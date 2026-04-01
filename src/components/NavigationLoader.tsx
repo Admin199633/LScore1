@@ -1,23 +1,24 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { FuturisticSpinner } from './PageSpinner';
 
 export function NavigationLoader() {
   const pathname = usePathname();
-  const prevPathname = useRef(pathname);
-  const [isLoading, setIsLoading] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
-  // When pathname changes — new page is ready, hide spinner
+  // When pathname changes — new page mounted, hide overlay
   useEffect(() => {
-    if (prevPathname.current !== pathname) {
-      prevPathname.current = pathname;
-      setIsLoading(false);
+    if (overlayRef.current) {
+      overlayRef.current.style.display = 'none';
     }
   }, [pathname]);
 
   useEffect(() => {
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+
     const show = (e: Event) => {
       const anchor = (e.target as HTMLElement).closest('a');
       if (
@@ -27,7 +28,8 @@ export function NavigationLoader() {
         !anchor.href.includes('#') &&
         anchor.pathname !== window.location.pathname
       ) {
-        setIsLoading(true);
+        // Direct DOM manipulation — synchronous, no React re-render needed
+        overlay.style.display = 'flex';
       }
     };
 
@@ -40,14 +42,13 @@ export function NavigationLoader() {
     };
   }, []);
 
-  if (!isLoading) return null;
-
   return (
     <div
+      ref={overlayRef}
       style={{
+        display: 'none',
         position: 'fixed',
         inset: 0,
-        display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         background: 'var(--background)',

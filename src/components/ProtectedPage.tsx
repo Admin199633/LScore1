@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSessionContext } from '@/lib/session';
+import { PageSpinner } from '@/components/PageSpinner';
 
 export function ProtectedPage({
   children,
@@ -27,36 +28,12 @@ export function ProtectedPage({
   }, [allowIncompleteOnboarding, hasOnboarding, isLoading, isOnboardingLoading, router, session]);
 
   if (isLoading || isOnboardingLoading || !session) {
-    return <PageLoader />;
+    return <PageSpinner />;
   }
 
   if (!allowIncompleteOnboarding && !hasOnboarding) {
-    return <PageLoader />;
+    return <PageSpinner />;
   }
 
   return <>{children}</>;
-}
-
-function PageLoader() {
-  return (
-    <div
-      style={{
-        minHeight: '60vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: '50%',
-          border: '3px solid var(--surface-2)',
-          borderTopColor: 'var(--accent)',
-          animation: 'spin 0.75s linear infinite',
-        }}
-      />
-    </div>
-  );
 }
