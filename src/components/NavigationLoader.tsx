@@ -30,18 +30,19 @@ export function NavigationLoader() {
         !anchor.href.includes('#') &&
         anchor.pathname !== window.location.pathname
       ) {
-        overlay.style.display = 'flex';
-        // Safety fallback: hide after 8s so it never gets stuck
+        // Delay so the click reaches the link first, then show overlay
         clearTimeout(hideTimeout);
-        hideTimeout = setTimeout(() => { overlay.style.display = 'none'; }, 8000);
+        hideTimeout = setTimeout(() => {
+          overlay.style.display = 'flex';
+          // Safety fallback: hide after 8s so it never gets stuck
+          hideTimeout = setTimeout(() => { overlay.style.display = 'none'; }, 8000);
+        }, 20);
       }
     };
 
-    document.addEventListener('touchstart', show, { passive: true });
     document.addEventListener('click', show);
 
     return () => {
-      document.removeEventListener('touchstart', show);
       document.removeEventListener('click', show);
       clearTimeout(hideTimeout);
     };
