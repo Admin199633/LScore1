@@ -34,13 +34,24 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
+    const CACHE_KEY = 'gym_onboarding_complete';
+
     const hydrateOnboarding = async (nextSession: Session | null) => {
       if (!isMounted) {
         return;
       }
 
       if (!nextSession) {
+        sessionStorage.removeItem(CACHE_KEY);
         setHasOnboarding(false);
+        setIsOnboardingLoading(false);
+        return;
+      }
+
+      // Use cached result to skip Supabase calls on repeat visits
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached !== null) {
+        setHasOnboarding(cached === 'true');
         setIsOnboardingLoading(false);
         return;
       }
@@ -49,8 +60,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const onboardingData = await loadOnboardingData();
+        const complete = isOnboardingComplete(onboardingData);
         if (isMounted) {
-          setHasOnboarding(isOnboardingComplete(onboardingData));
+          sessionStorage.setItem(CACHE_KEY, String(complete));
+          setHasOnboarding(complete);
         }
       } catch {
         if (isMounted) {
@@ -101,10 +114,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    sessionStorage.removeItem('gym_onboarding_complete');
     setIsOnboardingLoading(true);
     try {
       const onboardingData = await loadOnboardingData();
-      setHasOnboarding(isOnboardingComplete(onboardingData));
+      const complete = isOnboardingComplete(onboardingData);
+      sessionStorage.setItem('gym_onboarding_complete', String(complete));
+      setHasOnboarding(complete);
     } finally {
       setIsOnboardingLoading(false);
     }

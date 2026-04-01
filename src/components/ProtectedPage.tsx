@@ -27,12 +27,36 @@ export function ProtectedPage({
   }, [allowIncompleteOnboarding, hasOnboarding, isLoading, isOnboardingLoading, router, session]);
 
   if (isLoading || isOnboardingLoading || !session) {
-    return null;
+    return <PageLoader />;
   }
 
   if (!allowIncompleteOnboarding && !hasOnboarding) {
-    return null;
+    return <PageLoader />;
   }
 
   return <>{children}</>;
+}
+
+function PageLoader() {
+  return (
+    <div
+      style={{
+        minHeight: '60vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          border: '3px solid var(--surface-2)',
+          borderTopColor: 'var(--accent)',
+          animation: 'spin 0.75s linear infinite',
+        }}
+      />
+    </div>
+  );
 }

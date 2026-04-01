@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ProtectedPage } from '@/components/ProtectedPage';
+import { PageSpinner } from '@/components/PageSpinner';
 import { fetchCurrentProfile } from '@/lib/repositories/profileRepository';
 import { fetchLatestBodyweight } from '@/lib/repositories/bodyweightRepository';
 
@@ -62,11 +63,7 @@ export default function ReportsPage() {
   }, []);
 
   if (isLoading) {
-    return (
-      <ProtectedPage>
-        <div style={{ color: 'var(--text-muted)', padding: 8 }}>טוען דוחות...</div>
-      </ProtectedPage>
-    );
+    return <ProtectedPage><PageSpinner /></ProtectedPage>;
   }
 
   const bmr = profile ? calculateBMR(profile) : null;

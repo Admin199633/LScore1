@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ProtectedPage } from '@/components/ProtectedPage';
+import { PageSpinner } from '@/components/PageSpinner';
 import { fetchLatestBodyweight } from '@/lib/repositories/bodyweightRepository';
 import {
   fetchCurrentProfile,
@@ -342,11 +343,7 @@ export default function ProfilePage() {
   }, [themePreference]);
 
   if (isLoading) {
-    return (
-      <ProtectedPage>
-        <div style={{ color: 'var(--text-muted)' }}>טוען פרופיל...</div>
-      </ProtectedPage>
-    );
+    return <ProtectedPage><PageSpinner /></ProtectedPage>;
   }
 
   const selectedProgramDay = programDays[selectedDayIndex] || createEmptyDay();

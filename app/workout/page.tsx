@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ProtectedPage } from '@/components/ProtectedPage';
+import { PageSpinner } from '@/components/PageSpinner';
 import {
   fetchActiveWorkoutProgram,
   type WorkoutProgramDay,
@@ -364,11 +365,7 @@ export default function WorkoutPage() {
   const heroProgressValue = buildProgressValue(currentExerciseIndex, draftExercises.length);
 
   if (isLoading) {
-    return (
-      <ProtectedPage>
-        <div style={{ color: 'var(--text-muted)' }}>טוען תוכנית אימון...</div>
-      </ProtectedPage>
-    );
+    return <ProtectedPage><PageSpinner /></ProtectedPage>;
   }
 
   return (

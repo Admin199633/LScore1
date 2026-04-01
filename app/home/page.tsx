@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ProtectedPage } from '@/components/ProtectedPage';
+import { PageSpinner } from '@/components/PageSpinner';
 import { BodyweightChart } from '@/components/BodyweightChart';
 import { fetchBodyweightLogs, upsertBodyweightLog } from '@/lib/repositories/bodyweightRepository';
 import { fetchCurrentProfile } from '@/lib/repositories/profileRepository';
@@ -263,11 +264,7 @@ export default function HomePage() {
   };
 
   if (isLoading) {
-    return (
-      <ProtectedPage>
-        <div style={{ color: 'var(--text-muted)' }}>טוען בית...</div>
-      </ProtectedPage>
-    );
+    return <ProtectedPage><PageSpinner /></ProtectedPage>;
   }
 
   return (
