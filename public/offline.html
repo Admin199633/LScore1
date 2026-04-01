@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>אין חיבור לאינטרנט</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      background: #111111;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 24px;
+    }
+    h1 { font-size: 22px; margin: 0; }
+    p { color: #888888; margin: 0; font-size: 15px; }
+    button {
+      margin-top: 8px;
+      padding: 12px 28px;
+      border: none;
+      border-radius: 14px;
+      background: #0db899;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="32" cy="32" r="32" fill="#1c1c1c"/>
+    <path d="M20 44 L44 20" stroke="#888" stroke-width="3" stroke-linecap="round"/>
+    <path d="M14 32 Q14 20 32 20" stroke="#888" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M50 32 Q50 44 32 44" stroke="#888" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </svg>
+  <h1>אין חיבור לאינטרנט</h1>
+  <p>בדוק את החיבור שלך ונסה שוב</p>
+  <button onclick="window.location.reload()">נסה שוב</button>
+</body>
+</html>
