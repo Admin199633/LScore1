@@ -1,7 +1,7 @@
 'use client';
 
 import { BottomNavigation } from './BottomNavigation';
-import { NavigationLoader } from './NavigationLoader';
+// import { NavigationLoader } from './NavigationLoader';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -26,7 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {children}
       </div>
       <BottomNavigation />
-      <NavigationLoader />
+      {/* <NavigationLoader /> */}
     </main>
   );
 }
