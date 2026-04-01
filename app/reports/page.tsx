@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { PageSpinner } from '@/components/PageSpinner';
 import { fetchLatestBodyweight } from '@/lib/repositories/bodyweightRepository';
+import { calculateExerciseProgress, type ExerciseProgressResult } from '@/lib/exerciseProgress';
 import { fetchCurrentProfile } from '@/lib/repositories/profileRepository';
 import { fetchActiveWorkoutProgram } from '@/lib/repositories/programRepository';
+import { fetchSavedWorkoutSessions, type SavedWorkoutSession } from '@/lib/repositories/workoutSessionRepository';
 
 type ProfileData = {
   age: number;
@@ -14,8 +16,6 @@ type ProfileData = {
   goal: string;
   weight: number;
 };
-
-type ExerciseTrend = 'up' | 'stable' | 'down';
 
 const calculateBMR = ({ weight, height, age, gender }: ProfileData): number | null => {
   if (!weight || !height || !age) return null;
@@ -32,38 +32,54 @@ const getMissingFields = ({ weight, height, age, gender }: ProfileData): string[
   return missing;
 };
 
-const getExerciseTrend = (exerciseName: string): ExerciseTrend => {
-  const normalized = exerciseName.trim();
-  if (!normalized) return 'stable';
-
-  const score = normalized.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % 3;
-  if (score === 0) return 'up';
-  if (score === 1) return 'stable';
-  return 'down';
-};
-
 const exerciseTrendContent: Record<
-  ExerciseTrend,
-  { icon: string; title: string; accent: string; description: string }
+  ExerciseProgressResult['trend'],
+  { icon: string; accent: string }
 > = {
   up: {
     icon: '↗',
-    title: 'שיפור',
     accent: 'var(--success)',
-    description: 'תוצאת placeholder זמנית: נראה שהביצועים בתרגיל במגמת עלייה.',
   },
   stable: {
     icon: '➖',
-    title: 'יציב',
     accent: 'var(--text-muted)',
-    description: 'תוצאת placeholder זמנית: נראה שהביצועים בתרגיל נשארו יציבים.',
   },
   down: {
     icon: '↘',
-    title: 'ירידה',
     accent: 'var(--danger)',
-    description: 'תוצאת placeholder זמנית: נראה שהביצועים בתרגיל במגמת ירידה.',
   },
+  insufficient_data: {
+    icon: '•',
+    accent: 'var(--text-muted)',
+  },
+};
+
+const getExerciseProgressReason = (result: ExerciseProgressResult | null) => {
+  if (!result) {
+    return 'אין מספיק נתונים להשוואה';
+  }
+
+  if (result.trend === 'insufficient_data') {
+    return 'צריך לפחות 2 אימונים של אותו תרגיל כדי לחשב מגמת התקדמות';
+  }
+
+  return result.reason;
+};
+
+const formatDeltaPercentage = (value: number | null) => {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return null;
+  }
+
+  return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
+};
+
+const formatBestSetSummary = (set: ExerciseProgressResult['currentBestSet']) => {
+  if (!set) {
+    return null;
+  }
+
+  return `${set.weight}kg x ${set.reps}`;
 };
 
 export default function ReportsPage() {
@@ -72,13 +88,18 @@ export default function ReportsPage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [exerciseOptions, setExerciseOptions] = useState<string[]>([]);
   const [selectedExercise, setSelectedExercise] = useState('');
+  const [workoutHistory, setWorkoutHistory] = useState<SavedWorkoutSession[]>([]);
+  const [isWorkoutHistoryLoading, setIsWorkoutHistoryLoading] = useState(true);
+  const [workoutHistoryError, setWorkoutHistoryError] = useState('');
 
   useEffect(() => {
     let isMounted = true;
 
     const load = async () => {
       setIsLoading(true);
+      setIsWorkoutHistoryLoading(true);
       setError('');
+      setWorkoutHistoryError('');
 
       try {
         const [profileData, latestBodyweight, activeProgram] = await Promise.all([
@@ -116,6 +137,22 @@ export default function ReportsPage() {
       } finally {
         if (isMounted) setIsLoading(false);
       }
+
+      try {
+        const savedWorkoutSessions = await fetchSavedWorkoutSessions();
+
+        if (!isMounted) return;
+
+        setWorkoutHistory(savedWorkoutSessions);
+      } catch (historyError) {
+        if (isMounted) {
+          setWorkoutHistoryError(
+            historyError instanceof Error ? historyError.message : 'טעינת היסטוריית האימונים נכשלה.'
+          );
+        }
+      } finally {
+        if (isMounted) setIsWorkoutHistoryLoading(false);
+      }
     };
 
     load();
@@ -127,10 +164,13 @@ export default function ReportsPage() {
   const bmr = profile ? calculateBMR(profile) : null;
   const missingFields = profile ? getMissingFields(profile) : [];
 
-  const selectedExerciseTrend = useMemo(
-    () => getExerciseTrend(selectedExercise),
-    [selectedExercise]
-  );
+  const exerciseProgress = useMemo(() => {
+    if (!selectedExercise.trim()) {
+      return null;
+    }
+
+    return calculateExerciseProgress(selectedExercise, workoutHistory);
+  }, [selectedExercise, workoutHistory]);
 
   if (isLoading) {
     return (
@@ -157,7 +197,9 @@ export default function ReportsPage() {
           exerciseOptions={exerciseOptions}
           selectedExercise={selectedExercise}
           onSelectExercise={setSelectedExercise}
-          trend={selectedExerciseTrend}
+          isLoading={isWorkoutHistoryLoading}
+          error={workoutHistoryError}
+          result={exerciseProgress}
         />
       </div>
     </ProtectedPage>
@@ -168,12 +210,16 @@ function ExerciseProgressAccordion({
   exerciseOptions,
   selectedExercise,
   onSelectExercise,
-  trend,
+  isLoading,
+  error,
+  result,
 }: {
   exerciseOptions: string[];
   selectedExercise: string;
   onSelectExercise: (value: string) => void;
-  trend: ExerciseTrend;
+  isLoading: boolean;
+  error: string;
+  result: ExerciseProgressResult | null;
 }) {
   const [open, setOpen] = useState(false);
   const hasExercises = exerciseOptions.length > 0;
@@ -221,7 +267,9 @@ function ExerciseProgressAccordion({
             exerciseOptions={exerciseOptions}
             selectedExercise={selectedExercise}
             onSelectExercise={onSelectExercise}
-            trend={trend}
+            isLoading={isLoading}
+            error={error}
+            result={result}
           />
         </div>
       ) : null}
@@ -233,13 +281,37 @@ function ExerciseProgressPanel({
   exerciseOptions,
   selectedExercise,
   onSelectExercise,
-  trend,
+  isLoading,
+  error,
+  result,
 }: {
   exerciseOptions: string[];
   selectedExercise: string;
   onSelectExercise: (value: string) => void;
-  trend: ExerciseTrend;
+  isLoading: boolean;
+  error: string;
+  result: ExerciseProgressResult | null;
 }) {
+  if (isLoading) {
+    return (
+      <div style={{ background: 'var(--surface-2)', borderRadius: 16, padding: 18, display: 'grid', gap: 10 }}>
+        <div style={{ fontSize: 20, fontWeight: 800 }}>EXERCISE PROGRESS</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>
+          טוען היסטוריית אימונים...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ background: 'var(--surface-2)', borderRadius: 16, padding: 18, display: 'grid', gap: 10 }}>
+        <div style={{ fontSize: 20, fontWeight: 800 }}>EXERCISE PROGRESS</div>
+        <div style={{ color: 'var(--danger)', fontSize: 14, lineHeight: 1.6 }}>{error}</div>
+      </div>
+    );
+  }
+
   if (exerciseOptions.length === 0) {
     return (
       <div style={{ background: 'var(--surface-2)', borderRadius: 16, padding: 18, display: 'grid', gap: 10 }}>
@@ -251,7 +323,11 @@ function ExerciseProgressPanel({
     );
   }
 
-  const result = exerciseTrendContent[trend];
+  const content = exerciseTrendContent[result?.trend || 'insufficient_data'];
+  const deltaText = formatDeltaPercentage(result?.deltaPercentage ?? null);
+  const previousBestSet = formatBestSetSummary(result?.previousBestSet || null);
+  const currentBestSet = formatBestSetSummary(result?.currentBestSet || null);
+  const reasonText = getExerciseProgressReason(result);
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
@@ -295,18 +371,31 @@ function ExerciseProgressPanel({
           borderRadius: 18,
           padding: 18,
           display: 'grid',
-          gap: 10,
+          gap: 12,
         }}
       >
-        <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>תוצאה זמנית</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>תוצאה</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 26, lineHeight: 1, color: result.accent }}>{result.icon}</span>
+          <span style={{ fontSize: 26, lineHeight: 1, color: content.accent }}>{content.icon}</span>
           <div style={{ display: 'grid', gap: 2 }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: result.accent }}>{result.title}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: content.accent }}>{result?.label || 'אין מספיק נתונים'}</div>
             <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>{selectedExercise}</div>
           </div>
         </div>
-        <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>{result.description}</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>
+          {reasonText}
+        </div>
+        {deltaText ? (
+          <div style={{ fontSize: 15, fontWeight: 800, color: content.accent }}>
+            שינוי: {deltaText}
+          </div>
+        ) : null}
+        {previousBestSet && currentBestSet ? (
+          <div style={{ display: 'grid', gap: 4, color: 'var(--text-muted)', fontSize: 14 }}>
+            <div>קודם: {previousBestSet}</div>
+            <div>עכשיו: {currentBestSet}</div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
