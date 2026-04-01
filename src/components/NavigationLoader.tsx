@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { flushSync } from 'react-dom';
 import { FuturisticSpinner } from './PageSpinner';
 
 export function NavigationLoader() {
@@ -28,14 +27,11 @@ export function NavigationLoader() {
         !anchor.href.includes('#') &&
         anchor.pathname !== window.location.pathname
       ) {
-        // flushSync ensures the spinner renders before navigation starts
-        flushSync(() => setIsLoading(true));
+        setIsLoading(true);
       }
     };
 
-    // touchstart fires immediately on tap (before click's 300ms delay)
     document.addEventListener('touchstart', show, { passive: true });
-    // click as fallback for desktop
     document.addEventListener('click', show);
 
     return () => {

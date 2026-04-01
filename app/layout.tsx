@@ -39,6 +39,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="he" dir="rtl" className={poppins.className}>
       <body>
+        {/* Fallback: remove loader after 6s if React fails to mount */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script dangerouslySetInnerHTML={{ __html: `setTimeout(function(){var e=document.getElementById('app-initial-loader');if(e)e.remove();},6000)` }} />
+
         {/* Initial loader — rendered by server, visible before React hydrates */}
         <div
           id="app-initial-loader"
