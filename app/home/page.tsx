@@ -368,7 +368,13 @@ export default function HomePage() {
             <div style={{ fontSize: 20, fontWeight: 800 }}>{recommendation.title}</div>
             <div style={{ color: 'var(--text-muted)' }}>{recommendation.action}</div>
             <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>{recommendation.explanation}</div>
-            {recommendation.nutritionNote ? (
+type Recommendation = {
+  status: string;
+  title: string;
+  action: string;
+  explanation: string;
+  nutritionNote?: string;
+};
               <div style={{ color: 'var(--accent)', fontSize: 14, fontWeight: 700 }}>
                 {recommendation.nutritionNote}
               </div>
