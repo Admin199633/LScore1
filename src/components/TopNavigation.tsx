@@ -1,9 +1,10 @@
 'use client';
 
+import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const tabConfig = [
+const tabConfig: Array<{ label: string; href: Route }> = [
   { label: 'בית', href: '/home' },
   { label: 'יומן אימונים', href: '/workout' },
   { label: 'חלבון', href: '/nutrition' },
@@ -23,7 +24,7 @@ export function TopNavigation() {
   const pageTitle = titleMap[pathname] || 'בית';
 
   const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(`${href}/`) || href !== '/' && pathname.startsWith(href);
+    pathname === href || pathname.startsWith(`${href}/`) || (href !== '/' && pathname.startsWith(href));
 
   return (
     <div style={{ background: 'var(--surface)', padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
@@ -44,7 +45,15 @@ export function TopNavigation() {
           <span style={{ color: '#fff', fontWeight: 700 }}>פר</span>
         </Link>
       </div>
-      <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap-reverse', justifyContent: 'space-between' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          marginTop: 12,
+          flexWrap: 'wrap-reverse',
+          justifyContent: 'space-between',
+        }}
+      >
         {tabConfig.map((tab) => (
           <Link
             key={tab.href}
