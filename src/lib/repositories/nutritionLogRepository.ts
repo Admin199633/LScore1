@@ -149,7 +149,7 @@ export const saveNutritionLog = async (nutritionLog: SaveNutritionLogInput) => {
       calories: item.calories,
       carbs: item.carbs,
       fat: item.fat,
-      status: item.status,
+      status: item.status as 'calculated' | 'unresolved',
       reason: item.reason || undefined,
     })),
   } satisfies SavedNutritionLog;
@@ -248,7 +248,7 @@ export const appendNutritionLog = async (nutritionLog: SaveNutritionLogInput) =>
       calories: item.calories,
       carbs: item.carbs,
       fat: item.fat,
-      status: item.status,
+      status: item.status as 'calculated' | 'unresolved',
       reason: item.reason || undefined,
     })),
   } satisfies SavedNutritionLog;
@@ -314,7 +314,7 @@ export const fetchNutritionLogs = async (): Promise<SavedNutritionLog[]> => {
         calories: item.calories != null ? Number(item.calories) : null,
         carbs: item.carbs != null ? Number(item.carbs) : null,
         fat: item.fat != null ? Number(item.fat) : null,
-        status: item.status,
+        status: item.status as 'calculated' | 'unresolved',
         reason: item.reason || undefined,
       })),
   }));
