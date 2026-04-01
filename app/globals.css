@@ -1,5 +1,6 @@
 :root {
   color-scheme: dark;
+  --safe-area-top: 0px;
   --background: #111111;
   --surface: #1c1c1c;
   --surface-2: #242424;
@@ -30,6 +31,18 @@
   --danger-bg: #fff1f1;
   --success: #0a9e86;
   --success-bg: #ecfaf3;
+}
+
+@supports (padding-top: env(safe-area-inset-top)) {
+  :root {
+    --safe-area-top: env(safe-area-inset-top);
+  }
+}
+
+@supports (padding-top: constant(safe-area-inset-top)) {
+  :root {
+    --safe-area-top: constant(safe-area-inset-top);
+  }
 }
 
 * {
