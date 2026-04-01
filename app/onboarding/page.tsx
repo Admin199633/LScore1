@@ -24,9 +24,19 @@ const GOAL_OPTIONS = [
   ['maintain', 'שמירה'],
 ];
 
-const createEmptyRow = () => ({ exercise: '', sets: '', repsHeavy: '', weightHeavy: '' });
-const createEmptyDay = () => ({ id: '', name: '', rows: [createEmptyRow()] });
+const createEmptyRow = () => ({
+  id: crypto.randomUUID(),
+  exercise: '',
+  sets: '',
+  repsHeavy: '',
+  weightHeavy: '',
+});
 
+const createEmptyDay = () => ({
+  id: crypto.randomUUID(),
+  name: '',
+  rows: [createEmptyRow()],
+});
 const buildInitialState = () => ({
   age: '',
   weight: '',
@@ -221,18 +231,19 @@ export default function OnboardingPage() {
       focusAreas: parseCommaList(form.focusAreasText),
     };
 
-    const normalizedDays = form.days.map((day) => ({
-      id: day.id || '',
-      name: day.name.trim(),
-      rows: day.rows
-        .map((row) => ({
-          exercise: row.exercise.trim(),
-          sets: row.sets.trim(),
-          repsHeavy: row.repsHeavy.trim(),
-          weightHeavy: row.weightHeavy.trim(),
-        }))
-        .filter((row) => row.exercise || row.sets || row.repsHeavy || row.weightHeavy),
-    }));
+	const normalizedDays = form.days.map((day, dayIndex) => ({
+  id: day.id || `day-${dayIndex}`,
+  name: day.name.trim(),
+  rows: day.rows
+    .map((row, rowIndex) => ({
+      id: row.id || `day-${dayIndex}-row-${rowIndex}`,
+      exercise: row.exercise.trim(),
+      sets: row.sets.trim(),
+      repsHeavy: row.repsHeavy.trim(),
+      weightHeavy: row.weightHeavy.trim(),
+    }))
+    .filter((row) => row.exercise || row.sets || row.repsHeavy || row.weightHeavy),
+}));
 
     if (!user.age || !user.weight || !user.height) {
       setError('יש למלא גיל, משקל וגובה תקינים.');
