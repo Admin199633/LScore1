@@ -15,7 +15,6 @@ type ProfileData = {
   weight: number;
 };
 
-type ReportTab = 'bmr' | 'exercise-progress';
 type ExerciseTrend = 'up' | 'stable' | 'down';
 
 const calculateBMR = ({ weight, height, age, gender }: ProfileData): number | null => {
@@ -68,7 +67,6 @@ const exerciseTrendContent: Record<
 };
 
 export default function ReportsPage() {
-  const [activeTab, setActiveTab] = useState<ReportTab>('bmr');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -154,62 +152,80 @@ export default function ReportsPage() {
           <div style={{ color: 'var(--danger)', fontSize: 14, padding: '0 4px' }}>{error}</div>
         ) : null}
 
-        <div style={{ display: 'flex', gap: 8, background: 'var(--surface)', borderRadius: 18, padding: 6 }}>
-          <TabButton
-            label='BMR'
-            active={activeTab === 'bmr'}
-            onClick={() => setActiveTab('bmr')}
-          />
-          <TabButton
-            label='Exercise Progress'
-            active={activeTab === 'exercise-progress'}
-            onClick={() => setActiveTab('exercise-progress')}
-          />
-        </div>
-
-        {activeTab === 'bmr' ? (
-          <BmrAccordion bmr={bmr} profile={profile} missingFields={missingFields} />
-        ) : (
-          <ExerciseProgressPanel
-            exerciseOptions={exerciseOptions}
-            selectedExercise={selectedExercise}
-            onSelectExercise={setSelectedExercise}
-            trend={selectedExerciseTrend}
-          />
-        )}
+        <BmrAccordion bmr={bmr} profile={profile} missingFields={missingFields} />
+        <ExerciseProgressAccordion
+          exerciseOptions={exerciseOptions}
+          selectedExercise={selectedExercise}
+          onSelectExercise={setSelectedExercise}
+          trend={selectedExerciseTrend}
+        />
       </div>
     </ProtectedPage>
   );
 }
 
-function TabButton({
-  label,
-  active,
-  onClick,
+function ExerciseProgressAccordion({
+  exerciseOptions,
+  selectedExercise,
+  onSelectExercise,
+  trend,
 }: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
+  exerciseOptions: string[];
+  selectedExercise: string;
+  onSelectExercise: (value: string) => void;
+  trend: ExerciseTrend;
 }) {
+  const [open, setOpen] = useState(false);
+  const hasExercises = exerciseOptions.length > 0;
+
   return (
-    <button
-      type='button'
-      onClick={onClick}
-      style={{
-        flex: 1,
-        border: 'none',
-        borderRadius: 14,
-        background: active ? 'var(--accent)' : 'transparent',
-        color: active ? '#fff' : 'var(--text-muted)',
-        padding: '12px 14px',
-        fontWeight: 800,
-        fontSize: 14,
-        cursor: 'pointer',
-        transition: 'background 0.18s, color 0.18s',
-      }}
-    >
-      {label}
-    </button>
+    <div style={{ background: 'var(--surface)', borderRadius: 20, overflow: 'hidden' }}>
+      <button
+        type='button'
+        onClick={() => setOpen((prev) => !prev)}
+        style={{
+          width: '100%',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: 20,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          color: 'var(--text)',
+        }}
+      >
+        <div style={{ textAlign: 'right', flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 18, fontWeight: 800 }}>Exercise Progress - התקדמות בתרגיל</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>
+            {hasExercises ? selectedExercise || 'בחר תרגיל' : 'אין תרגילים זמינים בתוכנית'}
+          </div>
+        </div>
+        <span
+          style={{
+            fontSize: 18,
+            color: 'var(--text-muted)',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s',
+            flexShrink: 0,
+          }}
+        >
+          ▼
+        </span>
+      </button>
+
+      {open ? (
+        <div style={{ padding: '0 20px 20px' }}>
+          <ExerciseProgressPanel
+            exerciseOptions={exerciseOptions}
+            selectedExercise={selectedExercise}
+            onSelectExercise={onSelectExercise}
+            trend={trend}
+          />
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -226,7 +242,7 @@ function ExerciseProgressPanel({
 }) {
   if (exerciseOptions.length === 0) {
     return (
-      <div style={{ background: 'var(--surface)', borderRadius: 20, padding: 20, display: 'grid', gap: 10 }}>
+      <div style={{ background: 'var(--surface-2)', borderRadius: 16, padding: 18, display: 'grid', gap: 10 }}>
         <div style={{ fontSize: 20, fontWeight: 800 }}>Exercise Progress</div>
         <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>
           אין כרגע תרגילים בתוכנית האימון. אפשר להוסיף תרגילים בדף הפרופיל ואז לחזור לכאן.
@@ -238,7 +254,7 @@ function ExerciseProgressPanel({
   const result = exerciseTrendContent[trend];
 
   return (
-    <div style={{ background: 'var(--surface)', borderRadius: 20, padding: 20, display: 'grid', gap: 16 }}>
+    <div style={{ display: 'grid', gap: 16 }}>
       <div>
         <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
           ניתוח התקדמות
