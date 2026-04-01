@@ -6,7 +6,6 @@ import { SessionProvider } from '@/lib/session';
 import { ThemeProvider } from '@/lib/theme';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { SwRegister } from '@/components/SwRegister';
-import { AppReady } from '@/components/AppReady';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -84,7 +83,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </SessionProvider>
         </ThemeProvider>
         <SwRegister />
-        <AppReady />
       </body>
     </html>
   );
