@@ -2,12 +2,22 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { ProtectedPage } from '@/components/ProtectedPage';
+import { ExerciseProgressChart } from '@/components/ExerciseProgressChart';
 import { PageSpinner } from '@/components/PageSpinner';
 import { fetchLatestBodyweight } from '@/lib/repositories/bodyweightRepository';
-import { calculateExerciseProgress, type ExerciseProgressResult } from '@/lib/exerciseProgress';
+import {
+  calculateExerciseProgress,
+  getExerciseOccurrencesFromWorkoutHistory,
+  type ExerciseExerciseOccurrence,
+  type ExerciseProgressResult,
+} from '@/lib/exerciseProgress';
 import { fetchCurrentProfile } from '@/lib/repositories/profileRepository';
-import { fetchActiveWorkoutProgram } from '@/lib/repositories/programRepository';
+import { fetchActiveWorkoutProgram, type WorkoutProgram } from '@/lib/repositories/programRepository';
 import { fetchSavedWorkoutSessions, type SavedWorkoutSession } from '@/lib/repositories/workoutSessionRepository';
+import {
+  calculateWorkoutConsistency,
+  type WorkoutConsistencyResult,
+} from '@/lib/workoutConsistency';
 
 type ProfileData = {
   age: number;
@@ -86,6 +96,7 @@ export default function ReportsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [workoutProgram, setWorkoutProgram] = useState<WorkoutProgram>({ id: '', days: [] });
   const [exerciseOptions, setExerciseOptions] = useState<string[]>([]);
   const [selectedExercise, setSelectedExercise] = useState('');
   const [workoutHistory, setWorkoutHistory] = useState<SavedWorkoutSession[]>([]);
@@ -126,6 +137,7 @@ export default function ReportsPage() {
           goal: profileData?.goal || '',
           weight: latestBodyweight?.weight || 0,
         });
+        setWorkoutProgram(activeProgram);
         setExerciseOptions(nextExerciseOptions);
         setSelectedExercise((current) =>
           current && nextExerciseOptions.includes(current) ? current : nextExerciseOptions[0] || ''
@@ -172,6 +184,18 @@ export default function ReportsPage() {
     return calculateExerciseProgress(selectedExercise, workoutHistory);
   }, [selectedExercise, workoutHistory]);
 
+  const exerciseOccurrences = useMemo<ExerciseExerciseOccurrence[]>(() => {
+    if (!selectedExercise.trim()) {
+      return [];
+    }
+
+    return getExerciseOccurrencesFromWorkoutHistory(selectedExercise, workoutHistory);
+  }, [selectedExercise, workoutHistory]);
+
+  const workoutConsistency = useMemo<WorkoutConsistencyResult>(() => {
+    return calculateWorkoutConsistency(workoutProgram, workoutHistory);
+  }, [workoutProgram, workoutHistory]);
+
   if (isLoading) {
     return (
       <ProtectedPage>
@@ -200,9 +224,185 @@ export default function ReportsPage() {
           isLoading={isWorkoutHistoryLoading}
           error={workoutHistoryError}
           result={exerciseProgress}
+          occurrences={exerciseOccurrences}
+        />
+        <WorkoutConsistencyAccordion
+          isLoading={isWorkoutHistoryLoading}
+          error={workoutHistoryError}
+          result={workoutConsistency}
         />
       </div>
     </ProtectedPage>
+  );
+}
+
+function WorkoutConsistencyAccordion({
+  isLoading,
+  error,
+  result,
+}: {
+  isLoading: boolean;
+  error: string;
+  result: WorkoutConsistencyResult;
+}) {
+  const [open, setOpen] = useState(false);
+  const lastWeekStatusLabel =
+    result.lastWeek.status === 'high' ? 'גבוהה' : result.lastWeek.status === 'medium' ? 'בינונית' : 'נמוכה';
+  const paceStatusLabel =
+    result.currentWeek.paceStatus === 'ahead'
+      ? 'לפני הקצב'
+      : result.currentWeek.paceStatus === 'behind'
+        ? 'מאחור'
+        : 'בקצב';
+  const confidenceLabel =
+    result.confidence === 'high' ? 'גבוהה' : result.confidence === 'medium' ? 'בינונית' : 'נמוכה';
+
+  return (
+    <div style={{ background: 'var(--surface)', borderRadius: 20, overflow: 'hidden' }}>
+      <button
+        type='button'
+        onClick={() => setOpen((prev) => !prev)}
+        style={{
+          width: '100%',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: 20,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          color: 'var(--text)',
+        }}
+      >
+        <div style={{ textAlign: 'right', flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 18, fontWeight: 800 }}>WORKOUT CONSISTENCY</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>
+            מעקב עקביות אימונים
+          </div>
+        </div>
+        <span
+          style={{
+            fontSize: 18,
+            color: 'var(--text-muted)',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s',
+            flexShrink: 0,
+          }}
+        >
+          ▼
+        </span>
+      </button>
+
+      {open ? (
+        <div style={{ padding: '0 20px 20px' }}>
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800 }}>WORKOUT CONSISTENCY</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6, marginTop: 6 }}>
+                הדוח בודק עד כמה עמדת בתוכנית האימונים שלך בשבוע שעבר, והאם אתה בקצב נכון השבוע.
+              </div>
+            </div>
+
+            {isLoading ? (
+              <ConsistencyInfoCard tone='muted' text='טוען היסטוריית אימונים...' />
+            ) : error ? (
+              <ConsistencyInfoCard tone='danger' text={error} />
+            ) : !result.hasActiveProgram ? (
+              <ConsistencyInfoCard
+                tone='muted'
+                text='אין כרגע תוכנית אימונים פעילה, ולכן אי אפשר לחשב עקביות שבועית.'
+              />
+            ) : (
+              <>
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 16,
+                    padding: 18,
+                    display: 'grid',
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>שבוע שעבר</div>
+                  <div style={{ fontSize: 24, fontWeight: 800 }}>
+                    {result.lastWeek.completed}/{result.weeklyTarget} אימונים
+                  </div>
+                  <div style={{ color: 'var(--accent)', fontSize: 18, fontWeight: 800 }}>
+                    {result.lastWeek.percentage}%
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+                    סטטוס: {lastWeekStatusLabel}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 16,
+                    padding: 18,
+                    display: 'grid',
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>השבוע</div>
+                  <div style={{ color: 'var(--text)', fontSize: 15 }}>בוצעו: {result.currentWeek.completed}</div>
+                  <div style={{ color: 'var(--text)', fontSize: 15 }}>
+                    צפוי עד עכשיו: {result.currentWeek.expectedSoFar}
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+                    סטטוס: {paceStatusLabel}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 16,
+                    padding: 18,
+                    display: 'grid',
+                    gap: 6,
+                  }}
+                >
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>הקשר</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>
+                    {result.reason}
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                    רמת ביטחון: {confidenceLabel}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ConsistencyInfoCard({ text, tone }: { text: string; tone: 'muted' | 'danger' }) {
+  return (
+    <div
+      style={{
+        background: 'var(--surface-2)',
+        borderRadius: 16,
+        padding: 18,
+        display: 'grid',
+        gap: 8,
+      }}
+    >
+      <div style={{ fontSize: 20, fontWeight: 800 }}>WORKOUT CONSISTENCY</div>
+      <div
+        style={{
+          color: tone === 'danger' ? 'var(--danger)' : 'var(--text-muted)',
+          fontSize: 14,
+          lineHeight: 1.6,
+        }}
+      >
+        {text}
+      </div>
+    </div>
   );
 }
 
@@ -213,6 +413,7 @@ function ExerciseProgressAccordion({
   isLoading,
   error,
   result,
+  occurrences,
 }: {
   exerciseOptions: string[];
   selectedExercise: string;
@@ -220,6 +421,7 @@ function ExerciseProgressAccordion({
   isLoading: boolean;
   error: string;
   result: ExerciseProgressResult | null;
+  occurrences: ExerciseExerciseOccurrence[];
 }) {
   const [open, setOpen] = useState(false);
   const hasExercises = exerciseOptions.length > 0;
@@ -270,6 +472,7 @@ function ExerciseProgressAccordion({
             isLoading={isLoading}
             error={error}
             result={result}
+            occurrences={occurrences}
           />
         </div>
       ) : null}
@@ -284,6 +487,7 @@ function ExerciseProgressPanel({
   isLoading,
   error,
   result,
+  occurrences,
 }: {
   exerciseOptions: string[];
   selectedExercise: string;
@@ -291,6 +495,7 @@ function ExerciseProgressPanel({
   isLoading: boolean;
   error: string;
   result: ExerciseProgressResult | null;
+  occurrences: ExerciseExerciseOccurrence[];
 }) {
   if (isLoading) {
     return (
@@ -332,10 +537,13 @@ function ExerciseProgressPanel({
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <div>
-        <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
-          ניתוח התקדמות
-        </div>
         <div style={{ fontSize: 20, fontWeight: 800 }}>EXERCISE PROGRESS</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.5, marginTop: 6 }}>
+          ציון ביצוע = משקל × (1 + חזרות / 30) × קושי
+        </div>
+        <div style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.5, marginTop: 4 }}>
+          המערכת מחשבת את הסט החזק ביותר בכל אימון ומשווה אותו לאימון הקודם כדי לזהות מגמת התקדמות.
+        </div>
       </div>
 
       <div style={{ display: 'grid', gap: 8 }}>
@@ -390,6 +598,7 @@ function ExerciseProgressPanel({
             שינוי: {deltaText}
           </div>
         ) : null}
+        <ExerciseProgressChart occurrences={occurrences} />
         {previousBestSet && currentBestSet ? (
           <div style={{ display: 'grid', gap: 4, color: 'var(--text-muted)', fontSize: 14 }}>
             <div>קודם: {previousBestSet}</div>
