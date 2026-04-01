@@ -92,13 +92,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
     hydrate();
 
-    const { data } = onAuthStateChange(async (_event, nextSession) => {
+    const { data } = onAuthStateChange(async (event, nextSession) => {
       if (isMounted) {
         setSession(nextSession);
         setIsLoading(false);
       }
 
-      await hydrateOnboarding(nextSession);
+      // Only re-hydrate on real auth changes — not TOKEN_REFRESHED / INITIAL_SESSION
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        await hydrateOnboarding(nextSession);
+      }
     });
 
     return () => {
