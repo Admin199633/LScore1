@@ -283,7 +283,7 @@ export default function WorkoutPage() {
         date: selectedDate,
         dayId: selectedDay.id || '',
         dayName: selectedDay.name || '',
-        energyLevel,
+        energyLevel: energyLevel ?? undefined,
         startedAt: workoutStartedAt.current || '',
         endedAt: new Date().toISOString(),
         durationSeconds: timer,
