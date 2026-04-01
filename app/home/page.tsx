@@ -66,6 +66,14 @@ const buildExerciseEvaluations = (
     })
     .filter(Boolean) as Array<{ exercise: string; performanceTrend: string; fatigue: boolean }>;
 
+type Recommendation = {
+  status: string;
+  title: string;
+  action: string;
+  explanation: string;
+  nutritionNote?: string;
+};
+
 export default function HomePage() {
   const { user } = useSessionContext();
   const [isLoading, setIsLoading] = useState(true);
@@ -205,7 +213,7 @@ export default function HomePage() {
     [workoutSessions]
   );
 
-  const recommendation = useMemo(() => {
+  const recommendation = useMemo<Recommendation | null>(() => {
     const exerciseEvaluations = buildExerciseEvaluations(flattenedWorkoutSessions);
 
     if (exerciseEvaluations.length === 0) {
@@ -354,33 +362,27 @@ export default function HomePage() {
           <BodyweightChart logs={bodyweightLogs} />
         </div>
 
-        {recommendation ? (
-          <div
-            style={{
-              background: 'var(--surface)',
-              borderRadius: 20,
-              padding: 20,
-              display: 'grid',
-              gap: 8,
-            }}
-          >
-            <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>המלצה יומית</div>
-            <div style={{ fontSize: 20, fontWeight: 800 }}>{recommendation.title}</div>
-            <div style={{ color: 'var(--text-muted)' }}>{recommendation.action}</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>{recommendation.explanation}</div>
-type Recommendation = {
-  status: string;
-  title: string;
-  action: string;
-  explanation: string;
-  nutritionNote?: string;
-};
-              <div style={{ color: 'var(--accent)', fontSize: 14, fontWeight: 700 }}>
-                {recommendation.nutritionNote}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
+ {recommendation ? (
+  <div
+    style={{
+      background: 'var(--surface)',
+      borderRadius: 20,
+      padding: 20,
+      display: 'grid',
+      gap: 8,
+    }}
+  >
+    <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>המלצה יומית</div>
+    <div style={{ fontSize: 20, fontWeight: 800 }}>{recommendation.title}</div>
+    <div style={{ color: 'var(--text-muted)' }}>{recommendation.action}</div>
+    <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>{recommendation.explanation}</div>
+    {recommendation.nutritionNote ? (
+      <div style={{ color: 'var(--accent)', fontSize: 14, fontWeight: 700 }}>
+        {recommendation.nutritionNote}
+      </div>
+    ) : null}
+  </div>
+) : null}
 
         <div style={{ textAlign: 'center', marginTop: 6 }}>
           <Link href="/home-v2" style={{ fontWeight: 700, color: 'var(--accent)' }}>
