@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { getCurrentSession, onAuthStateChange, signOut as authSignOut } from '@/lib/auth';
 import { isOnboardingComplete, loadOnboardingData } from '@/lib/onboarding';
@@ -30,17 +30,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [isOnboardingLoading, setIsOnboardingLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
   const [hasOnboarding, setHasOnboarding] = useState(false);
+  const isHydratingRef = useRef(false); // prevents concurrent hydration calls
 
   useEffect(() => {
     let isMounted = true;
-
     const CACHE_KEY = 'gym_onboarding_complete';
 
     const hydrateOnboarding = async (nextSession: Session | null) => {
-      if (!isMounted) {
-        return;
-      }
+      if (!isMounted) return;
 
+      // Rule 4: null session → clear state directly, no Supabase calls
       if (!nextSession) {
         sessionStorage.removeItem(CACHE_KEY);
         setHasOnboarding(false);
@@ -48,7 +47,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Use cached result to skip Supabase calls on repeat visits
+      // Rule 6: already in sessionStorage → apply without touching isOnboardingLoading
       const cached = sessionStorage.getItem(CACHE_KEY);
       if (cached !== null) {
         setHasOnboarding(cached === 'true');
@@ -56,6 +55,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // Rule 5: prevent concurrent hydration (hydrate() vs INITIAL_SESSION)
+      if (isHydratingRef.current) return;
+      isHydratingRef.current = true;
       setIsOnboardingLoading(true);
 
       try {
@@ -66,27 +68,20 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           setHasOnboarding(complete);
         }
       } catch {
-        if (isMounted) {
-          setHasOnboarding(false);
-        }
+        if (isMounted) setHasOnboarding(false);
       } finally {
-        if (isMounted) {
-          setIsOnboardingLoading(false);
-        }
+        isHydratingRef.current = false;
+        if (isMounted) setIsOnboardingLoading(false);
       }
     };
 
     const hydrate = async () => {
       try {
         const currentSession = await getCurrentSession();
-        if (isMounted) {
-          setSession(currentSession);
-        }
+        if (isMounted) setSession(currentSession);
         await hydrateOnboarding(currentSession);
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (isMounted) setIsLoading(false);
       }
     };
 
@@ -98,8 +93,18 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
       }
 
-      // Only re-hydrate on real auth changes — not TOKEN_REFRESHED / INITIAL_SESSION
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT') {
+        // Rule 4: clear state directly without calling hydrateOnboarding
+        if (isMounted) {
+          sessionStorage.removeItem(CACHE_KEY);
+          setHasOnboarding(false);
+          setIsOnboardingLoading(false);
+        }
+        return;
+      }
+
+      // Rules 1-3: only hydrate on SIGNED_IN — skip TOKEN_REFRESHED, USER_UPDATED, INITIAL_SESSION
+      if (event === 'SIGNED_IN') {
         await hydrateOnboarding(nextSession);
       }
     });
