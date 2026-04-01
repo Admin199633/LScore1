@@ -4,15 +4,20 @@ import { useEffect, useMemo, useState } from 'react';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { ExerciseProgressChart } from '@/components/ExerciseProgressChart';
 import { PageSpinner } from '@/components/PageSpinner';
-import { fetchLatestBodyweight } from '@/lib/repositories/bodyweightRepository';
+import { fetchBodyweightLogs, fetchLatestBodyweight } from '@/lib/repositories/bodyweightRepository';
 import {
   calculateExerciseProgress,
   getExerciseOccurrencesFromWorkoutHistory,
   type ExerciseExerciseOccurrence,
   type ExerciseProgressResult,
 } from '@/lib/exerciseProgress';
+import {
+  buildProgressStatus,
+  type ProgressStatusResult,
+} from '@/lib/progressStatus';
 import { fetchCurrentProfile } from '@/lib/repositories/profileRepository';
 import { fetchActiveWorkoutProgram, type WorkoutProgram } from '@/lib/repositories/programRepository';
+import { fetchNutritionLogs, type SavedNutritionLog } from '@/lib/repositories/nutritionLogRepository';
 import { fetchSavedWorkoutSessions, type SavedWorkoutSession } from '@/lib/repositories/workoutSessionRepository';
 import {
   calculateWorkoutConsistency,
@@ -99,6 +104,8 @@ export default function ReportsPage() {
   const [workoutProgram, setWorkoutProgram] = useState<WorkoutProgram>({ id: '', days: [] });
   const [exerciseOptions, setExerciseOptions] = useState<string[]>([]);
   const [selectedExercise, setSelectedExercise] = useState('');
+  const [bodyweightLogs, setBodyweightLogs] = useState<Array<{ date: string; weight: number }>>([]);
+  const [nutritionLogs, setNutritionLogs] = useState<SavedNutritionLog[]>([]);
   const [workoutHistory, setWorkoutHistory] = useState<SavedWorkoutSession[]>([]);
   const [isWorkoutHistoryLoading, setIsWorkoutHistoryLoading] = useState(true);
   const [workoutHistoryError, setWorkoutHistoryError] = useState('');
@@ -113,10 +120,12 @@ export default function ReportsPage() {
       setWorkoutHistoryError('');
 
       try {
-        const [profileData, latestBodyweight, activeProgram] = await Promise.all([
+        const [profileData, latestBodyweight, activeProgram, nextBodyweightLogs, nextNutritionLogs] = await Promise.all([
           fetchCurrentProfile(),
           fetchLatestBodyweight().catch(() => null),
           fetchActiveWorkoutProgram().catch(() => ({ id: '', days: [] })),
+          fetchBodyweightLogs().catch(() => []),
+          fetchNutritionLogs().catch(() => []),
         ]);
 
         if (!isMounted) return;
@@ -138,6 +147,8 @@ export default function ReportsPage() {
           weight: latestBodyweight?.weight || 0,
         });
         setWorkoutProgram(activeProgram);
+        setBodyweightLogs(nextBodyweightLogs);
+        setNutritionLogs(nextNutritionLogs);
         setExerciseOptions(nextExerciseOptions);
         setSelectedExercise((current) =>
           current && nextExerciseOptions.includes(current) ? current : nextExerciseOptions[0] || ''
@@ -196,6 +207,18 @@ export default function ReportsPage() {
     return calculateWorkoutConsistency(workoutProgram, workoutHistory);
   }, [workoutProgram, workoutHistory]);
 
+  const progressStatus = useMemo<ProgressStatusResult>(() => {
+    return buildProgressStatus({
+      goal: (profile?.goal || '') as 'bulk' | 'cut' | 'maintain' | '',
+      exerciseNames: exerciseOptions,
+      workoutHistory,
+      bodyweightLogs,
+      nutritionLogs,
+      profile,
+      workoutConsistency,
+    });
+  }, [profile, exerciseOptions, workoutHistory, bodyweightLogs, nutritionLogs, workoutConsistency]);
+
   if (isLoading) {
     return (
       <ProtectedPage>
@@ -231,8 +254,159 @@ export default function ReportsPage() {
           error={workoutHistoryError}
           result={workoutConsistency}
         />
+        <ProgressStatusAccordion
+          isLoading={isWorkoutHistoryLoading}
+          error={workoutHistoryError}
+          result={progressStatus}
+        />
       </div>
     </ProtectedPage>
+  );
+}
+
+function ProgressStatusAccordion({
+  isLoading,
+  error,
+  result,
+}: {
+  isLoading: boolean;
+  error: string;
+  result: ProgressStatusResult;
+}) {
+  const [open, setOpen] = useState(false);
+  const statusAccent =
+    result.status === 'on_track'
+      ? 'var(--success)'
+      : result.status === 'partial'
+        ? 'var(--accent)'
+        : result.status === 'off_track'
+          ? 'var(--danger)'
+          : 'var(--text-muted)';
+
+  const exerciseLabel =
+    result.summaries.exerciseProgress.trend === 'up'
+      ? 'בעלייה'
+      : result.summaries.exerciseProgress.trend === 'stable'
+        ? 'יציב'
+        : result.summaries.exerciseProgress.trend === 'down'
+          ? 'בירידה'
+          : 'אין מספיק נתונים';
+  const weightLabel =
+    result.summaries.weightTrend === 'up'
+      ? 'בעלייה'
+      : result.summaries.weightTrend === 'stable'
+        ? 'יציב'
+        : result.summaries.weightTrend === 'down'
+          ? 'בירידה'
+          : 'אין מספיק נתונים';
+  const nutritionLabel =
+    result.summaries.nutritionAdherence === 'good'
+      ? 'טובה'
+      : result.summaries.nutritionAdherence === 'partial'
+        ? 'חלקית'
+        : result.summaries.nutritionAdherence === 'poor'
+          ? 'חלשה'
+          : 'אין מספיק נתונים';
+  const consistencyLabel =
+    result.summaries.workoutConsistency === 'high'
+      ? 'גבוהה'
+      : result.summaries.workoutConsistency === 'medium'
+        ? 'בינונית'
+        : result.summaries.workoutConsistency === 'low'
+          ? 'נמוכה'
+          : 'אין מספיק נתונים';
+  const confidenceLabel =
+    result.confidence === 'high' ? 'גבוהה' : result.confidence === 'medium' ? 'בינונית' : 'נמוכה';
+
+  return (
+    <div style={{ background: 'var(--surface)', borderRadius: 20, overflow: 'hidden' }}>
+      <button
+        type='button'
+        onClick={() => setOpen((prev) => !prev)}
+        style={{
+          width: '100%',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: 20,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          color: 'var(--text)',
+        }}
+      >
+        <div style={{ textAlign: 'right', flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 18, fontWeight: 800 }}>סטטוס התקדמות</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>
+            {result.label}
+          </div>
+        </div>
+        <span
+          style={{
+            fontSize: 18,
+            color: 'var(--text-muted)',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s',
+            flexShrink: 0,
+          }}
+        >
+          ▼
+        </span>
+      </button>
+
+      {open ? (
+        <div style={{ padding: '0 20px 20px' }}>
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800 }}>סטטוס התקדמות</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6, marginTop: 6 }}>
+                הדוח מסכם האם אתה מתקדם לפי המטרה שלך, על בסיס ביצועים, משקל, תזונה ועקביות אימונים.
+              </div>
+            </div>
+
+            {isLoading ? (
+              <ConsistencyInfoCard tone='muted' text='טוען נתונים לחישוב סטטוס התקדמות...' />
+            ) : error ? (
+              <ConsistencyInfoCard tone='danger' text={error} />
+            ) : (
+              <>
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 16,
+                    padding: 18,
+                    display: 'grid',
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>תוצאה מסכמת</div>
+                  <div style={{ fontSize: 26, fontWeight: 800, color: statusAccent }}>{result.label}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>{result.reason}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>רמת ביטחון: {confidenceLabel}</div>
+                </div>
+
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 16,
+                    padding: 18,
+                    display: 'grid',
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>פירוק המדדים</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>ביצועים: {exerciseLabel}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>משקל: {weightLabel}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>תזונה: {nutritionLabel}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>עקביות: {consistencyLabel}</div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
