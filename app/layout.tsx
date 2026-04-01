@@ -4,7 +4,7 @@ import './globals.css';
 import { AppShell } from '@/components/AppShell';
 import { SessionProvider } from '@/lib/session';
 import { ThemeProvider } from '@/lib/theme';
-import { SpeedInsights } from "@vercel/speed-insights/next"; // 👈 פה למעלה
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <SessionProvider>
             <AppShell>{children}</AppShell>
-            <SpeedInsights /> {/* 👈 פה */}
+            <SpeedInsights />
           </SessionProvider>
         </ThemeProvider>
       </body>
