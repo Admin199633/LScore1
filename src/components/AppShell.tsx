@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           maxWidth: 480,
           margin: '0 auto',
           padding: 16,
-          paddingTop: 'calc(16px + var(--safe-area-top))',
+          paddingTop: 16,
           paddingBottom: 96,
           boxSizing: 'border-box',
         }}

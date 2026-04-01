@@ -269,7 +269,14 @@ export default function HomePage() {
 
   return (
     <ProtectedPage>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+          paddingTop: 'calc(16px + var(--safe-area-top))',
+        }}
+      >
         {loadError ? <div style={{ color: 'var(--danger)' }}>{loadError}</div> : null}
 
         <div style={{ display: 'flex', gap: 8 }}>
