@@ -1,0 +1,13 @@
+node_modules/
+.next/
+dist/
+build/
+.env
+.env.local
+.env*.local
+*.log
+tsconfig.tsbuildinfo
+.claude/
+gradient-fitness-app-template/
+extract_files*.py
+"Screenshot *.png"

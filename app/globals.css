@@ -1,0 +1,64 @@
+:root {
+  color-scheme: dark;
+  --background: #111111;
+  --surface: #1c1c1c;
+  --surface-2: #242424;
+  --border: #2d2d2d;
+  --text: #ffffff;
+  --text-muted: #888888;
+  --accent: #0db899;
+  --accent-2: #b8a8ff;
+  --accent-gradient: linear-gradient(135deg, #0db899, #b8a8ff);
+  --danger: #ff6b6b;
+  --danger-bg: #2a1515;
+  --success: #0db899;
+  --success-bg: #0e2420;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --background: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f1f3f5;
+  --border: #e2e2e2;
+  --text: #111111;
+  --text-muted: #6f6f6f;
+  --accent: #0db899;
+  --accent-2: #8b7fff;
+  --accent-gradient: linear-gradient(135deg, #0db899, #8b7fff);
+  --danger: #e03e3e;
+  --danger-bg: #fff1f1;
+  --success: #0a9e86;
+  --success-bg: #ecfaf3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family: 'Poppins', Arial, sans-serif;
+}
+
+body {
+  direction: rtl;
+  background: radial-gradient(ellipse at 50% 30%, #1e1e2a 0%, #0d0d0d 60%, #050505 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
