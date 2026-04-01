@@ -184,7 +184,7 @@ export default function HomePage() {
     if (!userProfile) return null;
     const latestWeight = bodyweightLogs.length ? bodyweightLogs[bodyweightLogs.length - 1].weight : 0;
     if (!latestWeight) return null;
-    const multiplier = userProfile.goal === 'cut' ? 2.0 : userProfile.goal === 'bulk' ? 1.8 : 1.6;
+    const multiplier = userProfile.goal === 'cut' ? 2.2 : userProfile.goal === 'bulk' ? 1.8 : 1.6;
     return Math.round(latestWeight * multiplier);
   }, [userProfile, bodyweightLogs]);
 

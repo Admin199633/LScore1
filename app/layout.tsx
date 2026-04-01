@@ -4,6 +4,7 @@ import './globals.css';
 import { AppShell } from '@/components/AppShell';
 import { SessionProvider } from '@/lib/session';
 import { ThemeProvider } from '@/lib/theme';
+import { SpeedInsights } from "@vercel/speed-insights/next"; // 👈 פה למעלה
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -15,7 +16,6 @@ export const metadata: Metadata = {
   title: 'Gym Web',
   description: 'Web client for the Gym app',
 };
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="he" dir="rtl" className={poppins.className}>
@@ -23,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <SessionProvider>
             <AppShell>{children}</AppShell>
+            <SpeedInsights /> {/* 👈 פה */}
           </SessionProvider>
         </ThemeProvider>
       </body>
