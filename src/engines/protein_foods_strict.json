@@ -1,0 +1,9070 @@
+[
+  {
+    "name": "ביצה",
+    "category": "מוצרי חלבון",
+    "subCategory": "עוף",
+    "canonicalGroup": "ביצה",
+    "aliases": [
+      "ביצה",
+      "ביצים",
+      "egg",
+      "eggs",
+      "אטריות ביצים"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 80,
+          "protein": 6.3,
+          "carbs": 1,
+          "fat": 5.5
+        }
+      }
+    ]
+  },
+  {
+    "name": "סקופ חלבון",
+    "category": "תוספים",
+    "subCategory": "אבקות חלבון",
+    "canonicalGroup": "אבקת חלבון",
+    "aliases": [
+      "סקופ חלבון",
+      "סקופ",
+      "סקופים חלבון",
+      "סקופים",
+      "אבקת חלבון",
+      "scoop protein",
+      "protein scoop"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 117.5,
+          "protein": 24,
+          "carbs": 2,
+          "fat": 1.5
+        }
+      }
+    ]
+  },
+  {
+    "name": "מעדן חלבון",
+    "category": "חלבי",
+    "subCategory": "מעדנים",
+    "canonicalGroup": "מעדן חלבון",
+    "aliases": [
+      "מעדן חלבון",
+      "מעדן",
+      "יוגורט חלבון",
+      "פודינג חלבון",
+      "מעדן וניל",
+      "מעדן קרמל",
+      "מעדן מוקה"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 139,
+          "protein": 20,
+          "carbs": 8,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "אורז מבושל",
+    "category": "פחמימות",
+    "subCategory": "אורז",
+    "canonicalGroup": "אורז",
+    "aliases": [
+      "אורז",
+      "אורז מבושל",
+      "rice",
+      "cooked rice",
+      "אורז לבן",
+      "אורז מלא",
+      "אורז בסמטי",
+      "אורז יסמין",
+      "אורז עגול",
+      "אורז פראי",
+      "אטריות אורז",
+      "פריכית אורז"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 125.5,
+          "protein": 2.7,
+          "carbs": 28,
+          "fat": 0.3
+        }
+      }
+    ]
+  },
+  {
+    "name": "פתיתים מבושלים",
+    "category": "פחמימות",
+    "subCategory": "דגנים",
+    "canonicalGroup": "פתיתים",
+    "aliases": [
+      "פתיתים",
+      "פתיתים מבושלים",
+      "ptitim",
+      "cooked ptitim",
+      "פתיתים רגילים",
+      "פתיתים מלאים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 117,
+          "protein": 3.8,
+          "carbs": 25,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "חזה עוף",
+    "category": "בשר",
+    "subCategory": "עוף",
+    "canonicalGroup": "חזה עוף",
+    "aliases": [
+      "חזה עוף",
+      "עוף",
+      "חזה עוף מבושל",
+      "chicken breast",
+      "chicken",
+      "חזה עוף טרי",
+      "חזה עוף קפוא",
+      "חזה עוף פרוס",
+      "שוק עוף טרי",
+      "שוק עוף קפוא",
+      "ירך עוף",
+      "כנפיים עוף",
+      "כבד עוף",
+      "לבבות עוף",
+      "פסטרמה עוף",
+      "נקניקיות עוף",
+      "קציצות עוף",
+      "שיפודי עוף",
+      "חזה עוף צלוי",
+      "חזה עוף אפוי",
+      "שוק עוף"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 156.4,
+          "protein": 31,
+          "carbs": 0,
+          "fat": 3.6
+        }
+      }
+    ]
+  },
+  {
+    "name": "טונה",
+    "category": "דגים",
+    "subCategory": "דגים",
+    "canonicalGroup": "טונה",
+    "aliases": [
+      "טונה",
+      "קופסת טונה",
+      "קופסאת טונה",
+      "קופסת שימורי טונה",
+      "קופסאת שימורי טונה",
+      "שימורי טונה",
+      "טונה בשימורים",
+      "קופסת טונה במים",
+      "קופסאת טונה במים",
+      "tuna",
+      "tuna can",
+      "can of tuna",
+      null,
+      "טונה משומרת",
+      "טונה במים",
+      "טונה בשמן",
+      "טונה סטארקיסט",
+      "טונה ריו מרה",
+      "מים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 109,
+          "protein": 25,
+          "carbs": 0,
+          "fat": 1
+        }
+      },
+      {
+        "type": "unit",
+        "label": "קופסה",
+        "nutrition": {
+          "calories": 129,
+          "protein": 30,
+          "carbs": 0,
+          "fat": 1
+        }
+      }
+    ]
+  },
+  {
+    "name": "פסטה מבושלת",
+    "category": "פחמימות",
+    "subCategory": "פסטה",
+    "canonicalGroup": "פסטה מבושלת",
+    "aliases": [
+      "פסטה",
+      "פסטה מבושלת",
+      "pasta",
+      "cooked pasta",
+      "פסטה ספגטי",
+      "פסטה פנה",
+      "פסטה פוזילי",
+      "פסטה מקרוני",
+      "פסטה טליאטלה",
+      "פסטה מחיטה מלאה",
+      "פסטה ללא גלוטן"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 156.7,
+          "protein": 5.8,
+          "carbs": 30.9,
+          "fat": 1.1
+        }
+      }
+    ]
+  },
+  {
+    "name": "משולש פיצה",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "משולש פיצה",
+    "aliases": [
+      "משולש פיצה",
+      "פיצה",
+      "חתיכת פיצה",
+      "פרוסת פיצה",
+      "slice of pizza",
+      "pizza slice",
+      null,
+      "ביסלי פיצה",
+      "כיפלי פיצה"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 282,
+          "protein": 12,
+          "carbs": 36,
+          "fat": 10
+        }
+      }
+    ]
+  },
+  {
+    "name": "קוטג'",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "קוטג'",
+    "aliases": [
+      "קוטג'",
+      "קוטג׳",
+      "גבינת קוטג",
+      "גבינת קוטג׳",
+      "cottage",
+      "cottage cheese",
+      "קוטג' 5%",
+      "קוטג' 3%",
+      "קוטג' 1%",
+      "קוטג' עם זיתים",
+      "קוטג' עם עירית",
+      "טרה קוטג' 5%",
+      "תנובה קוטג' 5%",
+      "תנובה קוטג' 3%"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 101,
+          "protein": 11,
+          "carbs": 3,
+          "fat": 5
+        }
+      }
+    ]
+  },
+  {
+    "name": "גבינה לבנה",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "גבינה לבנה",
+    "aliases": [
+      "גבינה לבנה",
+      "גבינה",
+      "גבינה 5%",
+      "גבינה לבנה 5%",
+      "white cheese",
+      "גבינה לבנה 9%",
+      "גבינה לבנה 3%",
+      "גבינה לבנה 1.5%",
+      "גבינה במרקם שמנת 5%",
+      "גבינה במרקם שמנת 5% עם זיתים",
+      "טרה גבינה לבנה 5%",
+      "טרה גבינה במרקם שמנת 5%",
+      "תנובה גבינה לבנה 5%",
+      "מי גבינה",
+      "ממרח גבינה",
+      "ממרח גבינה זיתים",
+      "גבינה לבנה עם עשבי תיבול",
+      "עוגת גבינה",
+      "גבינה 3%",
+      "גבינה 1%",
+      "גבינה טבעונית"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 93,
+          "protein": 8.5,
+          "carbs": 3.5,
+          "fat": 5
+        }
+      }
+    ]
+  },
+  {
+    "name": "יוגורט",
+    "category": "חלבי",
+    "subCategory": "יוגורטים",
+    "canonicalGroup": "יוגורט",
+    "aliases": [
+      "יוגורט",
+      "יוגורט טבעי",
+      "גביע יוגורט",
+      "yogurt",
+      "yoghurt",
+      "יוגורט ביו",
+      "יוגורט יווני",
+      "יוגורט יווני 5%",
+      "יוגורט יווני 10%",
+      "יוגורט יווני 0%",
+      "יוגורט תות",
+      "יוגורט אפרסק",
+      "יוגורט פירות יער",
+      "פרוזן יוגורט",
+      "יוגורט 0%",
+      "יוגורט סויה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 67,
+          "protein": 5,
+          "carbs": 5,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "חלב",
+    "category": "חלבי",
+    "subCategory": "חלב",
+    "canonicalGroup": "חלב",
+    "aliases": [
+      "חלב",
+      "כוס חלב",
+      "milk",
+      "glass of milk",
+      "חלב 3%",
+      "חלב 1%",
+      "חלב 0%",
+      "חלב ללא לקטוז",
+      "חלב מועשר",
+      "חלב עמיד 3%",
+      "חלב עמיד 1%",
+      "טרה חלב 3%",
+      "טרה חלב 1%",
+      "טרה חלב ללא לקטוז",
+      "טופי חלב",
+      "חלבה",
+      "חלבה עם פיסטוק",
+      "חטיף חלבון",
+      "חטיף חלבון וניל",
+      "משקה חלבון",
+      "שייק חלבון",
+      "חלב דל שומן",
+      "חלב שקדים",
+      "חלב סויה",
+      "חלב קוקוס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 60.6,
+          "protein": 3.4,
+          "carbs": 5,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "חביתה",
+    "category": "משקאות",
+    "subCategory": "תה",
+    "canonicalGroup": "חביתה",
+    "aliases": [
+      "חביתה"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 150,
+          "protein": 12,
+          "carbs": 1.5,
+          "fat": 10
+        }
+      }
+    ]
+  },
+  {
+    "name": "פרגית",
+    "category": "בשר",
+    "subCategory": "עוף",
+    "canonicalGroup": "פרגית",
+    "aliases": [
+      "פרגית",
+      "פרגית טרייה",
+      "פרגית מתובלת",
+      "שיפודי פרגית"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 172,
+          "protein": 25,
+          "carbs": 0,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "שניצל",
+    "category": "בשר",
+    "subCategory": "עוף",
+    "canonicalGroup": "שניצל",
+    "aliases": [
+      "שניצל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 252,
+          "protein": 22,
+          "carbs": 14,
+          "fat": 12
+        }
+      }
+    ]
+  },
+  {
+    "name": "בשר טחון",
+    "category": "בשר",
+    "subCategory": "בקר",
+    "canonicalGroup": "בשר טחון",
+    "aliases": [
+      "בשר טחון"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 239,
+          "protein": 26,
+          "carbs": 0,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "סטייק",
+    "category": "בשר",
+    "subCategory": "בקר",
+    "canonicalGroup": "סטייק",
+    "aliases": [
+      "סטייק",
+      "סטייק אנטריקוט",
+      "סטייק סינטה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 216,
+          "protein": 27,
+          "carbs": 0,
+          "fat": 12
+        }
+      }
+    ]
+  },
+  {
+    "name": "קבב",
+    "category": "בשר",
+    "subCategory": "בקר",
+    "canonicalGroup": "קבב",
+    "aliases": [
+      "קבב",
+      "קבב ביתי",
+      "קבב קפוא"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 258,
+          "protein": 20,
+          "carbs": 4,
+          "fat": 18
+        }
+      }
+    ]
+  },
+  {
+    "name": "המבורגר",
+    "category": "בשר",
+    "subCategory": "בקר",
+    "canonicalGroup": "המבורגר",
+    "aliases": [
+      "המבורגר",
+      "המבורגר בקר",
+      "המבורגר קפוא",
+      "לחמניית המבורגר",
+      "המבורגר טבעוני"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 292,
+          "protein": 26,
+          "carbs": 2,
+          "fat": 20
+        }
+      }
+    ]
+  },
+  {
+    "name": "סלמון",
+    "category": "דגים",
+    "subCategory": "דגים",
+    "canonicalGroup": "סלמון",
+    "aliases": [
+      "סלמון",
+      "סלמון טרי",
+      "סלמון קפוא",
+      "סלמון מעושן",
+      "פילה סלמון",
+      "נתח סלמון"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 217,
+          "protein": 25,
+          "carbs": 0,
+          "fat": 13
+        }
+      }
+    ]
+  },
+  {
+    "name": "דג לבן",
+    "category": "דגים",
+    "subCategory": "דגים",
+    "canonicalGroup": "דג לבן",
+    "aliases": [
+      "דג לבן"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 98,
+          "protein": 20,
+          "carbs": 0,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גבינה צהובה",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "גבינה צהובה",
+    "aliases": [
+      "גבינה צהובה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 360,
+          "protein": 25,
+          "carbs": 2,
+          "fat": 28
+        }
+      }
+    ]
+  },
+  {
+    "name": "גבינת מוצרלה",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "גבינת מוצרלה",
+    "aliases": [
+      "גבינת מוצרלה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 253,
+          "protein": 22,
+          "carbs": 3,
+          "fat": 17
+        }
+      }
+    ]
+  },
+  {
+    "name": "סקיר",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "סקיר",
+      "סקיר טבעי",
+      "סקיר וניל",
+      "סקיר תות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 61.8,
+          "protein": 11,
+          "carbs": 4,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שוקו",
+    "category": "חלבי",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "שוקו",
+      "יטבתה שוקו",
+      "יטבתה שוקו בקבוק",
+      "יטבתה שוקו קרטון",
+      "גלידת שוקולד",
+      "דגני בוקר שוקולד",
+      "עוגת שוקולד",
+      "קראנצ' שוקולד",
+      "פתיבר שוקולד",
+      "עוגיות שוקולד צ'יפס",
+      "מאפין שוקולד",
+      "רוגלך שוקולד",
+      "שוקולד השחר",
+      "שוקולד מריר",
+      "שוקולד לבן",
+      "קליק שוקולד",
+      "שוקולד פרה מריר",
+      "שוקולד פרה לבן",
+      "שוקולד פרה אגוזים",
+      "שוקולד פרה פצפוצים",
+      "שוקולד פרה שקדים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 65.5,
+          "protein": 3,
+          "carbs": 10,
+          "fat": 1.5
+        }
+      }
+    ]
+  },
+  {
+    "name": "טופו",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "טופו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 85,
+          "protein": 8,
+          "carbs": 2,
+          "fat": 5
+        }
+      }
+    ]
+  },
+  {
+    "name": "עדשים",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "עדשים",
+      "עדשים מבושלות",
+      "עדשים ירוקות",
+      "עדשים כתומות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 119.6,
+          "protein": 9,
+          "carbs": 20,
+          "fat": 0.4
+        }
+      }
+    ]
+  },
+  {
+    "name": "תפוח אדמה",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "תפוח אדמה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 76.9,
+          "protein": 2,
+          "carbs": 17,
+          "fat": 0.1
+        }
+      }
+    ]
+  },
+  {
+    "name": "תפוח אדמה מבושל",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "תפוח אדמה מבושל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 88.9,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 0.1
+        }
+      }
+    ]
+  },
+  {
+    "name": "תפוח אדמה אפוי",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "תפוח אדמה אפוי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 94.9,
+          "protein": 2.5,
+          "carbs": 21,
+          "fat": 0.1
+        }
+      }
+    ]
+  },
+  {
+    "name": "בטטה",
+    "category": "ירקות",
+    "subCategory": "שורשים",
+    "canonicalGroup": "בטטה",
+    "aliases": [
+      "בטטה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 87.3,
+          "protein": 1.6,
+          "carbs": 20,
+          "fat": 0.1
+        }
+      }
+    ]
+  },
+  {
+    "name": "לחם לבן",
+    "category": "פחמימות",
+    "subCategory": "לחם",
+    "canonicalGroup": "לחם לבן",
+    "aliases": [
+      "לחם לבן",
+      "לחם לבן פרוס"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 73,
+          "protein": 3,
+          "carbs": 13,
+          "fat": 1
+        }
+      }
+    ]
+  },
+  {
+    "name": "לחם מלא",
+    "category": "פחמימות",
+    "subCategory": "לחם",
+    "canonicalGroup": "לחם מלא",
+    "aliases": [
+      "לחם מלא",
+      "לחם מלא פרוס"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 75.7,
+          "protein": 4,
+          "carbs": 12,
+          "fat": 1.3
+        }
+      }
+    ]
+  },
+  {
+    "name": "פרוסת לחם",
+    "category": "פחמימות",
+    "subCategory": "לחם",
+    "canonicalGroup": "פרוסת לחם",
+    "aliases": [
+      "פרוסת לחם"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 73,
+          "protein": 3,
+          "carbs": 13,
+          "fat": 1
+        }
+      }
+    ]
+  },
+  {
+    "name": "פיתה",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פיתה",
+      "פיתה לבנה",
+      "פיתה מלאה"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 174.8,
+          "protein": 6,
+          "carbs": 35,
+          "fat": 1.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "לאפה",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "לאפה"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 279,
+          "protein": 8,
+          "carbs": 55,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "טורטיה",
+    "category": "פחמימות",
+    "subCategory": "לחם",
+    "canonicalGroup": "טורטיה",
+    "aliases": [
+      "טורטיה",
+      "טורטיה חיטה",
+      "טורטיה מלאה"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 152,
+          "protein": 5,
+          "carbs": 24,
+          "fat": 4
+        }
+      }
+    ]
+  },
+  {
+    "name": "שיבולת שועל",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "שיבולת שועל",
+      "שיבולת שועל דקה",
+      "שיבולת שועל עבה",
+      "עוגיות שיבולת שועל",
+      "בר שיבולת שועל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 387,
+          "protein": 13,
+          "carbs": 68,
+          "fat": 7
+        }
+      }
+    ]
+  },
+  {
+    "name": "קוסקוס",
+    "category": "פחמימות",
+    "subCategory": "דגנים",
+    "canonicalGroup": "קוסקוס",
+    "aliases": [
+      "קוסקוס",
+      "קוסקוס מלא",
+      "קוסקוס מהיר הכנה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 109,
+          "protein": 3.8,
+          "carbs": 23,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "בורגול",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "בורגול",
+      "בורגול דק",
+      "בורגול גס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 89.8,
+          "protein": 3,
+          "carbs": 19,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גרנולה",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "גרנולה",
+      "גרנולה ללא סוכר",
+      "גרנולה דבש",
+      "גרנולה פקאן",
+      "גרנולה שקדים",
+      "חטיף גרנולה",
+      "חטיף גרנולה פירות",
+      "גרנולה בר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 404,
+          "protein": 10,
+          "carbs": 64,
+          "fat": 12
+        }
+      }
+    ]
+  },
+  {
+    "name": "שמן זית",
+    "category": "שומנים",
+    "subCategory": "שמנים",
+    "canonicalGroup": "שמן זית",
+    "aliases": [
+      "שמן זית",
+      "שמן זית כתית מעולה",
+      "שמן זית מעודן"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 126,
+          "protein": 0,
+          "carbs": 0,
+          "fat": 14
+        }
+      }
+    ]
+  },
+  {
+    "name": "חמאה",
+    "category": "חלבי",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "חמאה",
+      "חמאה מלוחה",
+      "חמאה ללא מלח",
+      "חמאה אירופאית",
+      "פופקורן חמאה",
+      "עוגיות חמאה"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 99.4,
+          "protein": 0.1,
+          "carbs": 0,
+          "fat": 11
+        }
+      }
+    ]
+  },
+  {
+    "name": "מרגרינה",
+    "category": "חלבי",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מרגרינה",
+      "מרגרינה למריחה",
+      "מרגרינה לאפייה"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 99,
+          "protein": 0,
+          "carbs": 0,
+          "fat": 11
+        }
+      }
+    ]
+  },
+  {
+    "name": "מיונז",
+    "category": "שומנים",
+    "subCategory": "רטבים שומניים",
+    "canonicalGroup": "מיונז",
+    "aliases": [
+      "מיונז",
+      "מיונז לייט"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 143,
+          "protein": 10,
+          "carbs": 1,
+          "fat": 11
+        }
+      }
+    ]
+  },
+  {
+    "name": "קטשופ",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "קטשופ",
+    "aliases": [
+      "קטשופ"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 20.8,
+          "protein": 0.2,
+          "carbs": 5,
+          "fat": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "חרדל",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "חרדל",
+    "aliases": [
+      "חרדל"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 7,
+          "protein": 0.3,
+          "carbs": 1,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "טחינה",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "טחינה",
+      "טחינה גולמית",
+      "טחינה מלאה",
+      "טחינה מוכנה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 638,
+          "protein": 17,
+          "carbs": 21,
+          "fat": 54
+        }
+      }
+    ]
+  },
+  {
+    "name": "חומוס",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "חומוס",
+      "ממרח חומוס",
+      "חומוס ביתי",
+      "חומוס מבושל",
+      "גרגירי חומוס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 173.5,
+          "protein": 8,
+          "carbs": 14,
+          "fat": 9.5
+        }
+      }
+    ]
+  },
+  {
+    "name": "ממרח שוקולד",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "ממרח שוקולד"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 120,
+          "protein": 1,
+          "carbs": 11,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "חמאת בוטנים",
+    "category": "שומנים",
+    "subCategory": "ממרחים",
+    "canonicalGroup": "חמאת בוטנים",
+    "aliases": [
+      "חמאת בוטנים",
+      "חמאת בוטנים טבעית",
+      "חמאת בוטנים עם סוכר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 630,
+          "protein": 25,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "אבוקדו",
+    "category": "ירקות",
+    "subCategory": "שמנים",
+    "canonicalGroup": "אבוקדו",
+    "aliases": [
+      "אבוקדו",
+      "אבוקדו האס",
+      "אבוקדו ירוק",
+      "שמן אבוקדו",
+      "אבוקדו בשל",
+      "אבוקדו רך"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 179,
+          "protein": 2,
+          "carbs": 9,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוטב סלט",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "רוטב סלט",
+    "aliases": [
+      "רוטב סלט"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 53,
+          "protein": 0,
+          "carbs": 2,
+          "fat": 5
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוטב אלף האיים",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "רוטב אלף האיים",
+    "aliases": [
+      "רוטב אלף האיים"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 79.8,
+          "protein": 0.2,
+          "carbs": 4,
+          "fat": 7
+        }
+      }
+    ]
+  },
+  {
+    "name": "עגבנייה",
+    "category": "פירות",
+    "subCategory": "פירות יבשים",
+    "canonicalGroup": "עגבנייה",
+    "aliases": [
+      "עגבנייה",
+      "עגבנייה שרי",
+      "עגבנייה תמר",
+      "עגבנייה מגי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 21.4,
+          "protein": 1,
+          "carbs": 3.9,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מלפפון",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מלפפון",
+      "מלפפון רגיל",
+      "מלפפון חמוץ",
+      "מלפפון בלאדי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 18.1,
+          "protein": 0.7,
+          "carbs": 3.6,
+          "fat": 0.1
+        }
+      }
+    ]
+  },
+  {
+    "name": "חסה",
+    "category": "ירקות",
+    "subCategory": "עליים",
+    "canonicalGroup": "חסה",
+    "aliases": [
+      "חסה",
+      "חסה אייסברג",
+      "חסה רומית",
+      "חסה מסולסלת"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 19,
+          "protein": 1.4,
+          "carbs": 2.9,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גזר",
+    "category": "ירקות",
+    "subCategory": "שורשים",
+    "canonicalGroup": "גזר",
+    "aliases": [
+      "גזר",
+      "גזר טרי",
+      "גזר גמדי",
+      "גזר מגורד"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.4,
+          "protein": 0.9,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "בצל",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "בצל",
+      "בצל לבן",
+      "בצל סגול",
+      "בצל ירוק",
+      "ביסלי בצל",
+      "תפוצ'יפס שמנת בצל",
+      "פרינגלס שמנת בצל",
+      "כיפלי בצל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 42.5,
+          "protein": 1.1,
+          "carbs": 9.3,
+          "fat": 0.1
+        }
+      }
+    ]
+  },
+  {
+    "name": "שום",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "שום",
+      "שום טרי",
+      "שום כתוש",
+      "שמן שומשום",
+      "שומשום",
+      "שומשום מלא",
+      "טחינת שומשום",
+      "רוטב שום",
+      "קרקרים שומשום",
+      "חטיף שומשום",
+      "ממרח שום"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 160.5,
+          "protein": 6,
+          "carbs": 33,
+          "fat": 0.5
+        }
+      }
+    ]
+  },
+  {
+    "name": "פלפל",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פלפל",
+      "פלפל צהוב",
+      "פלפל חריף",
+      "פלפל קלוי",
+      "ממרח פלפלים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 30.7,
+          "protein": 1,
+          "carbs": 6,
+          "fat": 0.3
+        }
+      }
+    ]
+  },
+  {
+    "name": "פלפל אדום",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פלפל אדום"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 30.7,
+          "protein": 1,
+          "carbs": 6,
+          "fat": 0.3
+        }
+      }
+    ]
+  },
+  {
+    "name": "פלפל ירוק",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פלפל ירוק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 24.2,
+          "protein": 1,
+          "carbs": 4.6,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "כרוב",
+    "category": "ירקות",
+    "subCategory": "מצליבים",
+    "canonicalGroup": "כרוב",
+    "aliases": [
+      "כרוב",
+      "כרוב לבן",
+      "כרוב כבוש",
+      "כרובית",
+      "כרובית קפואה",
+      "כרוב ניצנים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 30.1,
+          "protein": 1.3,
+          "carbs": 6,
+          "fat": 0.1
+        }
+      }
+    ]
+  },
+  {
+    "name": "כרוב סגול",
+    "category": "ירקות",
+    "subCategory": "מצליבים",
+    "canonicalGroup": "כרוב סגול",
+    "aliases": [
+      "כרוב סגול"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 35.4,
+          "protein": 1.4,
+          "carbs": 7,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קישוא",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קישוא",
+      "קישוא ירוק",
+      "קישוא צהוב"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 19.9,
+          "protein": 1.2,
+          "carbs": 3.1,
+          "fat": 0.3
+        }
+      }
+    ]
+  },
+  {
+    "name": "חציל",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "חציל",
+      "חציל קלוי",
+      "חציל מטוגן"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 29.8,
+          "protein": 1,
+          "carbs": 6,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "תירס",
+    "category": "ירקות",
+    "subCategory": "שמנים",
+    "canonicalGroup": "תירס",
+    "aliases": [
+      "תירס",
+      "תירס טרי",
+      "תירס קפוא",
+      "פריכית תירס",
+      "שמן תירס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 100.4,
+          "protein": 3.4,
+          "carbs": 19,
+          "fat": 1.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פטריות",
+    "category": "ירקות",
+    "subCategory": "פטריות",
+    "canonicalGroup": "פטריות",
+    "aliases": [
+      "פטריות",
+      "פטריות שמפיניון",
+      "פטריות פורטבלו",
+      "פטריות יער"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 27.9,
+          "protein": 3,
+          "carbs": 3.3,
+          "fat": 0.3
+        }
+      }
+    ]
+  },
+  {
+    "name": "תפוח",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "תפוח",
+      "תפוח ירוק",
+      "תפוח אדום",
+      "תפוח פינק ליידי",
+      "תפוח גרנד סמיט",
+      "מיץ תפוחים"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 104.7,
+          "protein": 0.5,
+          "carbs": 25,
+          "fat": 0.3
+        }
+      }
+    ]
+  },
+  {
+    "name": "בננה",
+    "category": "פירות",
+    "subCategory": "פירות טריים",
+    "canonicalGroup": "בננה",
+    "aliases": [
+      "בננה",
+      "דנונה בננה",
+      "בננה רגילה",
+      "בננה קטנה",
+      "בננה גדולה"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 115.9,
+          "protein": 1.3,
+          "carbs": 27,
+          "fat": 0.3
+        }
+      }
+    ]
+  },
+  {
+    "name": "תפוז",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "תפוז",
+      "תפוז ולנסיה",
+      "תפוז שמוטי",
+      "מיץ תפוזים"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 65.8,
+          "protein": 1,
+          "carbs": 15,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קלמנטינה",
+    "category": "פירות",
+    "subCategory": "פירות הדר",
+    "canonicalGroup": "קלמנטינה",
+    "aliases": [
+      "קלמנטינה",
+      "קלמנטינה אור",
+      "קלמנטינה מיכל"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 40.6,
+          "protein": 0.7,
+          "carbs": 9,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אגס",
+    "category": "פירות",
+    "subCategory": "פירות טריים",
+    "canonicalGroup": "אגס",
+    "aliases": [
+      "אגס",
+      "אגס ספדונה",
+      "אגס אנג'ו",
+      "אגס ירוק"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 112.2,
+          "protein": 0.6,
+          "carbs": 27,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "ענבים",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "ענבים",
+      "ענבים ירוקים",
+      "ענבים אדומים",
+      "ענבים שחורים",
+      "מיץ ענבים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 76.2,
+          "protein": 0.6,
+          "carbs": 18,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אבטיח",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "אבטיח",
+      "אבטיח חתוך",
+      "גרעיני אבטיח"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 36.2,
+          "protein": 0.6,
+          "carbs": 8,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מלון",
+    "category": "פירות",
+    "subCategory": "פירות טריים",
+    "canonicalGroup": "מלון",
+    "aliases": [
+      "מלון",
+      "מלון כתום",
+      "מלון ירוק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 37,
+          "protein": 0.8,
+          "carbs": 8,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "תותים",
+    "category": "פירות",
+    "subCategory": "פירות יער",
+    "canonicalGroup": "תותים",
+    "aliases": [
+      "תותים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 36.3,
+          "protein": 0.7,
+          "carbs": 7.7,
+          "fat": 0.3
+        }
+      }
+    ]
+  },
+  {
+    "name": "תמרים",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "תמרים",
+      "חטיף תמרים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 309.8,
+          "protein": 2,
+          "carbs": 75,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "סלט ירקות",
+    "category": "",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "סלט ירקות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 23.8,
+          "protein": 1.5,
+          "carbs": 4,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "סלט טונה",
+    "category": "בשר",
+    "subCategory": "דגים",
+    "canonicalGroup": "סלט טונה",
+    "aliases": [
+      "סלט טונה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 182,
+          "protein": 20,
+          "carbs": 3,
+          "fat": 10
+        }
+      }
+    ]
+  },
+  {
+    "name": "סלט חומוס",
+    "category": "רטבים",
+    "subCategory": "ממרחים",
+    "canonicalGroup": "סלט חומוס",
+    "aliases": [
+      "סלט חומוס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 173.5,
+          "protein": 8,
+          "carbs": 14,
+          "fat": 9.5
+        }
+      }
+    ]
+  },
+  {
+    "name": "שקשוקה",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "שקשוקה"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 210,
+          "protein": 15,
+          "carbs": 6,
+          "fat": 14
+        }
+      }
+    ]
+  },
+  {
+    "name": "פלאפל",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "פלאפל",
+    "aliases": [
+      "פלאפל",
+      "ביסלי פלאפל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 329,
+          "protein": 13,
+          "carbs": 31,
+          "fat": 17
+        }
+      }
+    ]
+  },
+  {
+    "name": "שווארמה",
+    "category": "בשר",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "שווארמה",
+      "שווארמה הודו",
+      "שווארמה בקר",
+      "שווארמה קפואה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 247,
+          "protein": 25,
+          "carbs": 3,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "סנדוויץ'",
+    "category": "נשנושים",
+    "subCategory": "עוגיות",
+    "canonicalGroup": "סנדוויץ'",
+    "aliases": [
+      "סנדוויץ'",
+      "עוגיות סנדוויץ' וניל"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 278,
+          "protein": 12,
+          "carbs": 35,
+          "fat": 10
+        }
+      }
+    ]
+  },
+  {
+    "name": "טוסט",
+    "category": "פחמימות",
+    "subCategory": "לחם",
+    "canonicalGroup": "טוסט",
+    "aliases": [
+      "טוסט"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 233,
+          "protein": 10,
+          "carbs": 28,
+          "fat": 9
+        }
+      }
+    ]
+  },
+  {
+    "name": "טוסט גבינה",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "טוסט גבינה"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 288,
+          "protein": 15,
+          "carbs": 30,
+          "fat": 12
+        }
+      }
+    ]
+  },
+  {
+    "name": "פיצה משפחתית",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פיצה משפחתית"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 1750,
+          "protein": 60,
+          "carbs": 220,
+          "fat": 70
+        }
+      }
+    ]
+  },
+  {
+    "name": "סושי",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "סושי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 140.5,
+          "protein": 6,
+          "carbs": 28,
+          "fat": 0.5
+        }
+      }
+    ]
+  },
+  {
+    "name": "בורקס",
+    "category": "פחמימות",
+    "subCategory": "מאפים",
+    "canonicalGroup": "בורקס",
+    "aliases": [
+      "בורקס",
+      "בורקס מתוק"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 314,
+          "protein": 7,
+          "carbs": 31,
+          "fat": 18
+        }
+      }
+    ]
+  },
+  {
+    "name": "ג'חנון",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "ג'חנון"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 309,
+          "protein": 6,
+          "carbs": 42,
+          "fat": 13
+        }
+      }
+    ]
+  },
+  {
+    "name": "עמק",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "עמק",
+    "aliases": [
+      "עמק",
+      "עמק פרוסות",
+      "עמק דל לקטוז",
+      "תנובה עמק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 360,
+          "protein": 25,
+          "carbs": 2,
+          "fat": 28
+        }
+      }
+    ]
+  },
+  {
+    "name": "גלבוע",
+    "category": "",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "גלבוע"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 158,
+          "protein": 25,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "נעם",
+    "category": "חלבי",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "נעם",
+      "נעם פרוסות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 158,
+          "protein": 25,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מוצרלה מגורדת",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "מוצרלה מגורדת",
+    "aliases": [
+      "מוצרלה מגורדת"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 261,
+          "protein": 24,
+          "carbs": 3,
+          "fat": 17
+        }
+      }
+    ]
+  },
+  {
+    "name": "מוצרלה בייבי",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "מוצרלה בייבי",
+    "aliases": [
+      "מוצרלה בייבי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 253,
+          "protein": 22,
+          "carbs": 3,
+          "fat": 17
+        }
+      }
+    ]
+  },
+  {
+    "name": "צ'דר",
+    "category": "",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "צ'דר",
+      "צ'דר לבן",
+      "צ'דר כתום"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 158,
+          "protein": 25,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גאודה",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "גאודה",
+    "aliases": [
+      "גאודה",
+      "גאודה מעושנת"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 360,
+          "protein": 25,
+          "carbs": 2,
+          "fat": 28
+        }
+      }
+    ]
+  },
+  {
+    "name": "אדאם",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "אדאם"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 158,
+          "protein": 25,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קשקבל",
+    "category": "",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קשקבל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 158,
+          "protein": 25,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פרמזן",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "פרמזן",
+    "aliases": [
+      "פרמזן"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 198,
+          "protein": 35,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "ריקוטה",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "ריקוטה",
+    "aliases": [
+      "ריקוטה",
+      "ריקוטה פרסקה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 191,
+          "protein": 11,
+          "carbs": 3,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "פטה",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "פטה",
+    "aliases": [
+      "פטה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 203,
+          "protein": 14,
+          "carbs": 3,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "בולגרית",
+    "category": "חלבי",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "בולגרית",
+      "בולגרית 5%",
+      "בולגרית 16%",
+      "בולגרית 24%"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 126,
+          "protein": 17,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "לאבנה",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "לאבנה",
+    "aliases": [
+      "לאבנה",
+      "לאבנה 5%",
+      "לאבנה 9%"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 187,
+          "protein": 10,
+          "carbs": 3,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "גבינת עיזים",
+    "category": "חלבי",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "גבינת עיזים",
+      "גבינת עיזים רכה",
+      "גבינת עיזים קשה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 130,
+          "protein": 18,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "חלומי",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "חלומי",
+    "aliases": [
+      "חלומי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 330,
+          "protein": 22,
+          "carbs": 2,
+          "fat": 26
+        }
+      }
+    ]
+  },
+  {
+    "name": "ברי",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "ברי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קממבר",
+    "category": "חלבי",
+    "subCategory": "גבינות",
+    "canonicalGroup": "קממבר",
+    "aliases": [
+      "קממבר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 223,
+          "protein": 19,
+          "carbs": 3,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוקפור",
+    "category": "חלבי",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "רוקפור"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 142,
+          "protein": 21,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גורגונזולה",
+    "category": "",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "גורגונזולה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 142,
+          "protein": 21,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גבינת שמנת",
+    "category": "חלבי",
+    "subCategory": "שמנת",
+    "canonicalGroup": "גבינת שמנת",
+    "aliases": [
+      "גבינת שמנת",
+      "גבינת שמנת 16%",
+      "גבינת שמנת 25%"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 82,
+          "protein": 6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מסקרפונה",
+    "category": "חלבי",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מסקרפונה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 74,
+          "protein": 4,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דנונה טבעי",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "דנונה טבעי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 79,
+          "protein": 5,
+          "carbs": 8,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "דנונה תות",
+    "category": "חלבי",
+    "subCategory": "פירות יער",
+    "canonicalGroup": "דנונה תות",
+    "aliases": [
+      "דנונה תות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 75,
+          "protein": 4,
+          "carbs": 8,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "דנונה אפרסק",
+    "category": "חלבי",
+    "subCategory": "פירות טריים",
+    "canonicalGroup": "דנונה אפרסק",
+    "aliases": [
+      "דנונה אפרסק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 75,
+          "protein": 4,
+          "carbs": 8,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "דנונה 0%",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "דנונה 0%"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 79,
+          "protein": 5,
+          "carbs": 8,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "דנונה 99 קלוריות",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "דנונה 99 קלוריות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 68.2,
+          "protein": 5,
+          "carbs": 8,
+          "fat": 1.8
+        }
+      }
+    ]
+  },
+  {
+    "name": "דנונה פרו",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "דנונה פרו",
+      "דנונה פרו וניל",
+      "דנונה פרו תות",
+      "דנונה פרו אפרסק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 99,
+          "protein": 10,
+          "carbs": 8,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "יופלה טבעי",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "יופלה טבעי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 79,
+          "protein": 5,
+          "carbs": 8,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "יופלה תות",
+    "category": "חלבי",
+    "subCategory": "פירות יער",
+    "canonicalGroup": "יופלה תות",
+    "aliases": [
+      "יופלה תות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 75,
+          "protein": 4,
+          "carbs": 8,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "יופלה אפרסק",
+    "category": "חלבי",
+    "subCategory": "פירות טריים",
+    "canonicalGroup": "יופלה אפרסק",
+    "aliases": [
+      "יופלה אפרסק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 75,
+          "protein": 4,
+          "carbs": 8,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "יופלה פירות יער",
+    "category": "חלבי",
+    "subCategory": "פירות יער",
+    "canonicalGroup": "יופלה פירות יער",
+    "aliases": [
+      "יופלה פירות יער"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 75,
+          "protein": 4,
+          "carbs": 8,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "יופלה GO",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "יופלה GO"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 99,
+          "protein": 10,
+          "carbs": 8,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "מילקי",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מילקי",
+      "מילקי וניל",
+      "מילקי קרם"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 70,
+          "protein": 3,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דני",
+    "category": "בשר",
+    "subCategory": "דגים",
+    "canonicalGroup": "דני",
+    "aliases": [
+      "דני",
+      "דני וניל",
+      "דג דניס",
+      "דניס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 70,
+          "protein": 3,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קרלו",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קרלו",
+      "קרלו וניל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 70,
+          "protein": 3,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גמדים",
+    "category": "חלבי",
+    "subCategory": "פירות יער",
+    "canonicalGroup": "גמדים",
+    "aliases": [
+      "גמדים",
+      "גמדים תות",
+      "גמדים וניל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 75,
+          "protein": 4,
+          "carbs": 8,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "אקטימל",
+    "category": "חלבי",
+    "subCategory": "פירות יער",
+    "canonicalGroup": "אקטימל",
+    "aliases": [
+      "אקטימל",
+      "אקטימל תות",
+      "אקטימל וניל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 71.8,
+          "protein": 3.2,
+          "carbs": 8,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "אשל",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "אשל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 72,
+          "protein": 3.5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוויון",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "רוויון"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 70,
+          "protein": 3,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קפיר",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קפיר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 72,
+          "protein": 3.5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שמנת חמוצה",
+    "category": "חלבי",
+    "subCategory": "שמנת",
+    "canonicalGroup": "שמנת חמוצה",
+    "aliases": [
+      "שמנת חמוצה",
+      "שמנת חמוצה 9%",
+      "שמנת חמוצה 15%"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 68,
+          "protein": 2.5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שמנת מתוקה",
+    "category": "חלבי",
+    "subCategory": "שמנת",
+    "canonicalGroup": "שמנת מתוקה",
+    "aliases": [
+      "שמנת מתוקה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 66,
+          "protein": 2,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שמנת להקצפה",
+    "category": "חלבי",
+    "subCategory": "שמנת",
+    "canonicalGroup": "שמנת להקצפה",
+    "aliases": [
+      "שמנת להקצפה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 66,
+          "protein": 2,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שמנת לבישול",
+    "category": "חלבי",
+    "subCategory": "שמנת",
+    "canonicalGroup": "שמנת לבישול",
+    "aliases": [
+      "שמנת לבישול"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 66.8,
+          "protein": 2.2,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גלידת שמנת",
+    "category": "חלבי",
+    "subCategory": "שמנת",
+    "canonicalGroup": "גלידת שמנת",
+    "aliases": [
+      "גלידת שמנת"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 72,
+          "protein": 3.5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גלידת וניל",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "גלידת וניל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 72,
+          "protein": 3.5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "לבנה עם זיתים",
+    "category": "חלבי",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "לבנה עם זיתים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 98,
+          "protein": 10,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גבינת צאן",
+    "category": "חלבי",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "גבינת צאן"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 130,
+          "protein": 18,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גבינת כבשים",
+    "category": "בשר",
+    "subCategory": "כבש",
+    "canonicalGroup": "גבינת כבשים",
+    "aliases": [
+      "גבינת כבשים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 130,
+          "protein": 18,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "כנפיים ברוטב",
+    "category": "בשר",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "כנפיים ברוטב"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 200,
+          "protein": 20,
+          "carbs": 12,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "הודו חזה",
+    "category": "בשר",
+    "subCategory": "הודו",
+    "canonicalGroup": "הודו חזה",
+    "aliases": [
+      "הודו חזה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "הודו נקבה",
+    "category": "בשר",
+    "subCategory": "הודו",
+    "canonicalGroup": "הודו נקבה",
+    "aliases": [
+      "הודו נקבה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "הודו מעושן",
+    "category": "בשר",
+    "subCategory": "הודו",
+    "canonicalGroup": "הודו מעושן",
+    "aliases": [
+      "הודו מעושן"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פסטרמה הודו",
+    "category": "בשר",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פסטרמה הודו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "נקניקיות הודו",
+    "category": "בשר",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "נקניקיות הודו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 272,
+          "protein": 20,
+          "carbs": 3,
+          "fat": 20
+        }
+      }
+    ]
+  },
+  {
+    "name": "נקניקיות חריפות",
+    "category": "בשר",
+    "subCategory": "בשר מעובד",
+    "canonicalGroup": "נקניקיות חריפות",
+    "aliases": [
+      "נקניקיות חריפות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 272,
+          "protein": 20,
+          "carbs": 3,
+          "fat": 20
+        }
+      }
+    ]
+  },
+  {
+    "name": "נקניקיות רגילות",
+    "category": "בשר",
+    "subCategory": "בשר מעובד",
+    "canonicalGroup": "נקניקיות רגילות",
+    "aliases": [
+      "נקניקיות רגילות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 272,
+          "protein": 20,
+          "carbs": 3,
+          "fat": 20
+        }
+      }
+    ]
+  },
+  {
+    "name": "בשר בקר טחון",
+    "category": "בשר",
+    "subCategory": "בקר",
+    "canonicalGroup": "בשר בקר טחון",
+    "aliases": [
+      "בשר בקר טחון",
+      "בשר בקר טחון רזה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פילה בקר",
+    "category": "בשר",
+    "subCategory": "בקר",
+    "canonicalGroup": "פילה בקר",
+    "aliases": [
+      "פילה בקר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אסאדו",
+    "category": "בשר",
+    "subCategory": "בקר",
+    "canonicalGroup": "אסאדו",
+    "aliases": [
+      "אסאדו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "צלי בקר",
+    "category": "בשר",
+    "subCategory": "בקר",
+    "canonicalGroup": "צלי בקר",
+    "aliases": [
+      "צלי בקר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוסטביף",
+    "category": "בשר",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "רוסטביף"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קציצות בקר",
+    "category": "בשר",
+    "subCategory": "בקר",
+    "canonicalGroup": "קציצות בקר",
+    "aliases": [
+      "קציצות בקר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "צלעות כבש",
+    "category": "בשר",
+    "subCategory": "כבש",
+    "canonicalGroup": "צלעות כבש",
+    "aliases": [
+      "צלעות כבש"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "בשר כבש טחון",
+    "category": "בשר",
+    "subCategory": "כבש",
+    "canonicalGroup": "בשר כבש טחון",
+    "aliases": [
+      "בשר כבש טחון"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שיפודי כבש",
+    "category": "בשר",
+    "subCategory": "כבש",
+    "canonicalGroup": "שיפודי כבש",
+    "aliases": [
+      "שיפודי כבש"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דג אמנון",
+    "category": "דגים",
+    "subCategory": "דגים",
+    "canonicalGroup": "דג אמנון",
+    "aliases": [
+      "דג אמנון",
+      "אמנון"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 107,
+          "protein": 20,
+          "carbs": 0,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "דג מושט",
+    "category": "דגים",
+    "subCategory": "דגים",
+    "canonicalGroup": "דג מושט",
+    "aliases": [
+      "דג מושט",
+      "מושט"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 107,
+          "protein": 20,
+          "carbs": 0,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "דג לברק",
+    "category": "דגים",
+    "subCategory": "דגים",
+    "canonicalGroup": "דג לברק",
+    "aliases": [
+      "דג לברק",
+      "לברק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 107,
+          "protein": 20,
+          "carbs": 0,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "דג פורל",
+    "category": "דגים",
+    "subCategory": "דגים",
+    "canonicalGroup": "דג פורל",
+    "aliases": [
+      "דג פורל",
+      "פורל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 107,
+          "protein": 20,
+          "carbs": 0,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "סרדינים",
+    "category": "דגים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "סרדינים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מקרל",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מקרל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "הרינג",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "הרינג"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אנשובי",
+    "category": "דגים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "אנשובי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שרימפס",
+    "category": "דגים",
+    "subCategory": "פירות ים",
+    "canonicalGroup": "שרימפס",
+    "aliases": [
+      "שרימפס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קלמארי",
+    "category": "דגים",
+    "subCategory": "פירות ים",
+    "canonicalGroup": "קלמארי",
+    "aliases": [
+      "קלמארי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מולים",
+    "category": "דגים",
+    "subCategory": "פירות ים",
+    "canonicalGroup": "מולים",
+    "aliases": [
+      "מולים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 138,
+          "protein": 20,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "ברוקולי טרי",
+    "category": "ירקות",
+    "subCategory": "מצליבים",
+    "canonicalGroup": "ברוקולי טרי",
+    "aliases": [
+      "ברוקולי טרי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 25.8,
+          "protein": 1,
+          "carbs": 5,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "ברוקולי קפוא",
+    "category": "ירקות",
+    "subCategory": "מצליבים",
+    "canonicalGroup": "ברוקולי קפוא",
+    "aliases": [
+      "ברוקולי קפוא"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 25.8,
+          "protein": 1,
+          "carbs": 5,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "סלק",
+    "category": "ירקות",
+    "subCategory": "שורשים",
+    "canonicalGroup": "סלק",
+    "aliases": [
+      "סלק",
+      "סלק מבושל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 25.8,
+          "protein": 1,
+          "carbs": 5,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "תרד",
+    "category": "ירקות",
+    "subCategory": "עליים",
+    "canonicalGroup": "תרד",
+    "aliases": [
+      "תרד",
+      "תרד בייבי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 25.8,
+          "protein": 1,
+          "carbs": 5,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מנגולד",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מנגולד"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוקט",
+    "category": "ירקות",
+    "subCategory": "עליים",
+    "canonicalGroup": "רוקט",
+    "aliases": [
+      "רוקט"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 25.8,
+          "protein": 1,
+          "carbs": 5,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פטרוזיליה",
+    "category": "ירקות",
+    "subCategory": "עשבי תיבול",
+    "canonicalGroup": "פטרוזיליה",
+    "aliases": [
+      "פטרוזיליה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 25.8,
+          "protein": 1,
+          "carbs": 5,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "כוסברה",
+    "category": "ירקות",
+    "subCategory": "עשבי תיבול",
+    "canonicalGroup": "כוסברה",
+    "aliases": [
+      "כוסברה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 25.8,
+          "protein": 1,
+          "carbs": 5,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שמיר",
+    "category": "ירקות",
+    "subCategory": "עשבי תיבול",
+    "canonicalGroup": "שמיר",
+    "aliases": [
+      "שמיר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "נענע",
+    "category": "ירקות",
+    "subCategory": "עשבי תיבול",
+    "canonicalGroup": "נענע",
+    "aliases": [
+      "נענע"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 25.8,
+          "protein": 1,
+          "carbs": 5,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "סלרי",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "סלרי",
+      "שורש סלרי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "לפת",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "לפת"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "צנון",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "צנון"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "צנונית",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "צנונית"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "כרישה",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "כרישה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "במיה",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "במיה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שעועית ירוקה",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "שעועית ירוקה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אפונת שלג",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "אפונת שלג"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קייל",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קייל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אספרגוס",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "אספרגוס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "ארטישוק",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "ארטישוק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דלעת",
+    "category": "ירקות",
+    "subCategory": "זרעים",
+    "canonicalGroup": "דלעת",
+    "aliases": [
+      "דלעת",
+      "גרעיני דלעת"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 25.8,
+          "protein": 1,
+          "carbs": 5,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דלורית",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "דלורית"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "נבטים",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "נבטים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "נבטי אלפלפה",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "נבטי אלפלפה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "נבטי שעועית",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "נבטי שעועית"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "תות שדה",
+    "category": "פירות",
+    "subCategory": "פירות יער",
+    "canonicalGroup": "תות שדה",
+    "aliases": [
+      "תות שדה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "תות קפוא",
+    "category": "פירות",
+    "subCategory": "פירות יער",
+    "canonicalGroup": "תות קפוא",
+    "aliases": [
+      "תות קפוא"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "תמר מג'הול",
+    "category": "פירות",
+    "subCategory": "פירות יבשים",
+    "canonicalGroup": "תמר מג'הול",
+    "aliases": [
+      "תמר מג'הול"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "תמר דקל נור",
+    "category": "פירות",
+    "subCategory": "פירות יבשים",
+    "canonicalGroup": "תמר דקל נור",
+    "aliases": [
+      "תמר דקל נור"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "תמר לח",
+    "category": "פירות",
+    "subCategory": "פירות יבשים",
+    "canonicalGroup": "תמר לח",
+    "aliases": [
+      "תמר לח"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קיווי ירוק",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קיווי ירוק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קיווי זהוב",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קיווי זהוב"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מנגו מיובש",
+    "category": "פירות",
+    "subCategory": "פירות טריים",
+    "canonicalGroup": "מנגו מיובש",
+    "aliases": [
+      "מנגו מיובש"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אננס טרי",
+    "category": "פירות",
+    "subCategory": "פירות טריים",
+    "canonicalGroup": "אננס טרי",
+    "aliases": [
+      "אננס טרי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 71,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "אננס משומר",
+    "category": "פירות",
+    "subCategory": "פירות טריים",
+    "canonicalGroup": "אננס משומר",
+    "aliases": [
+      "אננס משומר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 71,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "נקטרינה",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "נקטרינה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שזיף",
+    "category": "פירות",
+    "subCategory": "פירות טריים",
+    "canonicalGroup": "שזיף",
+    "aliases": [
+      "שזיף"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "משמש",
+    "category": "פירות",
+    "subCategory": "פירות יבשים",
+    "canonicalGroup": "משמש",
+    "aliases": [
+      "משמש",
+      "משמש מיובש"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דובדבנים",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "דובדבנים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אוכמניות",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "אוכמניות",
+      "מאפין אוכמניות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פטל",
+    "category": "פירות",
+    "subCategory": "פירות יער",
+    "canonicalGroup": "פטל",
+    "aliases": [
+      "פטל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "רימון",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "רימון"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אשכולית אדומה",
+    "category": "פירות",
+    "subCategory": "פירות הדר",
+    "canonicalGroup": "אשכולית אדומה",
+    "aliases": [
+      "אשכולית אדומה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אשכולית לבנה",
+    "category": "פירות",
+    "subCategory": "פירות הדר",
+    "canonicalGroup": "אשכולית לבנה",
+    "aliases": [
+      "אשכולית לבנה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "לימון",
+    "category": "פירות",
+    "subCategory": "פירות הדר",
+    "canonicalGroup": "לימון",
+    "aliases": [
+      "לימון"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "ליים",
+    "category": "משקאות",
+    "subCategory": "מים",
+    "canonicalGroup": "ליים",
+    "aliases": [
+      "ליים",
+      "מים מינרליים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קוקוס טרי",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קוקוס טרי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קוקוס יבש",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קוקוס יבש"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פסיפלורה",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פסיפלורה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גויאבה",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "גויאבה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "סברס",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "סברס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "ליצ'י",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "ליצ'י"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פרי הדר מעורב",
+    "category": "פירות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פרי הדר מעורב"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "סלט פירות",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "סלט פירות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 45.8,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 0.2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אטריות דקות",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "אטריות דקות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אטריות עבות",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "אטריות עבות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קינואה לבנה",
+    "category": "פחמימות",
+    "subCategory": "דגנים",
+    "canonicalGroup": "קינואה לבנה",
+    "aliases": [
+      "קינואה לבנה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 121.1,
+          "protein": 5,
+          "carbs": 21,
+          "fat": 1.9
+        }
+      }
+    ]
+  },
+  {
+    "name": "קינואה אדומה",
+    "category": "פחמימות",
+    "subCategory": "דגנים",
+    "canonicalGroup": "קינואה אדומה",
+    "aliases": [
+      "קינואה אדומה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 121.1,
+          "protein": 5,
+          "carbs": 21,
+          "fat": 1.9
+        }
+      }
+    ]
+  },
+  {
+    "name": "קינואה שחורה",
+    "category": "פחמימות",
+    "subCategory": "דגנים",
+    "canonicalGroup": "קינואה שחורה",
+    "aliases": [
+      "קינואה שחורה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 121.1,
+          "protein": 5,
+          "carbs": 21,
+          "fat": 1.9
+        }
+      }
+    ]
+  },
+  {
+    "name": "כוסמת",
+    "category": "פחמימות",
+    "subCategory": "דגנים",
+    "canonicalGroup": "כוסמת",
+    "aliases": [
+      "כוסמת",
+      "כוסמת ירוקה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 105.4,
+          "protein": 5,
+          "carbs": 20,
+          "fat": 0.6
+        }
+      }
+    ]
+  },
+  {
+    "name": "קוואקר אינסטנט",
+    "category": "פחמימות",
+    "subCategory": "דגנים",
+    "canonicalGroup": "קוואקר אינסטנט",
+    "aliases": [
+      "קוואקר אינסטנט"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 87,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "מוזלי",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "מוזלי",
+    "aliases": [
+      "מוזלי",
+      "מוזלי פירות",
+      "מוזלי אגוזים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 363,
+          "protein": 5,
+          "carbs": 70,
+          "fat": 7
+        }
+      }
+    ]
+  },
+  {
+    "name": "קורנפלקס",
+    "category": "קורנפלקס",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קורנפלקס",
+      "קורנפלקס תלמה",
+      "קורנפלקס של אלופים תלמה",
+      "קורנפלקס קלוגס",
+      "קורנפלקס קלוגס ללא סוכר",
+      "קורנפלקס מלא",
+      "קורנפלקס דל סוכר",
+      "קורנפלקס מצופה דבש",
+      "קליק קורנפלקס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דגני בוקר מלאים",
+    "category": "קורנפלקס",
+    "subCategory": "דגני בוקר",
+    "canonicalGroup": "דגני בוקר מלאים",
+    "aliases": [
+      "דגני בוקר מלאים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 47,
+          "protein": 5,
+          "carbs": 0,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "לחם שיפון",
+    "category": "פחמימות",
+    "subCategory": "לחם",
+    "canonicalGroup": "לחם שיפון",
+    "aliases": [
+      "לחם שיפון"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 252,
+          "protein": 5,
+          "carbs": 49,
+          "fat": 4
+        }
+      }
+    ]
+  },
+  {
+    "name": "לחם כוסמין",
+    "category": "פחמימות",
+    "subCategory": "לחם",
+    "canonicalGroup": "לחם כוסמין",
+    "aliases": [
+      "לחם כוסמין"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 252,
+          "protein": 5,
+          "carbs": 49,
+          "fat": 4
+        }
+      }
+    ]
+  },
+  {
+    "name": "לחם דגנים",
+    "category": "פחמימות",
+    "subCategory": "לחם",
+    "canonicalGroup": "לחם דגנים",
+    "aliases": [
+      "לחם דגנים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 47,
+          "protein": 5,
+          "carbs": 0,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "לחם קל",
+    "category": "פחמימות",
+    "subCategory": "לחם",
+    "canonicalGroup": "לחם קל",
+    "aliases": [
+      "לחם קל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 176.2,
+          "protein": 5,
+          "carbs": 35,
+          "fat": 1.8
+        }
+      }
+    ]
+  },
+  {
+    "name": "לחם מחמצת",
+    "category": "פחמימות",
+    "subCategory": "לחם",
+    "canonicalGroup": "לחם מחמצת",
+    "aliases": [
+      "לחם מחמצת"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 252,
+          "protein": 5,
+          "carbs": 49,
+          "fat": 4
+        }
+      }
+    ]
+  },
+  {
+    "name": "לחם ללא גלוטן",
+    "category": "פחמימות",
+    "subCategory": "לחם",
+    "canonicalGroup": "לחם ללא גלוטן",
+    "aliases": [
+      "לחם ללא גלוטן"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 252,
+          "protein": 5,
+          "carbs": 49,
+          "fat": 4
+        }
+      }
+    ]
+  },
+  {
+    "name": "לחמניה רגילה",
+    "category": "פחמימות",
+    "subCategory": "לחם",
+    "canonicalGroup": "לחמניה רגילה",
+    "aliases": [
+      "לחמניה רגילה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 252,
+          "protein": 5,
+          "carbs": 49,
+          "fat": 4
+        }
+      }
+    ]
+  },
+  {
+    "name": "לחמניה מלאה",
+    "category": "פחמימות",
+    "subCategory": "לחם",
+    "canonicalGroup": "לחמניה מלאה",
+    "aliases": [
+      "לחמניה מלאה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 252,
+          "protein": 5,
+          "carbs": 49,
+          "fat": 4
+        }
+      }
+    ]
+  },
+  {
+    "name": "לחמניית כוסמין",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "לחמניית כוסמין"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "בגט",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "בגט"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "בייגל",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "בייגל",
+      "בייגלה",
+      "בייגלה מקלות",
+      "בייגלה שמיניות",
+      "קליק בייגלה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קרקר רגיל",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "קרקר רגיל",
+    "aliases": [
+      "קרקר רגיל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קרקר מלא",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "קרקר מלא",
+    "aliases": [
+      "קרקר מלא"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קרקר שיפון",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "קרקר שיפון",
+    "aliases": [
+      "קרקר שיפון"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קרקר כוסמין",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "קרקר כוסמין",
+    "aliases": [
+      "קרקר כוסמין"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פריכית כוסמין",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פריכית כוסמין"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מצה",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מצה",
+      "מצה מלאה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קרואסון",
+    "category": "פחמימות",
+    "subCategory": "מאפים",
+    "canonicalGroup": "קרואסון",
+    "aliases": [
+      "קרואסון"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 389,
+          "protein": 5,
+          "carbs": 45,
+          "fat": 21
+        }
+      }
+    ]
+  },
+  {
+    "name": "וופל",
+    "category": "נשנושים",
+    "subCategory": "וופלים",
+    "canonicalGroup": "וופל",
+    "aliases": [
+      "וופל",
+      "וופל בלגי",
+      "וופל וניל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 546,
+          "protein": 5,
+          "carbs": 64,
+          "fat": 30
+        }
+      }
+    ]
+  },
+  {
+    "name": "פנקייק",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פנקייק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "עוגה בחושה",
+    "category": "פחמימות",
+    "subCategory": "מאפים",
+    "canonicalGroup": "עוגה בחושה",
+    "aliases": [
+      "עוגה בחושה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 295,
+          "protein": 5,
+          "carbs": 35,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "מלאווח",
+    "category": "פחמימות",
+    "subCategory": "מאפים",
+    "canonicalGroup": "מלאווח",
+    "aliases": [
+      "מלאווח"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 295,
+          "protein": 5,
+          "carbs": 35,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "קובנה",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קובנה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שמן קנולה",
+    "category": "שומנים",
+    "subCategory": "שמנים",
+    "canonicalGroup": "שמן קנולה",
+    "aliases": [
+      "שמן קנולה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 908,
+          "protein": 2,
+          "carbs": 0,
+          "fat": 100
+        }
+      }
+    ]
+  },
+  {
+    "name": "שמן חמניות",
+    "category": "",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "שמן חמניות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 908,
+          "protein": 2,
+          "carbs": 0,
+          "fat": 100
+        }
+      }
+    ]
+  },
+  {
+    "name": "שמן סויה",
+    "category": "שומנים",
+    "subCategory": "שמנים",
+    "canonicalGroup": "שמן סויה",
+    "aliases": [
+      "שמן סויה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 908,
+          "protein": 2,
+          "carbs": 0,
+          "fat": 100
+        }
+      }
+    ]
+  },
+  {
+    "name": "שמן קוקוס",
+    "category": "שומנים",
+    "subCategory": "שמנים",
+    "canonicalGroup": "שמן קוקוס",
+    "aliases": [
+      "שמן קוקוס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 908,
+          "protein": 2,
+          "carbs": 0,
+          "fat": 100
+        }
+      }
+    ]
+  },
+  {
+    "name": "חמאת שקדים",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "חמאת שקדים",
+    "aliases": [
+      "חמאת שקדים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "חמאת קשיו",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "חמאת קשיו",
+    "aliases": [
+      "חמאת קשיו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "אגוזי מלך",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "אגוזי מלך",
+    "aliases": [
+      "אגוזי מלך"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "אגוזי לוז",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "אגוזי לוז",
+    "aliases": [
+      "אגוזי לוז"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "אגוזי פקאן",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "אגוזי פקאן",
+    "aliases": [
+      "אגוזי פקאן"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "אגוזי מקדמיה",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "אגוזי מקדמיה",
+    "aliases": [
+      "אגוזי מקדמיה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "אגוזי ברזיל",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "אגוזי ברזיל",
+    "aliases": [
+      "אגוזי ברזיל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "שקדים טבעיים",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "שקדים טבעיים",
+    "aliases": [
+      "שקדים טבעיים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "שקדים קלויים",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "שקדים קלויים",
+    "aliases": [
+      "שקדים קלויים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 358,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 30
+        }
+      }
+    ]
+  },
+  {
+    "name": "שקדים מולבנים",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "שקדים מולבנים",
+    "aliases": [
+      "שקדים מולבנים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "קשיו טבעי",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "קשיו טבעי",
+    "aliases": [
+      "קשיו טבעי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "קשיו קלוי",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "קשיו קלוי",
+    "aliases": [
+      "קשיו קלוי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 358,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 30
+        }
+      }
+    ]
+  },
+  {
+    "name": "פיסטוקים",
+    "category": "שומנים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "פיסטוקים",
+    "aliases": [
+      "פיסטוקים",
+      "פיסטוקים קלויים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "בוטנים קלויים",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "בוטנים קלויים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 66,
+          "protein": 2,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "בוטנים אמריקאים",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "בוטנים אמריקאים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 66,
+          "protein": 2,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גרעיני חמנייה",
+    "category": "שומנים",
+    "subCategory": "זרעים",
+    "canonicalGroup": "גרעיני חמנייה",
+    "aliases": [
+      "גרעיני חמנייה",
+      "גרעיני חמנייה קלויים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "זרעי צ'יה",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "זרעי צ'יה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "זרעי פשתן",
+    "category": "שומנים",
+    "subCategory": "זרעים",
+    "canonicalGroup": "זרעי פשתן",
+    "aliases": [
+      "זרעי פשתן",
+      "זרעי פשתן טחונים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 538,
+          "protein": 2,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "קוקוס טחון",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קוקוס טחון"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 66,
+          "protein": 2,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קוקוס שבבים",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קוקוס שבבים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 66,
+          "protein": 2,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוטב ויניגרט",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "רוטב ויניגרט",
+    "aliases": [
+      "רוטב ויניגרט"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 128,
+          "protein": 2,
+          "carbs": 12,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוטב קיסר",
+    "category": "רטבים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "רוטב קיסר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 128,
+          "protein": 2,
+          "carbs": 12,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוטב טריאקי",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "רוטב טריאקי",
+    "aliases": [
+      "רוטב טריאקי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 128,
+          "protein": 2,
+          "carbs": 12,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוטב סויה",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "רוטב סויה",
+    "aliases": [
+      "רוטב סויה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 128,
+          "protein": 2,
+          "carbs": 12,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוטב פסטו",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "רוטב פסטו",
+    "aliases": [
+      "רוטב פסטו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 128,
+          "protein": 2,
+          "carbs": 12,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "ברנפלקס תלמה",
+    "category": "קורנפלקס",
+    "subCategory": "דגני בוקר",
+    "canonicalGroup": "ברנפלקס תלמה",
+    "aliases": [
+      "ברנפלקס תלמה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 383,
+          "protein": 10,
+          "carbs": 70,
+          "fat": 7
+        }
+      }
+    ]
+  },
+  {
+    "name": "כריות",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "כריות",
+      "כריות נוגט",
+      "כריות וניל",
+      "צ'וקו כריות",
+      "דגני בוקר כריות נוגט",
+      "קליק כריות",
+      "קליק כריות נוגט",
+      "סוכריות טופי",
+      "סוכריות גומי",
+      "סוכריות על מקל",
+      "סוכריות קפה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 86,
+          "protein": 7,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "טריקס",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "טריקס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "צ'יריוס",
+    "category": "קורנפלקס",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "צ'יריוס",
+      "צ'יריוס דבש",
+      "צ'יריוס מולטי גריין"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 90,
+          "protein": 8,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פיטנס",
+    "category": "חטיפים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "פיטנס",
+    "aliases": [
+      "פיטנס",
+      "פיטנס שקדים ודבש",
+      "פיטנס פירות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 99,
+          "protein": 8,
+          "carbs": 10,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "קראנץ'",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קראנץ'"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 86,
+          "protein": 7,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "נסקוויק דגני בוקר",
+    "category": "קורנפלקס",
+    "subCategory": "דגני בוקר",
+    "canonicalGroup": "נסקוויק דגני בוקר",
+    "aliases": [
+      "נסקוויק דגני בוקר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 55,
+          "protein": 7,
+          "carbs": 0,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "קוקומן",
+    "category": "רטבים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קוקומן"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 82,
+          "protein": 6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דגני בוקר דבש",
+    "category": "קורנפלקס",
+    "subCategory": "דגני בוקר",
+    "canonicalGroup": "דגני בוקר דבש",
+    "aliases": [
+      "דגני בוקר דבש"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 55,
+          "protein": 7,
+          "carbs": 0,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "דגני בוקר פירות",
+    "category": "קורנפלקס",
+    "subCategory": "דגני בוקר",
+    "canonicalGroup": "דגני בוקר פירות",
+    "aliases": [
+      "דגני בוקר פירות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 55,
+          "protein": 7,
+          "carbs": 0,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "דגני בוקר כוכבים",
+    "category": "קורנפלקס",
+    "subCategory": "דגני בוקר",
+    "canonicalGroup": "דגני בוקר כוכבים",
+    "aliases": [
+      "דגני בוקר כוכבים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 51,
+          "protein": 6,
+          "carbs": 0,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "דגני בוקר טבעות דבש",
+    "category": "קורנפלקס",
+    "subCategory": "דגני בוקר",
+    "canonicalGroup": "דגני בוקר טבעות דבש",
+    "aliases": [
+      "דגני בוקר טבעות דבש"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 55,
+          "protein": 7,
+          "carbs": 0,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "דגני בוקר קוקוס",
+    "category": "קורנפלקס",
+    "subCategory": "דגני בוקר",
+    "canonicalGroup": "דגני בוקר קוקוס",
+    "aliases": [
+      "דגני בוקר קוקוס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 51,
+          "protein": 6,
+          "carbs": 0,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "במבה",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "במבה",
+    "aliases": [
+      "במבה",
+      "במבה נוגט",
+      "במבה אדומה",
+      "במבה במילוי נוגט"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 114,
+          "protein": 14,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "ביסלי גריל",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "ביסלי גריל",
+    "aliases": [
+      "ביסלי גריל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 110,
+          "protein": 13,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "ביסלי ברביקיו",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "ביסלי ברביקיו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 110,
+          "protein": 13,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דובונים",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "דובונים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 86,
+          "protein": 7,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שוש",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "שוש"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 86,
+          "protein": 7,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "צ'יטוס",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "צ'יטוס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 82,
+          "protein": 6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דוריטוס נאצ'ו",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "דוריטוס נאצ'ו",
+    "aliases": [
+      "דוריטוס נאצ'ו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 86,
+          "protein": 7,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דוריטוס גריל",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "דוריטוס גריל",
+    "aliases": [
+      "דוריטוס גריל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 86,
+          "protein": 7,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דוריטוס חמוץ חריף",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "דוריטוס חמוץ חריף",
+    "aliases": [
+      "דוריטוס חמוץ חריף"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 86,
+          "protein": 7,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "תפוצ'יפס קלאסי",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "תפוצ'יפס קלאסי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 82,
+          "protein": 6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "תפוצ'יפס גריל",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "תפוצ'יפס גריל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 82,
+          "protein": 6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "תפוצ'יפס חריף",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "תפוצ'יפס חריף"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 82,
+          "protein": 6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פרינגלס מקורי",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פרינגלס מקורי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 74,
+          "protein": 4,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פרינגלס פפריקה",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פרינגלס פפריקה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 74,
+          "protein": 4,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פרינגלס חריף",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פרינגלס חריף"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 74,
+          "protein": 4,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אפרופו",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "אפרופו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "כיפלי גריל",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "כיפלי גריל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 86,
+          "protein": 7,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פופקורן מלוח",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פופקורן מלוח"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 106,
+          "protein": 12,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פופקורן מתוק",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פופקורן מתוק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 90,
+          "protein": 8,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "נאצ'וס",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "נאצ'וס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 82,
+          "protein": 6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קרקרים מלוחים",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "קרקרים מלוחים",
+    "aliases": [
+      "קרקרים מלוחים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 98,
+          "protein": 10,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קרקר זהב",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "קרקר זהב",
+    "aliases": [
+      "קרקר זהב"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 94,
+          "protein": 9,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קרקר מלח",
+    "category": "נשנושים",
+    "subCategory": "מלוחים",
+    "canonicalGroup": "קרקר מלח",
+    "aliases": [
+      "קרקר מלח"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 94,
+          "protein": 9,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "עוגיות פתיבר",
+    "category": "נשנושים",
+    "subCategory": "עוגיות",
+    "canonicalGroup": "עוגיות פתיבר",
+    "aliases": [
+      "עוגיות פתיבר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 299,
+          "protein": 6,
+          "carbs": 35,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "עוגיות קוקוס",
+    "category": "נשנושים",
+    "subCategory": "עוגיות",
+    "canonicalGroup": "עוגיות קוקוס",
+    "aliases": [
+      "עוגיות קוקוס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 295,
+          "protein": 5,
+          "carbs": 35,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "עוגיות ריבה",
+    "category": "נשנושים",
+    "subCategory": "עוגיות",
+    "canonicalGroup": "עוגיות ריבה",
+    "aliases": [
+      "עוגיות ריבה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 291,
+          "protein": 4,
+          "carbs": 35,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "אוראו",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "אוראו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 74,
+          "protein": 4,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "לוטוס ביסקוף",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "לוטוס ביסקוף"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 74,
+          "protein": 4,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "טורטית",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "טורטית",
+      "טורטית קלאסית",
+      "טורטית לבנה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "טעמי",
+    "category": "חטיפים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "טעמי",
+    "aliases": [
+      "טעמי",
+      "טעמי קלאסי",
+      "טעמי אגוזים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 82,
+          "protein": 6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "כיף כף",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "כיף כף",
+      "כיף כף קלאסי",
+      "כיף כף לבן"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "עוגת שיש",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "עוגת שיש"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 295,
+          "protein": 5,
+          "carbs": 35,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוגלך קינמון",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "רוגלך קינמון"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "השחר פרווה",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "השחר פרווה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 74,
+          "protein": 4,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "נוטלה",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "נוטלה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 82,
+          "protein": 6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "ממרח נוגט",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "ממרח נוגט"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מקופלת",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מקופלת",
+      "מקופלת לבנה",
+      "מיני מקופלת"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 82,
+          "protein": 6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פסק זמן",
+    "category": "חטיפים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "פסק זמן",
+    "aliases": [
+      "פסק זמן",
+      "פסק זמן XL",
+      "פסק זמן לבן",
+      "פסק זמן אגוזים",
+      "מיני פסק זמן"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 82,
+          "protein": 6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מיני קליק",
+    "category": "נשנושים",
+    "subCategory": "שוקולדים",
+    "canonicalGroup": "מיני קליק",
+    "aliases": [
+      "מיני קליק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 82,
+          "protein": 6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מרס",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מרס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 74,
+          "protein": 4,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "סניקרס",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "סניקרס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 90,
+          "protein": 8,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "טוויקס",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "טוויקס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 74,
+          "protein": 4,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "באונטי",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "באונטי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 70,
+          "protein": 3,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קיט קט",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קיט קט"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 82,
+          "protein": 6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "M&M's",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "M&M's"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "סקיטלס",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "סקיטלס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דובוני גומי",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "דובוני גומי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 70,
+          "protein": 3,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "נחשי גומי",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "נחשי גומי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 70,
+          "protein": 3,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מרשמלו",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מרשמלו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מסטיק",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מסטיק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מנטוס",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מנטוס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קרמבו",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "קרמבו",
+      "קרמבו וניל",
+      "קרמבו מוקה"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 37,
+          "protein": 2,
+          "carbs": 5,
+          "fat": 1
+        }
+      }
+    ]
+  },
+  {
+    "name": "בקלווה",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "בקלווה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "כנאפה",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "כנאפה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 86,
+          "protein": 7,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מלבי",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מלבי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 70,
+          "protein": 3,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פחזנית",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פחזנית"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 5,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "חטיף אנרגיה",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "חטיף אנרגיה"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 395,
+          "protein": 5,
+          "carbs": 60,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "חטיף אגוזים",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "חטיף אגוזים"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 407,
+          "protein": 8,
+          "carbs": 60,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "חטיף קוקוס",
+    "category": "נשנושים",
+    "subCategory": "מתוקים",
+    "canonicalGroup": "חטיף קוקוס",
+    "aliases": [
+      "חטיף קוקוס"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 387,
+          "protein": 3,
+          "carbs": 60,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "חטיף בוטנים",
+    "category": "נשנושים",
+    "subCategory": "מתוקים",
+    "canonicalGroup": "חטיף בוטנים",
+    "aliases": [
+      "חטיף בוטנים"
+    ],
+    "units": [
+      {
+        "type": "unit",
+        "label": "unit",
+        "nutrition": {
+          "calories": 407,
+          "protein": 8,
+          "carbs": 60,
+          "fat": 15
+        }
+      }
+    ]
+  },
+  {
+    "name": "בשר בקר רזה",
+    "category": "בשר",
+    "subCategory": "בקר",
+    "canonicalGroup": "בשר בקר רזה",
+    "aliases": [
+      "בשר בקר רזה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 166,
+          "protein": 27,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "טמפה",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "טמפה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 134,
+          "protein": 19,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "סייטן",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "סייטן"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 158,
+          "protein": 25,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שעועית לבנה",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "שעועית לבנה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 90,
+          "protein": 8,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שעועית אדומה",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "שעועית אדומה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 92.8,
+          "protein": 8.7,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "שעועית שחורה",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "שעועית שחורה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 93.6,
+          "protein": 8.9,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אפונה",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "אפונה",
+      "אפונה ירוקה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 79.6,
+          "protein": 5.4,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פול מבושל",
+    "category": "ירקות",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "פול מבושל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 88.4,
+          "protein": 7.6,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מש מבושל",
+    "category": "דגנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מש מבושל"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 86,
+          "protein": 7,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוטב ברביקיו",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "רוטב ברביקיו",
+    "aliases": [
+      "רוטב ברביקיו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 122,
+          "protein": 0.5,
+          "carbs": 12,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוטב צ'ילי מתוק",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "רוטב צ'ילי מתוק",
+    "aliases": [
+      "רוטב צ'ילי מתוק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 122,
+          "protein": 0.5,
+          "carbs": 12,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוטב צ'ילי חריף",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "רוטב צ'ילי חריף",
+    "aliases": [
+      "רוטב צ'ילי חריף"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 122,
+          "protein": 0.5,
+          "carbs": 12,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוטב אלפרדו",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "רוטב אלפרדו",
+    "aliases": [
+      "רוטב אלפרדו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 122,
+          "protein": 0.5,
+          "carbs": 12,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוטב עגבניות",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "רוטב עגבניות",
+    "aliases": [
+      "רוטב עגבניות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 122,
+          "protein": 0.5,
+          "carbs": 12,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "קולה",
+    "category": "משקאות",
+    "subCategory": "משקאות קלים",
+    "canonicalGroup": "קולה",
+    "aliases": [
+      "קולה",
+      "קולה זירו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 42.4,
+          "protein": 0,
+          "carbs": 10.6,
+          "fat": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "ספרייט",
+    "category": "משקאות",
+    "subCategory": "משקאות קלים",
+    "canonicalGroup": "ספרייט",
+    "aliases": [
+      "ספרייט",
+      "ספרייט זירו"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 42.4,
+          "protein": 0,
+          "carbs": 10.6,
+          "fat": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "פאנטה",
+    "category": "משקאות",
+    "subCategory": "משקאות קלים",
+    "canonicalGroup": "פאנטה",
+    "aliases": [
+      "פאנטה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 42.4,
+          "protein": 0,
+          "carbs": 10.6,
+          "fat": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "קפה שחור",
+    "category": "משקאות",
+    "subCategory": "קפה",
+    "canonicalGroup": "קפה שחור",
+    "aliases": [
+      "קפה שחור"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 0,
+          "protein": 0,
+          "carbs": 0,
+          "fat": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "קפה הפוך",
+    "category": "משקאות",
+    "subCategory": "קפה",
+    "canonicalGroup": "קפה הפוך",
+    "aliases": [
+      "קפה הפוך"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 79,
+          "protein": 3,
+          "carbs": 10,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "נס קפה",
+    "category": "משקאות",
+    "subCategory": "קפה",
+    "canonicalGroup": "נס קפה",
+    "aliases": [
+      "נס קפה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 79,
+          "protein": 3,
+          "carbs": 10,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "תה ירוק",
+    "category": "משקאות",
+    "subCategory": "תה",
+    "canonicalGroup": "תה ירוק",
+    "aliases": [
+      "תה ירוק"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "תה קר",
+    "category": "משקאות",
+    "subCategory": "תה",
+    "canonicalGroup": "תה קר",
+    "aliases": [
+      "תה קר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 79,
+          "protein": 3,
+          "carbs": 10,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "אייס קפה",
+    "category": "משקאות",
+    "subCategory": "קפה",
+    "canonicalGroup": "אייס קפה",
+    "aliases": [
+      "אייס קפה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 78,
+          "protein": 3,
+          "carbs": 12,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "רד בול",
+    "category": "משקאות",
+    "subCategory": "משקאות אנרגיה",
+    "canonicalGroup": "רד בול",
+    "aliases": [
+      "רד בול"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 44,
+          "protein": 0,
+          "carbs": 11,
+          "fat": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "XL",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "XL"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "בירה",
+    "category": "משקאות",
+    "subCategory": "אלכוהול",
+    "canonicalGroup": "בירה",
+    "aliases": [
+      "בירה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 16.4,
+          "protein": 0.5,
+          "carbs": 3.6,
+          "fat": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "יין אדום",
+    "category": "משקאות",
+    "subCategory": "אלכוהול",
+    "canonicalGroup": "יין אדום",
+    "aliases": [
+      "יין אדום"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 10.4,
+          "protein": 0,
+          "carbs": 2.6,
+          "fat": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "יין לבן",
+    "category": "משקאות",
+    "subCategory": "אלכוהול",
+    "canonicalGroup": "יין לבן",
+    "aliases": [
+      "יין לבן"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 10.4,
+          "protein": 0,
+          "carbs": 2.6,
+          "fat": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "וודקה",
+    "category": "משקאות",
+    "subCategory": "אלכוהול",
+    "canonicalGroup": "וודקה",
+    "aliases": [
+      "וודקה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 0,
+          "protein": 0,
+          "carbs": 0,
+          "fat": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "וויסקי",
+    "category": "משקאות",
+    "subCategory": "אלכוהול",
+    "canonicalGroup": "וויסקי",
+    "aliases": [
+      "וויסקי"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 0,
+          "protein": 0,
+          "carbs": 0,
+          "fat": 0
+        }
+      }
+    ]
+  },
+  {
+    "name": "ג'ין",
+    "category": "משקאות חריפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "ג'ין"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "רום",
+    "category": "משקאות חריפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "רום"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "טקילה",
+    "category": "משקאות חריפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "טקילה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קריאטין",
+    "category": "תוספים",
+    "subCategory": "קריאטין",
+    "canonicalGroup": "קריאטין",
+    "aliases": [
+      "קריאטין"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "BCAA",
+    "category": "תוספים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "BCAA"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "EAA",
+    "category": "תוספים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "EAA"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "גיינר",
+    "category": "מוצרי חלבון",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "גיינר"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "ויטמין D",
+    "category": "תוספים",
+    "subCategory": "ויטמינים",
+    "canonicalGroup": "ויטמין D",
+    "aliases": [
+      "ויטמין D"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מגנזיום",
+    "category": "ויטמנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "מגנזיום"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "אבץ",
+    "category": "ויטמנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "אבץ"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "מולטי ויטמין",
+    "category": "תוספים",
+    "subCategory": "ויטמינים",
+    "canonicalGroup": "מולטי ויטמין",
+    "aliases": [
+      "מולטי ויטמין"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "ZMA",
+    "category": "ויטמנים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "ZMA"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "קפאין",
+    "category": "פחמימות",
+    "subCategory": "מאפים",
+    "canonicalGroup": "קפאין",
+    "aliases": [
+      "קפאין"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "פרה וורקאוט",
+    "category": "תוספים",
+    "subCategory": "פרה וורקאוט",
+    "canonicalGroup": "פרה וורקאוט",
+    "aliases": [
+      "פרה וורקאוט"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "כדורי אנרגיה",
+    "category": "משקאות",
+    "subCategory": "משקאות אנרגיה",
+    "canonicalGroup": "כדורי אנרגיה",
+    "aliases": [
+      "כדורי אנרגיה"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "בר אגוזים",
+    "category": "חטיפים",
+    "subCategory": "אגוזים",
+    "canonicalGroup": "בר אגוזים",
+    "aliases": [
+      "בר אגוזים"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 590,
+          "protein": 15,
+          "carbs": 20,
+          "fat": 50
+        }
+      }
+    ]
+  },
+  {
+    "name": "בר קוקוס",
+    "category": "חטיפים",
+    "subCategory": "",
+    "canonicalGroup": "",
+    "aliases": [
+      "בר קוקוס"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 62,
+          "protein": 1,
+          "carbs": 10,
+          "fat": 2
+        }
+      }
+    ]
+  },
+  {
+    "name": "דגני בוקר דיאט",
+    "category": "קורנפלקס",
+    "subCategory": "דגני בוקר",
+    "canonicalGroup": "דגני בוקר דיאט",
+    "aliases": [
+      "דגני בוקר דיאט"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 107,
+          "protein": 20,
+          "carbs": 0,
+          "fat": 3
+        }
+      }
+    ]
+  },
+  {
+    "name": "רוטב לייט",
+    "category": "רטבים",
+    "subCategory": "רטבים",
+    "canonicalGroup": "רוטב",
+    "aliases": [
+      "רוטב לייט"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 122,
+          "protein": 0.5,
+          "carbs": 12,
+          "fat": 8
+        }
+      }
+    ]
+  },
+  {
+    "name": "נקניקיות טבעוניות",
+    "category": "בשר",
+    "subCategory": "בשר מעובד",
+    "canonicalGroup": "נקניקיות טבעוניות",
+    "aliases": [
+      "נקניקיות טבעוניות"
+    ],
+    "units": [
+      {
+        "type": "weight",
+        "label": "100g",
+        "nutrition": {
+          "calories": 240,
+          "protein": 12,
+          "carbs": 3,
+          "fat": 20
+        }
+      }
+    ]
+  }
+]

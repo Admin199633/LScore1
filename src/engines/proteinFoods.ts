@@ -21,6 +21,6 @@ export type ProteinFoodEntry = {
   units: FoodUnit[];
 };
 
-const proteinFoodsData = require('../../protein_foods_strict.json') as ProteinFoodEntry[];
+const proteinFoodsData = require('./protein_foods_strict.json') as ProteinFoodEntry[];
 
 export const proteinFoods: ProteinFoodEntry[] = proteinFoodsData;
