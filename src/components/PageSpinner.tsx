@@ -8,7 +8,7 @@ export function PageSpinner() {
         alignItems: 'center',
         justifyContent: 'center',
         background: 'var(--background)',
-        zIndex: 50,
+        zIndex: 200,
       }}
     >
       <FuturisticSpinner />

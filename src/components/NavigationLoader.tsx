@@ -52,7 +52,7 @@ export function NavigationLoader() {
         alignItems: 'center',
         justifyContent: 'center',
         background: 'var(--background)',
-        zIndex: 100,
+        zIndex: 200,
       }}
     >
       <FuturisticSpinner />
