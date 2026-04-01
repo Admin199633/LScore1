@@ -197,7 +197,7 @@ function ExerciseProgressAccordion({
         }}
       >
         <div style={{ textAlign: 'right', flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 18, fontWeight: 800 }}>Exercise Progress - התקדמות בתרגיל</div>
+          <div style={{ fontSize: 18, fontWeight: 800 }}>EXERCISE PROGRESS</div>
           <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>
             {hasExercises ? selectedExercise || 'בחר תרגיל' : 'אין תרגילים זמינים בתוכנית'}
           </div>
@@ -243,7 +243,7 @@ function ExerciseProgressPanel({
   if (exerciseOptions.length === 0) {
     return (
       <div style={{ background: 'var(--surface-2)', borderRadius: 16, padding: 18, display: 'grid', gap: 10 }}>
-        <div style={{ fontSize: 20, fontWeight: 800 }}>Exercise Progress</div>
+        <div style={{ fontSize: 20, fontWeight: 800 }}>EXERCISE PROGRESS</div>
         <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>
           אין כרגע תרגילים בתוכנית האימון. אפשר להוסיף תרגילים בדף הפרופיל ואז לחזור לכאן.
         </div>
@@ -259,7 +259,7 @@ function ExerciseProgressPanel({
         <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
           ניתוח התקדמות
         </div>
-        <div style={{ fontSize: 20, fontWeight: 800 }}>Exercise Progress</div>
+        <div style={{ fontSize: 20, fontWeight: 800 }}>EXERCISE PROGRESS</div>
       </div>
 
       <div style={{ display: 'grid', gap: 8 }}>
