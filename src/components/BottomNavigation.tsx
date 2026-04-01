@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -45,12 +46,17 @@ const ProfileIcon = ({ active }: { active: boolean }) => (
   </svg>
 );
 
-const navItems = [
-  { href: '/home',      label: 'בית',    Icon: HomeIcon      },
-  { href: '/nutrition', label: 'תזונה',  Icon: NutritionIcon },
-  { href: '/workout',   label: 'אימון',  Icon: WorkoutIcon, center: true },
-  { href: '/reports',   label: 'דוחות',  Icon: ReportsIcon   },
-  { href: '/profile',   label: 'פרופיל', Icon: ProfileIcon   },
+const navItems: Array<{
+  href: Route;
+  label: string;
+  Icon: ({ active }: { active: boolean }) => JSX.Element;
+  center?: boolean;
+}> = [
+  { href: '/home', label: 'בית', Icon: HomeIcon },
+  { href: '/nutrition', label: 'תזונה', Icon: NutritionIcon },
+  { href: '/workout', label: 'אימון', Icon: WorkoutIcon, center: true },
+  { href: '/reports', label: 'דוחות', Icon: ReportsIcon },
+  { href: '/profile', label: 'פרופיל', Icon: ProfileIcon },
 ];
 
 export function BottomNavigation() {
@@ -88,7 +94,7 @@ export function BottomNavigation() {
               style={{
                 display: 'grid',
                 placeItems: 'center',
-                width:  center ? 54 : 42,
+                width: center ? 54 : 42,
                 height: center ? 54 : 42,
                 borderRadius: '50%',
                 background: center
