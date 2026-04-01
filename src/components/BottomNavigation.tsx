@@ -76,7 +76,7 @@ export function BottomNavigation() {
         right: 0,
         display: 'flex',
         justifyContent: 'center',
-        zIndex: 100,
+        zIndex: 300,
         pointerEvents: 'none',
       }}
     >

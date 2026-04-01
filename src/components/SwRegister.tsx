@@ -12,10 +12,14 @@ export function SwRegister() {
       setTimeout(() => loader.remove(), 250);
     }
 
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
-    }
+    if (!('serviceWorker' in navigator)) return;
+
+    // Unregister all old service workers, then register fresh
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      Promise.all(registrations.map((r) => r.unregister())).then(() => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    });
   }, []);
 
   return null;
