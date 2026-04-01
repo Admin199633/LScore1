@@ -384,12 +384,6 @@ export default function HomePage() {
   </div>
 ) : null}
 
-        <div style={{ textAlign: 'center', marginTop: 6 }}>
-          <Link href="/home-v2" style={{ fontWeight: 700, color: 'var(--accent)' }}>
-            Explore Home V2 → 
-          </Link>
-        </div>
-
       </div>
     </ProtectedPage>
   );
