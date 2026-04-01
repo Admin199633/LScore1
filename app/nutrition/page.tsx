@@ -9,7 +9,7 @@ import {
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { appendNutritionLog, saveNutritionLog } from '@/lib/repositories/nutritionLogRepository';
 
-const EXAMPLE_INPUT = ['סלמון 100 גרם', '2 ביצים', 'טונה', 'לחם'].join('\n');
+const EXAMPLE_INPUT = [''].join('\n');
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 const formatMacro = (value?: number | null, suffix = '') =>
   value == null ? '-' : `${value.toFixed(1)}${suffix}`;
