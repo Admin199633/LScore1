@@ -1,6 +1,7 @@
 'use client';
 
 import type { Route } from 'next';
+import type { ReactElement } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -25,8 +26,11 @@ const WorkoutIcon = ({ active }: { active: boolean }) => (
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
     <path d="M6.5 8v8M17.5 8v8" stroke={active ? '#fff' : 'rgba(255,255,255,0.9)'} strokeWidth="2.2" />
     <path d="M6.5 12h11" stroke={active ? '#fff' : 'rgba(255,255,255,0.9)'} strokeWidth="2.2" />
-    <path d="M2.5 9.5h4M17.5 9.5H21.5M2.5 14.5h4M17.5 14.5H21.5"
-      stroke={active ? '#fff' : 'rgba(255,255,255,0.9)'} strokeWidth="1.8" />
+    <path
+      d="M2.5 9.5h4M17.5 9.5H21.5M2.5 14.5h4M17.5 14.5H21.5"
+      stroke={active ? '#fff' : 'rgba(255,255,255,0.9)'}
+      strokeWidth="1.8"
+    />
   </svg>
 );
 
@@ -49,7 +53,7 @@ const ProfileIcon = ({ active }: { active: boolean }) => (
 const navItems: Array<{
   href: Route;
   label: string;
-  Icon: ({ active }: { active: boolean }) => JSX.Element;
+  Icon: ({ active }: { active: boolean }) => ReactElement;
   center?: boolean;
 }> = [
   { href: '/home', label: 'בית', Icon: HomeIcon },
@@ -64,26 +68,30 @@ export function BottomNavigation() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: 20,
-      left: 0,
-      right: 0,
-      display: 'flex',
-      justifyContent: 'center',
-      zIndex: 100,
-      pointerEvents: 'none',
-    }}>
-      <nav style={{
-        pointerEvents: 'all',
-        background: 'linear-gradient(135deg, #a8eddc 0%, #d4ccff 100%)',
-        borderRadius: 999,
-        padding: '7px 14px',
+    <div
+      style={{
+        position: 'fixed',
+        bottom: 20,
+        left: 0,
+        right: 0,
         display: 'flex',
-        alignItems: 'center',
-        gap: 4,
-        boxShadow: '0 8px 30px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)',
-      }}>
+        justifyContent: 'center',
+        zIndex: 100,
+        pointerEvents: 'none',
+      }}
+    >
+      <nav
+        style={{
+          pointerEvents: 'all',
+          background: 'linear-gradient(135deg, #a8eddc 0%, #d4ccff 100%)',
+          borderRadius: 999,
+          padding: '7px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          boxShadow: '0 8px 30px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.10)',
+        }}
+      >
         {navItems.map(({ href, label, Icon, center }) => {
           const active = isActive(href);
           return (
@@ -98,7 +106,9 @@ export function BottomNavigation() {
                 height: center ? 54 : 42,
                 borderRadius: '50%',
                 background: center
-                  ? active ? '#0a0a0a' : '#111111'
+                  ? active
+                    ? '#0a0a0a'
+                    : '#111111'
                   : active
                     ? 'rgba(0,0,0,0.10)'
                     : 'transparent',
