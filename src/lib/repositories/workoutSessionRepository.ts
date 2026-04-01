@@ -1,7 +1,7 @@
 import { webSupabase } from '@/lib/supabase/browser';
 import { fetchActiveProgramRecord } from '@/lib/repositories/programRepository';
 
-const normalizeSet = (row: { weight?: number | string; reps?: number | string; difficulty?: string }) => ({
+const normalizeSet = (row: { weight?: number | string; reps?: number | string; difficulty?: string | null }) => ({
   weight: String(row.weight ?? ''),
   reps: String(row.reps ?? ''),
   difficulty: row.difficulty || 'good',
