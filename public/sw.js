@@ -1,62 +1,38 @@
-const CACHE_NAME = 'gym-tracker-v1';
+const CACHE_NAME = 'gym-static-v2';
 
-// Static assets worth caching
-const PRECACHE_URLS = ['/offline.html'];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
-  );
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
     )
   );
   self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const url = new URL(event.request.url);
 
-  // Skip non-GET, cross-origin (Supabase, etc.), and Next.js internals
+  // Only cache-first for Next.js hashed static assets — safe to cache forever
+  // Everything else (pages, RSC, API, Supabase) goes directly to network
   if (
-    request.method !== 'GET' ||
-    url.origin !== self.location.origin ||
-    url.pathname.startsWith('/api/') ||
-    url.pathname.startsWith('/_next/webpack-hmr')
+    event.request.method === 'GET' &&
+    url.origin === self.location.origin &&
+    url.pathname.startsWith('/_next/static/')
   ) {
-    return;
-  }
-
-  // Cache-first for Next.js static assets (they're content-hashed)
-  if (url.pathname.startsWith('/_next/static/')) {
     event.respondWith(
-      caches.match(request).then(
+      caches.match(event.request).then(
         (cached) =>
           cached ||
-          fetch(request).then((response) => {
+          fetch(event.request).then((response) => {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
             return response;
           })
       )
     );
-    return;
   }
-
-  // Network-first for pages — fall back to offline page
-  event.respondWith(
-    fetch(request).catch(() =>
-      caches.match(request).then((cached) => cached || caches.match('/offline.html'))
-    )
-  );
 });

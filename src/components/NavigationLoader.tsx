@@ -19,6 +19,8 @@ export function NavigationLoader() {
     const overlay = overlayRef.current;
     if (!overlay) return;
 
+    let hideTimeout: ReturnType<typeof setTimeout>;
+
     const show = (e: Event) => {
       const anchor = (e.target as HTMLElement).closest('a');
       if (
@@ -28,8 +30,10 @@ export function NavigationLoader() {
         !anchor.href.includes('#') &&
         anchor.pathname !== window.location.pathname
       ) {
-        // Direct DOM manipulation — synchronous, no React re-render needed
         overlay.style.display = 'flex';
+        // Safety fallback: hide after 8s so it never gets stuck
+        clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(() => { overlay.style.display = 'none'; }, 8000);
       }
     };
 
@@ -39,6 +43,7 @@ export function NavigationLoader() {
     return () => {
       document.removeEventListener('touchstart', show);
       document.removeEventListener('click', show);
+      clearTimeout(hideTimeout);
     };
   }, []);
 
