@@ -79,13 +79,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
     hydrate();
 
-    const { data } = onAuthStateChange((_event, nextSession) => {
+    const { data } = onAuthStateChange(async (_event, nextSession) => {
       if (isMounted) {
         setSession(nextSession);
         setIsLoading(false);
       }
 
-       void hydrateOnboarding(nextSession);
+      await hydrateOnboarding(nextSession);
     });
 
     return () => {
