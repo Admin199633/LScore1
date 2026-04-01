@@ -1,6 +1,13 @@
-const CACHE_NAME = 'gym-static-v2';
+const CACHE_NAME = 'gym-static-v3';
+const PWA_ASSETS = [
+  '/manifest.json',
+  '/apple-touch-icon.png',
+];
 
-self.addEventListener('install', () => {
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PWA_ASSETS).catch(() => undefined))
+  );
   self.skipWaiting();
 });
 
@@ -22,6 +29,25 @@ self.addEventListener('fetch', (event) => {
     event.request.method === 'GET' &&
     url.origin === self.location.origin &&
     url.pathname.startsWith('/_next/static/')
+  ) {
+    event.respondWith(
+      caches.match(event.request).then(
+        (cached) =>
+          cached ||
+          fetch(event.request).then((response) => {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            return response;
+          })
+      )
+    );
+    return;
+  }
+
+  if (
+    event.request.method === 'GET' &&
+    url.origin === self.location.origin &&
+    PWA_ASSETS.includes(url.pathname)
   ) {
     event.respondWith(
       caches.match(event.request).then(

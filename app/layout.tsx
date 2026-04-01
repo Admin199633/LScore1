@@ -30,8 +30,17 @@ export const metadata: Metadata = {
     title: 'Gym',
     statusBarStyle: 'black-translucent',
   },
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+  },
   icons: {
-    apple: '/icons/icon-192.svg',
+    apple: [
+      {
+        url: '/apple-touch-icon.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
+    ],
   },
 };
 
