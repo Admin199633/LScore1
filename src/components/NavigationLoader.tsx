@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { flushSync } from 'react-dom';
 import { FuturisticSpinner } from './PageSpinner';
 
 export function NavigationLoader() {
@@ -17,9 +18,8 @@ export function NavigationLoader() {
     }
   }, [pathname]);
 
-  // Show spinner immediately when any internal link is clicked
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
+    const show = (e: Event) => {
       const anchor = (e.target as HTMLElement).closest('a');
       if (
         anchor &&
@@ -28,11 +28,20 @@ export function NavigationLoader() {
         !anchor.href.includes('#') &&
         anchor.pathname !== window.location.pathname
       ) {
-        setIsLoading(true);
+        // flushSync ensures the spinner renders before navigation starts
+        flushSync(() => setIsLoading(true));
       }
     };
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
+
+    // touchstart fires immediately on tap (before click's 300ms delay)
+    document.addEventListener('touchstart', show, { passive: true });
+    // click as fallback for desktop
+    document.addEventListener('click', show);
+
+    return () => {
+      document.removeEventListener('touchstart', show);
+      document.removeEventListener('click', show);
+    };
   }, []);
 
   if (!isLoading) return null;
