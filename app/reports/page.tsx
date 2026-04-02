@@ -31,6 +31,10 @@ import {
   calculateWorkoutPerformanceInsights,
   type WorkoutPerformanceInsightsResult,
 } from '@/lib/workoutPerformanceInsights';
+import {
+  calculateNutritionAdherence,
+  type NutritionAdherenceResult,
+} from '@/lib/nutritionAdherence';
 
 type ProfileData = {
   age: number;
@@ -219,6 +223,15 @@ export default function ReportsPage() {
     return calculateWorkoutPerformanceInsights(workoutHistory);
   }, [workoutHistory]);
 
+  const nutritionAdherence = useMemo<NutritionAdherenceResult>(() => {
+    return calculateNutritionAdherence({
+      goal: (profile?.goal || '') as 'bulk' | 'cut' | 'maintain' | '',
+      nutritionLogs,
+      profile,
+      bodyweightLogs,
+    });
+  }, [profile, nutritionLogs, bodyweightLogs]);
+
   const progressStatus = useMemo<ProgressStatusResult>(() => {
     return buildProgressStatus({
       goal: (profile?.goal || '') as 'bulk' | 'cut' | 'maintain' | '',
@@ -277,6 +290,11 @@ export default function ReportsPage() {
           isLoading={isWorkoutHistoryLoading}
           error={workoutHistoryError}
           result={workoutPerformanceInsights}
+        />
+        <NutritionAdherenceAccordion
+          isLoading={isLoading}
+          error={error}
+          result={nutritionAdherence}
         />
         <ProgressStatusAccordion
           isLoading={isWorkoutHistoryLoading}
@@ -432,6 +450,140 @@ function WorkoutPerformanceInsightsAccordion({
                       <div style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.5 }}>{row.reason}</div>
                     </div>
                   ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function NutritionAdherenceAccordion({
+  isLoading,
+  error,
+  result,
+}: {
+  isLoading: boolean;
+  error: string;
+  result: NutritionAdherenceResult;
+}) {
+  const [open, setOpen] = useState(false);
+  const statusAccent =
+    result.status === 'good'
+      ? 'var(--success)'
+      : result.status === 'partial'
+        ? 'var(--accent)'
+        : result.status === 'poor'
+          ? 'var(--danger)'
+          : 'var(--text-muted)';
+  const confidenceLabel =
+    result.confidence === 'high' ? 'גבוהה' : result.confidence === 'medium' ? 'בינונית' : 'נמוכה';
+
+  return (
+    <div style={{ background: 'var(--surface)', borderRadius: 20, overflow: 'hidden' }}>
+      <button
+        type='button'
+        onClick={() => setOpen((prev) => !prev)}
+        style={{
+          width: '100%',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: 20,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          color: 'var(--text)',
+        }}
+      >
+        <div style={{ textAlign: 'right', flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 18, fontWeight: 800 }}>עמידה בתזונה</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>{result.label}</div>
+        </div>
+        <span
+          style={{
+            fontSize: 18,
+            color: 'var(--text-muted)',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s',
+            flexShrink: 0,
+          }}
+        >
+          ג–¼
+        </span>
+      </button>
+
+      {open ? (
+        <div style={{ padding: '0 20px 20px' }}>
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800 }}>עמידה בתזונה</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6, marginTop: 6 }}>
+                הדוח בודק האם עמדת ביעדי התזונה שלך ב-7 הימים האחרונים, לפי קלוריות, חלבון, פחמימות ושומן.
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div style={{ background: 'var(--surface-2)', borderRadius: 16, padding: 18, display: 'grid', gap: 10 }}>
+                <div style={{ fontSize: 20, fontWeight: 800 }}>עמידה בתזונה</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>
+                  טוען נתוני תזונה...
+                </div>
+              </div>
+            ) : error ? (
+              <div style={{ background: 'var(--surface-2)', borderRadius: 16, padding: 18, display: 'grid', gap: 10 }}>
+                <div style={{ fontSize: 20, fontWeight: 800 }}>עמידה בתזונה</div>
+                <div style={{ color: 'var(--danger)', fontSize: 14, lineHeight: 1.6 }}>{error}</div>
+              </div>
+            ) : (
+              <>
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 16,
+                    padding: 18,
+                    display: 'grid',
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>תוצאה מסכמת</div>
+                  <div style={{ fontSize: 26, fontWeight: 800, color: statusAccent }}>{result.label}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>{result.reason}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>רמת ביטחון: {confidenceLabel}</div>
+                </div>
+
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 16,
+                    padding: 18,
+                    display: 'grid',
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>סיכום שבועי</div>
+                  <div style={{ color: 'var(--text)', fontSize: 15 }}>חלבון: {result.proteinDaysMet}/7 ימים</div>
+                  <div style={{ color: 'var(--text)', fontSize: 15 }}>קלוריות: {result.calorieDaysInRange}/7 ימים</div>
+                  <div style={{ color: 'var(--text)', fontSize: 15 }}>ימים מתועדים: {result.totalTrackedDays}/7</div>
+                </div>
+
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 16,
+                    padding: 18,
+                    display: 'grid',
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>ממוצעים</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>ממוצע קלוריות: {result.averages.calories}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>ממוצע חלבון: {result.averages.protein} גרם</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>ממוצע פחמימות: {result.averages.carbs} גרם</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>ממוצע שומן: {result.averages.fat} גרם</div>
                 </div>
               </>
             )}

@@ -51,7 +51,7 @@ export type ProgressStatusResult = {
 
 type ReliabilityLike = Pick<DataReliability, 'dataStatus' | 'freshness' | 'confidence'>;
 
-type ProfileForProgress = {
+export type ProfileForProgress = {
   age: number;
   height: number;
   gender: string;
@@ -61,7 +61,7 @@ type ProfileForProgress = {
 const getLatestBodyweight = (bodyweightLogs: Array<{ date: string; weight: number }>) =>
   bodyweightLogs.length ? bodyweightLogs[bodyweightLogs.length - 1].weight : 0;
 
-const getDailyCalorieTarget = (
+export const getDailyCalorieTarget = (
   profile: ProfileForProgress | null,
   bodyweightLogs: Array<{ date: string; weight: number }>
 ) => {
@@ -79,7 +79,7 @@ const getDailyCalorieTarget = (
   return Math.round(tdee);
 };
 
-const getDailyProteinTarget = (
+export const getDailyProteinTarget = (
   profile: ProfileForProgress | null,
   bodyweightLogs: Array<{ date: string; weight: number }>
 ) => {
