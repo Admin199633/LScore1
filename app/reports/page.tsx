@@ -15,6 +15,10 @@ import {
   buildProgressStatus,
   type ProgressStatusResult,
 } from '@/lib/progressStatus';
+import {
+  calculateProgressRecommendation,
+  type ProgressRecommendation,
+} from '@/lib/progressRecommendation';
 import { fetchCurrentProfile } from '@/lib/repositories/profileRepository';
 import { fetchActiveWorkoutProgram, type WorkoutProgram } from '@/lib/repositories/programRepository';
 import { fetchNutritionLogs, type SavedNutritionLog } from '@/lib/repositories/nutritionLogRepository';
@@ -23,6 +27,10 @@ import {
   calculateWorkoutConsistency,
   type WorkoutConsistencyResult,
 } from '@/lib/workoutConsistency';
+import {
+  calculateWorkoutPerformanceInsights,
+  type WorkoutPerformanceInsightsResult,
+} from '@/lib/workoutPerformanceInsights';
 
 type ProfileData = {
   age: number;
@@ -207,6 +215,10 @@ export default function ReportsPage() {
     return calculateWorkoutConsistency(workoutProgram, workoutHistory);
   }, [workoutProgram, workoutHistory]);
 
+  const workoutPerformanceInsights = useMemo<WorkoutPerformanceInsightsResult>(() => {
+    return calculateWorkoutPerformanceInsights(workoutHistory);
+  }, [workoutHistory]);
+
   const progressStatus = useMemo<ProgressStatusResult>(() => {
     return buildProgressStatus({
       goal: (profile?.goal || '') as 'bulk' | 'cut' | 'maintain' | '',
@@ -218,6 +230,13 @@ export default function ReportsPage() {
       workoutConsistency,
     });
   }, [profile, exerciseOptions, workoutHistory, bodyweightLogs, nutritionLogs, workoutConsistency]);
+
+  const progressRecommendation = useMemo<ProgressRecommendation>(() => {
+    return calculateProgressRecommendation({
+      goal: (profile?.goal || '') as 'bulk' | 'cut' | 'maintain' | '',
+      progressStatus,
+    });
+  }, [profile, progressStatus]);
 
   if (isLoading) {
     return (
@@ -254,13 +273,172 @@ export default function ReportsPage() {
           error={workoutHistoryError}
           result={workoutConsistency}
         />
+        <WorkoutPerformanceInsightsAccordion
+          isLoading={isWorkoutHistoryLoading}
+          error={workoutHistoryError}
+          result={workoutPerformanceInsights}
+        />
         <ProgressStatusAccordion
           isLoading={isWorkoutHistoryLoading}
           error={workoutHistoryError}
           result={progressStatus}
+          recommendation={progressRecommendation}
         />
       </div>
     </ProtectedPage>
+  );
+}
+
+function WorkoutPerformanceInsightsAccordion({
+  isLoading,
+  error,
+  result,
+}: {
+  isLoading: boolean;
+  error: string;
+  result: WorkoutPerformanceInsightsResult;
+}) {
+  const [open, setOpen] = useState(false);
+  const overallConfidenceLabel =
+    result.overallConfidence === 'high'
+      ? 'גבוהה'
+      : result.overallConfidence === 'medium'
+        ? 'בינונית'
+        : 'נמוכה';
+
+  const rows = [
+    {
+      label: 'היום החזק ביותר',
+      value: result.bestWeekday.bestWeekday || 'אין מספיק נתונים',
+      reason: result.bestWeekday.reason,
+    },
+    {
+      label: 'חלון הזמן החזק ביותר',
+      value: result.bestStartTime.bestStartTimeBucket || 'אין מספיק נתונים',
+      reason: result.bestStartTime.reason,
+    },
+    {
+      label: 'משך אימון מיטבי',
+      value: result.bestDuration.bestDurationBucket || 'אין מספיק נתונים',
+      reason: result.bestDuration.reason,
+    },
+    {
+      label: 'רמת אנרגיה מיטבית',
+      value: result.bestEnergy.bestEnergyLevel || 'אין מספיק נתונים',
+      reason: result.bestEnergy.reason,
+    },
+    {
+      label: 'הביצועים הטובים ביותר מגיעים אחרי',
+      value: result.bestRest.bestRestBucket ? `${result.bestRest.bestRestBucket} ימי מנוחה` : 'אין מספיק נתונים',
+      reason: result.bestRest.reason,
+    },
+    {
+      label: 'עקביות זמני אימון',
+      value: result.timeConsistency.consistencyLevel || 'אין מספיק נתונים',
+      reason: result.timeConsistency.reason,
+    },
+  ];
+
+  return (
+    <div style={{ background: 'var(--surface)', borderRadius: 20, overflow: 'hidden' }}>
+      <button
+        type='button'
+        onClick={() => setOpen((prev) => !prev)}
+        style={{
+          width: '100%',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: 20,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          color: 'var(--text)',
+        }}
+      >
+        <div style={{ textAlign: 'right', flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 18, fontWeight: 800 }}>תובנות ביצועים</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>
+            {result.dataStatus === 'missing' ? 'אין מספיק נתונים' : `${result.validWorkoutsCount} אימונים תקפים נותחו`}
+          </div>
+        </div>
+        <span
+          style={{
+            fontSize: 18,
+            color: 'var(--text-muted)',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s',
+            flexShrink: 0,
+          }}
+        >
+          ג–¼
+        </span>
+      </button>
+
+      {open ? (
+        <div style={{ padding: '0 20px 20px' }}>
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800 }}>תובנות ביצועים</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6, marginTop: 6 }}>
+                הדוח מזהה באילו תנאים אתה משיג את הביצועים הכי טובים באימונים.
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div style={{ background: 'var(--surface-2)', borderRadius: 16, padding: 18, display: 'grid', gap: 10 }}>
+                <div style={{ fontSize: 20, fontWeight: 800 }}>תובנות ביצועים</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>
+                  טוען היסטוריית אימונים לניתוח ביצועים...
+                </div>
+              </div>
+            ) : error ? (
+              <div style={{ background: 'var(--surface-2)', borderRadius: 16, padding: 18, display: 'grid', gap: 10 }}>
+                <div style={{ fontSize: 20, fontWeight: 800 }}>תובנות ביצועים</div>
+                <div style={{ color: 'var(--danger)', fontSize: 14, lineHeight: 1.6 }}>{error}</div>
+              </div>
+            ) : (
+              <>
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 16,
+                    padding: 18,
+                    display: 'grid',
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>רמת אמינות</div>
+                  <div style={{ fontSize: 18, fontWeight: 800 }}>
+                    {result.dataStatus === 'complete' ? 'מלאה' : result.dataStatus === 'partial' ? 'חלקית' : 'חסרה'}
+                  </div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>רמת ביטחון: {overallConfidenceLabel}</div>
+                </div>
+
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 16,
+                    padding: 18,
+                    display: 'grid',
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>תובנות</div>
+                  {rows.map((row) => (
+                    <div key={row.label} style={{ display: 'grid', gap: 4 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700 }}>{row.label}: {row.value}</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.5 }}>{row.reason}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -268,10 +446,12 @@ function ProgressStatusAccordion({
   isLoading,
   error,
   result,
+  recommendation,
 }: {
   isLoading: boolean;
   error: string;
   result: ProgressStatusResult;
+  recommendation: ProgressRecommendation;
 }) {
   const [open, setOpen] = useState(false);
   const statusAccent =
@@ -292,19 +472,19 @@ function ProgressStatusAccordion({
           ? 'בירידה'
           : 'אין מספיק נתונים';
   const weightLabel =
-    result.summaries.weightTrend === 'up'
+    result.summaries.weightTrend.trend === 'up'
       ? 'בעלייה'
-      : result.summaries.weightTrend === 'stable'
+      : result.summaries.weightTrend.trend === 'stable'
         ? 'יציב'
-        : result.summaries.weightTrend === 'down'
+        : result.summaries.weightTrend.trend === 'down'
           ? 'בירידה'
           : 'אין מספיק נתונים';
   const nutritionLabel =
-    result.summaries.nutritionAdherence === 'good'
+    result.summaries.nutritionAdherence.result === 'good'
       ? 'טובה'
-      : result.summaries.nutritionAdherence === 'partial'
+      : result.summaries.nutritionAdherence.result === 'partial'
         ? 'חלקית'
-        : result.summaries.nutritionAdherence === 'poor'
+        : result.summaries.nutritionAdherence.result === 'poor'
           ? 'חלשה'
           : 'אין מספיק נתונים';
   const consistencyLabel =
@@ -317,6 +497,12 @@ function ProgressStatusAccordion({
           : 'אין מספיק נתונים';
   const confidenceLabel =
     result.confidence === 'high' ? 'גבוהה' : result.confidence === 'medium' ? 'בינונית' : 'נמוכה';
+  const recommendationPriorityColor =
+    recommendation.priority === 'high'
+      ? 'var(--danger)'
+      : recommendation.priority === 'medium'
+        ? 'var(--accent)'
+        : 'var(--text-muted)';
 
   return (
     <div style={{ background: 'var(--surface)', borderRadius: 20, overflow: 'hidden' }}>
@@ -384,6 +570,37 @@ function ProgressStatusAccordion({
                   <div style={{ fontSize: 26, fontWeight: 800, color: statusAccent }}>{result.label}</div>
                   <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>{result.reason}</div>
                   <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>רמת ביטחון: {confidenceLabel}</div>
+                </div>
+
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 16,
+                    padding: 18,
+                    display: 'grid',
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>המלצה</div>
+                  <div style={{ fontSize: 18, fontWeight: 800 }}>{recommendation.title}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>
+                    {recommendation.message}
+                  </div>
+                  {recommendation.actionLabel ? (
+                    <div
+                      style={{
+                        justifySelf: 'start',
+                        borderRadius: 999,
+                        padding: '6px 10px',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: recommendationPriorityColor,
+                        background: 'rgba(255,255,255,0.04)',
+                      }}
+                    >
+                      {recommendation.actionLabel}
+                    </div>
+                  ) : null}
                 </div>
 
                 <div

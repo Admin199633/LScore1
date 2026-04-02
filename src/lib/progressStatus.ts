@@ -1,6 +1,6 @@
 import { calculateExerciseProgress, type ExerciseProgressTrend } from '@/lib/exerciseProgress';
+import { diffDaysFromCurrentDate, getLatestDate, type DataReliability } from '@/lib/dataReliability';
 import type { SavedNutritionLog } from '@/lib/repositories/nutritionLogRepository';
-import type { WorkoutProgram } from '@/lib/repositories/programRepository';
 import type { SavedWorkoutSession } from '@/lib/repositories/workoutSessionRepository';
 import type { WorkoutConsistencyResult } from '@/lib/workoutConsistency';
 import { calculateBodyweightTrend } from '@shared-engines/index';
@@ -19,7 +19,15 @@ export type ExerciseProgressSummary = {
   stableCount: number;
   downCount: number;
   validExercisesCount: number;
-};
+} & DataReliability;
+
+export type WeightTrendSummaryResult = {
+  trend: WeightTrendSummary;
+} & DataReliability;
+
+export type NutritionAdherenceSummaryResult = {
+  result: NutritionAdherenceSummary;
+} & DataReliability;
 
 export type ProgressStatusResult = {
   status: ProgressStatus;
@@ -34,11 +42,14 @@ export type ProgressStatusResult = {
   };
   summaries: {
     exerciseProgress: ExerciseProgressSummary;
-    weightTrend: WeightTrendSummary;
-    nutritionAdherence: NutritionAdherenceSummary;
+    weightTrend: WeightTrendSummaryResult;
+    nutritionAdherence: NutritionAdherenceSummaryResult;
     workoutConsistency: WorkoutConsistencySummary;
+    workoutConsistencyReliability: DataReliability;
   };
 };
+
+type ReliabilityLike = Pick<DataReliability, 'dataStatus' | 'freshness' | 'confidence'>;
 
 type ProfileForProgress = {
   age: number;
@@ -113,22 +124,30 @@ const getNutritionScore = (actual: number | null, target: number | null, mode: '
 
 export const summarizeExerciseProgress = (
   exerciseNames: string[],
-  workoutHistory: SavedWorkoutSession[]
+  workoutHistory: SavedWorkoutSession[],
+  currentDate?: string | Date
 ): ExerciseProgressSummary => {
   const uniqueExerciseNames = Array.from(new Set(exerciseNames.map((name) => String(name || '').trim()).filter(Boolean)));
   let upCount = 0;
   let stableCount = 0;
   let downCount = 0;
+  const lastRelevantDates: string[] = [];
 
   uniqueExerciseNames.forEach((exerciseName) => {
-    const trend = calculateExerciseProgress(exerciseName, workoutHistory).trend as ExerciseProgressTrend;
+    const result = calculateExerciseProgress(exerciseName, workoutHistory);
+    const trend = result.trend as ExerciseProgressTrend;
 
     if (trend === 'up') upCount += 1;
     if (trend === 'stable') stableCount += 1;
     if (trend === 'down') downCount += 1;
+    if (result.currentBestSet?.date) {
+      lastRelevantDates.push(result.currentBestSet.date);
+    }
   });
 
   const validExercisesCount = upCount + stableCount + downCount;
+  const lastUpdatedAt = getLatestDate(lastRelevantDates);
+  const daysSinceLastRelevantWorkout = diffDaysFromCurrentDate(lastUpdatedAt, currentDate);
 
   if (validExercisesCount < 2) {
     return {
@@ -137,26 +156,96 @@ export const summarizeExerciseProgress = (
       stableCount,
       downCount,
       validExercisesCount,
+      dataStatus: 'missing',
+      freshness: 'stale',
+      confidence: 'low',
+      lastUpdatedAt,
     };
   }
 
+  const reliability =
+    daysSinceLastRelevantWorkout === null
+      ? ({ dataStatus: 'missing', freshness: 'stale', confidence: 'low' } satisfies Pick<DataReliability, 'dataStatus' | 'freshness' | 'confidence'>)
+      : daysSinceLastRelevantWorkout <= 14
+        ? ({
+            dataStatus: 'complete',
+            freshness: 'fresh',
+            confidence: validExercisesCount >= 3 ? 'high' : 'medium',
+          } satisfies Pick<DataReliability, 'dataStatus' | 'freshness' | 'confidence'>)
+        : daysSinceLastRelevantWorkout <= 21
+          ? ({ dataStatus: 'partial', freshness: 'aging', confidence: 'medium' } satisfies Pick<DataReliability, 'dataStatus' | 'freshness' | 'confidence'>)
+          : ({ dataStatus: 'stale', freshness: 'stale', confidence: 'low' } satisfies Pick<DataReliability, 'dataStatus' | 'freshness' | 'confidence'>);
+
   if (downCount > upCount && downCount >= stableCount) {
-    return { trend: 'down', upCount, stableCount, downCount, validExercisesCount };
+    return { trend: 'down', upCount, stableCount, downCount, validExercisesCount, ...reliability, lastUpdatedAt };
   }
 
   if (upCount > downCount && upCount >= stableCount) {
-    return { trend: 'up', upCount, stableCount, downCount, validExercisesCount };
+    return { trend: 'up', upCount, stableCount, downCount, validExercisesCount, ...reliability, lastUpdatedAt };
   }
 
-  return { trend: 'stable', upCount, stableCount, downCount, validExercisesCount };
+  return { trend: 'stable', upCount, stableCount, downCount, validExercisesCount, ...reliability, lastUpdatedAt };
 };
 
-export const summarizeWeightTrend = (bodyweightLogs: Array<{ date: string; weight: number }>): WeightTrendSummary => {
+export const summarizeWeightTrend = (
+  bodyweightLogs: Array<{ date: string; weight: number }>,
+  currentDate?: string | Date
+): WeightTrendSummaryResult => {
+  const orderedLogs = [...(bodyweightLogs || [])].sort((left, right) => left.date.localeCompare(right.date));
+  const lastUpdatedAt = orderedLogs.length ? orderedLogs[orderedLogs.length - 1].date : null;
+  const logsInLast14Days = orderedLogs.filter((log) => {
+    const diff = diffDaysFromCurrentDate(log.date, currentDate);
+    return diff !== null && diff >= 0 && diff <= 14;
+  });
+  const daysSinceLastLog = diffDaysFromCurrentDate(lastUpdatedAt, currentDate);
+
   if (!Array.isArray(bodyweightLogs) || bodyweightLogs.length < 2) {
-    return 'insufficient_data';
+    return {
+      trend: 'insufficient_data',
+      dataStatus: 'missing',
+      freshness: 'stale',
+      confidence: 'low',
+      lastUpdatedAt,
+    };
   }
 
-  return calculateBodyweightTrend(bodyweightLogs) as WeightTrendSummary;
+  if (logsInLast14Days.length >= 4 && daysSinceLastLog !== null && daysSinceLastLog <= 3) {
+    return {
+      trend: calculateBodyweightTrend(orderedLogs) as WeightTrendSummary,
+      dataStatus: 'complete',
+      freshness: 'fresh',
+      confidence: 'high',
+      lastUpdatedAt,
+    };
+  }
+
+  if (logsInLast14Days.length >= 2 && logsInLast14Days.length <= 3 && daysSinceLastLog !== null && daysSinceLastLog <= 5) {
+    return {
+      trend: calculateBodyweightTrend(orderedLogs) as WeightTrendSummary,
+      dataStatus: 'partial',
+      freshness: 'aging',
+      confidence: 'medium',
+      lastUpdatedAt,
+    };
+  }
+
+  if (daysSinceLastLog !== null && daysSinceLastLog > 5) {
+    return {
+      trend: 'insufficient_data',
+      dataStatus: 'stale',
+      freshness: 'stale',
+      confidence: 'low',
+      lastUpdatedAt,
+    };
+  }
+
+  return {
+    trend: 'insufficient_data',
+    dataStatus: 'missing',
+    freshness: 'stale',
+    confidence: 'low',
+    lastUpdatedAt,
+  };
 };
 
 export const summarizeNutritionAdherence = ({
@@ -164,25 +253,41 @@ export const summarizeNutritionAdherence = ({
   nutritionLogs,
   profile,
   bodyweightLogs,
+  currentDate,
 }: {
   goal: GoalType;
   nutritionLogs: SavedNutritionLog[];
   profile: ProfileForProgress | null;
   bodyweightLogs: Array<{ date: string; weight: number }>;
-}): NutritionAdherenceSummary => {
+  currentDate?: string | Date;
+}): NutritionAdherenceSummaryResult => {
   const recentLogs = [...(nutritionLogs || [])]
     .sort((left, right) => left.date.localeCompare(right.date))
     .slice(-7);
+  const lastUpdatedAt = recentLogs.length ? recentLogs[recentLogs.length - 1].date : null;
+  const daysSinceLastLog = diffDaysFromCurrentDate(lastUpdatedAt, currentDate);
 
   if (recentLogs.length < 3) {
-    return 'insufficient_data';
+    return {
+      result: 'insufficient_data',
+      dataStatus: recentLogs.length <= 1 ? 'missing' : 'partial',
+      freshness: 'stale',
+      confidence: 'low',
+      lastUpdatedAt,
+    };
   }
 
   const proteinTarget = getDailyProteinTarget(profile, bodyweightLogs);
   const calorieTarget = getDailyCalorieTarget(profile, bodyweightLogs);
 
   if (!proteinTarget || !calorieTarget) {
-    return 'insufficient_data';
+    return {
+      result: 'insufficient_data',
+      dataStatus: 'missing',
+      freshness: 'stale',
+      confidence: 'low',
+      lastUpdatedAt,
+    };
   }
 
   const scores = recentLogs
@@ -200,20 +305,56 @@ export const summarizeNutritionAdherence = ({
     .filter((score): score is number => typeof score === 'number');
 
   if (scores.length < 3) {
-    return 'insufficient_data';
+    return {
+      result: 'insufficient_data',
+      dataStatus: 'partial',
+      freshness: daysSinceLastLog !== null && daysSinceLastLog <= 5 ? 'aging' : 'stale',
+      confidence: 'low',
+      lastUpdatedAt,
+    };
   }
 
   const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+  const result =
+    averageScore >= 1.5 ? 'good' : averageScore >= 0.85 ? 'partial' : 'poor';
 
-  if (averageScore >= 1.5) {
-    return 'good';
+  if (recentLogs.length >= 6 && daysSinceLastLog !== null && daysSinceLastLog <= 1) {
+    return {
+      result,
+      dataStatus: 'complete',
+      freshness: 'fresh',
+      confidence: 'high',
+      lastUpdatedAt,
+    };
   }
 
-  if (averageScore >= 0.85) {
-    return 'partial';
+  if (recentLogs.length >= 4 && recentLogs.length <= 5) {
+    return {
+      result,
+      dataStatus: 'partial',
+      freshness: 'aging',
+      confidence: 'medium',
+      lastUpdatedAt,
+    };
   }
 
-  return 'poor';
+  if ((recentLogs.length >= 2 && recentLogs.length <= 3) || (daysSinceLastLog !== null && daysSinceLastLog > 1)) {
+    return {
+      result: recentLogs.length >= 2 ? result : 'insufficient_data',
+      dataStatus: recentLogs.length >= 2 ? 'partial' : 'stale',
+      freshness: daysSinceLastLog !== null && daysSinceLastLog <= 5 ? 'aging' : 'stale',
+      confidence: 'low',
+      lastUpdatedAt,
+    };
+  }
+
+  return {
+    result: 'insufficient_data',
+    dataStatus: 'missing',
+    freshness: 'stale',
+    confidence: 'low',
+    lastUpdatedAt,
+  };
 };
 
 export const summarizeWorkoutConsistency = (
@@ -231,37 +372,47 @@ export const summarizeWorkoutConsistency = (
 };
 
 const isAvailable = (status: string) => status !== 'insufficient_data';
+const isMissingOrStale = (reliability: ReliabilityLike) =>
+  reliability.dataStatus === 'missing' || reliability.dataStatus === 'stale';
+const isUsable = (reliability: ReliabilityLike) =>
+  reliability.dataStatus === 'complete' || reliability.dataStatus === 'partial';
+const isStrongReliability = (reliability: ReliabilityLike) =>
+  reliability.confidence === 'high' || reliability.confidence === 'medium';
 
-const getProgressStatusConfidence = ({
+const getProgressReliabilityConfidence = ({
   exerciseProgressSummary,
   weightTrend,
   nutritionAdherence,
-  workoutConsistency,
+  workoutConsistencyReliability,
 }: {
   exerciseProgressSummary: ExerciseProgressSummary;
-  weightTrend: WeightTrendSummary;
-  nutritionAdherence: NutritionAdherenceSummary;
-  workoutConsistency: WorkoutConsistencySummary;
-}) => {
-  const availableStatuses = [
-    exerciseProgressSummary.trend,
+  weightTrend: WeightTrendSummaryResult;
+  nutritionAdherence: NutritionAdherenceSummaryResult;
+  workoutConsistencyReliability: ReliabilityLike;
+}): ProgressStatusConfidence => {
+  const reliabilityItems = [
+    exerciseProgressSummary,
     weightTrend,
     nutritionAdherence,
-    workoutConsistency,
-  ].filter(isAvailable);
+    workoutConsistencyReliability,
+  ];
 
-  const hasExercise = isAvailable(exerciseProgressSummary.trend);
-  const hasWeight = isAvailable(weightTrend);
+  const completeFreshCount = reliabilityItems.filter(
+    (item) => item.dataStatus === 'complete' && item.freshness === 'fresh'
+  ).length;
+  const usableCount = reliabilityItems.filter(isUsable).length;
+  const missingOrStaleCount = reliabilityItems.filter(isMissingOrStale).length;
+  const exerciseUsable = isUsable(exerciseProgressSummary);
 
-  if (availableStatuses.length === 4 && hasExercise) {
-    return 'high' as const;
+  if (completeFreshCount >= 3 && exerciseUsable) {
+    return 'high';
   }
 
-  if (availableStatuses.length >= 3 && (hasExercise || hasWeight)) {
-    return 'medium' as const;
+  if (usableCount >= 2 && missingOrStaleCount <= 1 && (exerciseUsable || isUsable(weightTrend))) {
+    return 'medium';
   }
 
-  return 'low' as const;
+  return 'low';
 };
 
 const buildDecision = (
@@ -292,35 +443,56 @@ export const calculateProgressStatus = ({
   weightTrend,
   nutritionAdherence,
   workoutConsistency,
+  workoutConsistencyReliability,
 }: {
   goal: GoalType;
   exerciseProgressSummary: ExerciseProgressSummary;
-  weightTrend: WeightTrendSummary;
-  nutritionAdherence: NutritionAdherenceSummary;
+  weightTrend: WeightTrendSummaryResult;
+  nutritionAdherence: NutritionAdherenceSummaryResult;
   workoutConsistency: WorkoutConsistencySummary;
+  workoutConsistencyReliability: ReliabilityLike;
 }): Omit<ProgressStatusResult, 'summaries' | 'breakdown'> => {
-  const statuses = [exerciseProgressSummary.trend, weightTrend, nutritionAdherence, workoutConsistency];
-  const insufficientCount = statuses.filter((status) => status === 'insufficient_data').length;
-  const confidence = getProgressStatusConfidence({
+  const confidence = getProgressReliabilityConfidence({
     exerciseProgressSummary,
     weightTrend,
     nutritionAdherence,
-    workoutConsistency,
+    workoutConsistencyReliability,
   });
-  const exerciseTrend = exerciseProgressSummary.trend;
-  const lowHabitSupport = workoutConsistency === 'low' && nutritionAdherence === 'poor';
+  const effectiveExerciseTrend =
+    isMissingOrStale(exerciseProgressSummary) ? 'insufficient_data' : exerciseProgressSummary.trend;
+  const effectiveWeightTrend =
+    isMissingOrStale(weightTrend) ? 'insufficient_data' : weightTrend.trend;
+  const effectiveNutrition =
+    isMissingOrStale(nutritionAdherence) ? 'insufficient_data' : nutritionAdherence.result;
+  const effectiveConsistency =
+    workoutConsistencyReliability.dataStatus === 'missing' || workoutConsistencyReliability.dataStatus === 'partial'
+      ? 'insufficient_data'
+      : workoutConsistency;
+  const missingOrStaleMetrics = [
+    isMissingOrStale(exerciseProgressSummary),
+    isMissingOrStale(weightTrend),
+    isMissingOrStale(nutritionAdherence),
+    isMissingOrStale(workoutConsistencyReliability),
+  ].filter(Boolean).length;
+  const mediumHighMetrics = [
+    exerciseProgressSummary,
+    weightTrend,
+    nutritionAdherence,
+    workoutConsistencyReliability,
+  ].filter(isStrongReliability).length;
   const hasTooLittleData =
-    (exerciseTrend === 'insufficient_data' && insufficientCount >= 2) || insufficientCount >= 3;
+    (isMissingOrStale(exerciseProgressSummary) && missingOrStaleMetrics >= 2) ||
+    mediumHighMetrics < 2;
 
   if (hasTooLittleData) {
     return buildDecision(
       'insufficient_data',
-      'אין מספיק נתונים כדי לקבוע אם אתה בכיוון.',
+      'אין מספיק נתונים עדכניים כדי לקבוע אם אתה בכיוון.',
       confidence
     );
   }
 
-  if (goal === 'maintain' && weightTrend !== 'stable' && exerciseTrend === 'down') {
+  if (goal === 'maintain' && effectiveWeightTrend !== 'stable' && effectiveExerciseTrend === 'down') {
     return buildDecision(
       'off_track',
       'המשקל זז מהיעד והביצועים בירידה, ולכן אתה לא בכיוון.',
@@ -329,33 +501,35 @@ export const calculateProgressStatus = ({
   }
 
   if (goal === 'bulk') {
-    const weightGood = weightTrend === 'up';
-    const nutritionGood = nutritionAdherence === 'good' || nutritionAdherence === 'partial';
+    const weightGood = effectiveWeightTrend === 'up';
+    const nutritionGood = effectiveNutrition === 'good' || effectiveNutrition === 'partial';
     const consistencyGood = workoutConsistency === 'high' || workoutConsistency === 'medium';
     const onTrackBlocked =
-      exerciseTrend === 'down' ||
-      (weightTrend === 'down' && exerciseTrend !== 'up') ||
-      lowHabitSupport;
+      effectiveExerciseTrend === 'down' ||
+      (effectiveWeightTrend === 'down' && effectiveExerciseTrend !== 'up') ||
+      (workoutConsistencyReliability.dataStatus === 'complete' &&
+        workoutConsistency === 'low' &&
+        effectiveNutrition === 'poor');
 
-    if (!onTrackBlocked && exerciseTrend === 'up' && weightGood && nutritionGood && consistencyGood) {
+    if (!onTrackBlocked && effectiveExerciseTrend === 'up' && weightGood && nutritionGood && consistencyGood) {
       return buildDecision(
         'on_track',
-        'הביצועים בעלייה והמשקל מתקדם בהתאם למטרה שלך.',
+        'הביצועים בעלייה והנתונים תומכים בכך שאתה מתקדם לפי המטרה.',
         confidence
       );
     }
 
-    if (exerciseTrend === 'down') {
+    if (effectiveExerciseTrend === 'down') {
       return buildDecision(
         'off_track',
-        weightTrend === 'up'
+        effectiveWeightTrend === 'up'
           ? 'המשקל עולה, אבל אין שיפור בתרגילים ולכן ההתקדמות לא מספקת.'
           : 'הביצועים בירידה ולכן קשה לומר שאתה מתקדם במסה.',
         confidence
       );
     }
 
-    if (weightTrend === 'down' && exerciseTrend !== 'up') {
+    if (effectiveWeightTrend === 'down' && effectiveExerciseTrend !== 'up') {
       return buildDecision(
         'off_track',
         'מגמת המשקל לא תואמת מסה, וגם הביצועים לא נותנים פיצוי ברור.',
@@ -363,18 +537,30 @@ export const calculateProgressStatus = ({
       );
     }
 
-    if (lowHabitSupport) {
+    if (
+      workoutConsistencyReliability.dataStatus === 'complete' &&
+      workoutConsistency === 'low' &&
+      effectiveNutrition === 'poor'
+    ) {
       return buildDecision(
-        exerciseTrend === 'up' || (exerciseTrend === 'stable' && weightGood) ? 'partial' : 'off_track',
+        effectiveExerciseTrend === 'up' || (effectiveExerciseTrend === 'stable' && weightGood) ? 'partial' : 'off_track',
         'התזונה והעקביות חלשות ולכן קשה להתקדם כרגע.',
         confidence
       );
     }
 
-    if ((exerciseTrend === 'stable' && weightGood) || (exerciseTrend === 'up' && (!nutritionGood || !consistencyGood))) {
+    if (!isUsable(weightTrend)) {
       return buildDecision(
         'partial',
-        weightTrend !== 'up'
+        'יש שיפור חלקי, אבל מגמת המשקל לא עדכנית ולכן הסטטוס חלקי בלבד.',
+        confidence
+      );
+    }
+
+    if ((effectiveExerciseTrend === 'stable' && weightGood) || (effectiveExerciseTrend === 'up' && (!nutritionGood || !consistencyGood))) {
+      return buildDecision(
+        'partial',
+        effectiveWeightTrend !== 'up'
           ? 'יש שיפור חלקי, אבל מגמת המשקל עדיין לא תואמת את המטרה.'
           : 'יש שיפור חלקי, אבל העקביות או התזונה עדיין לא מספיקות.',
         confidence
@@ -389,14 +575,16 @@ export const calculateProgressStatus = ({
   }
 
   if (goal === 'cut') {
-    const weightGood = weightTrend === 'down';
-    const exerciseGood = exerciseTrend === 'up' || exerciseTrend === 'stable';
-    const nutritionGood = nutritionAdherence === 'good' || nutritionAdherence === 'partial';
+    const weightGood = effectiveWeightTrend === 'down';
+    const exerciseGood = effectiveExerciseTrend === 'up' || effectiveExerciseTrend === 'stable';
+    const nutritionGood = effectiveNutrition === 'good' || effectiveNutrition === 'partial';
     const consistencyGood = workoutConsistency === 'high' || workoutConsistency === 'medium';
     const onTrackBlocked =
-      exerciseTrend === 'down' ||
-      (weightTrend === 'up' && nutritionAdherence === 'poor') ||
-      lowHabitSupport;
+      effectiveExerciseTrend === 'down' ||
+      (effectiveWeightTrend === 'up' && effectiveNutrition === 'poor') ||
+      (workoutConsistencyReliability.dataStatus === 'complete' &&
+        workoutConsistency === 'low' &&
+        effectiveNutrition === 'poor');
 
     if (!onTrackBlocked && exerciseGood && weightGood && nutritionGood && consistencyGood) {
       return buildDecision(
@@ -406,7 +594,7 @@ export const calculateProgressStatus = ({
       );
     }
 
-    if (weightTrend === 'up' && nutritionAdherence === 'poor') {
+    if (effectiveWeightTrend === 'up' && effectiveNutrition === 'poor') {
       return buildDecision(
         'off_track',
         'המשקל עולה והתזונה חלשה, ולכן אתה לא בכיוון לחיטוב.',
@@ -414,7 +602,7 @@ export const calculateProgressStatus = ({
       );
     }
 
-    if (exerciseTrend === 'down' && weightGood) {
+    if (effectiveExerciseTrend === 'down' && weightGood) {
       return buildDecision(
         'partial',
         'יש ירידה במשקל, אבל הביצועים נחלשים ולכן ההתקדמות חלקית.',
@@ -422,10 +610,22 @@ export const calculateProgressStatus = ({
       );
     }
 
-    if (lowHabitSupport) {
+    if (
+      workoutConsistencyReliability.dataStatus === 'complete' &&
+      workoutConsistency === 'low' &&
+      effectiveNutrition === 'poor'
+    ) {
       return buildDecision(
         exerciseGood && weightGood ? 'partial' : 'off_track',
         'התזונה והעקביות חלשות ולכן קשה להתקדם כרגע.',
+        confidence
+      );
+    }
+
+    if (!isUsable(weightTrend)) {
+      return buildDecision(
+        'partial',
+        'הביצועים סבירים, אבל מגמת המשקל לא עדכנית ולכן הסטטוס חלקי בלבד.',
         confidence
       );
     }
@@ -445,11 +645,15 @@ export const calculateProgressStatus = ({
     );
   }
 
-  const weightGood = weightTrend === 'stable';
-  const exerciseGood = exerciseTrend === 'up' || exerciseTrend === 'stable';
-  const nutritionGood = nutritionAdherence === 'good' || nutritionAdherence === 'partial';
+  const weightGood = effectiveWeightTrend === 'stable';
+  const exerciseGood = effectiveExerciseTrend === 'up' || effectiveExerciseTrend === 'stable';
+  const nutritionGood = effectiveNutrition === 'good' || effectiveNutrition === 'partial';
   const consistencyGood = workoutConsistency === 'high' || workoutConsistency === 'medium';
-  const onTrackBlocked = exerciseTrend === 'down' || lowHabitSupport;
+  const onTrackBlocked =
+    effectiveExerciseTrend === 'down' ||
+    (workoutConsistencyReliability.dataStatus === 'complete' &&
+      workoutConsistency === 'low' &&
+      effectiveNutrition === 'poor');
 
   if (!onTrackBlocked && exerciseGood && weightGood && nutritionGood && consistencyGood) {
     return buildDecision(
@@ -459,7 +663,7 @@ export const calculateProgressStatus = ({
     );
   }
 
-  if (exerciseTrend === 'down' && weightTrend !== 'stable') {
+  if (effectiveExerciseTrend === 'down' && effectiveWeightTrend !== 'stable') {
     return buildDecision(
       'off_track',
       'המשקל לא יציב וגם הביצועים בירידה, ולכן אתה לא בכיוון.',
@@ -467,10 +671,22 @@ export const calculateProgressStatus = ({
     );
   }
 
-  if (lowHabitSupport) {
+  if (
+    workoutConsistencyReliability.dataStatus === 'complete' &&
+    workoutConsistency === 'low' &&
+    effectiveNutrition === 'poor'
+  ) {
     return buildDecision(
       exerciseGood && weightGood ? 'partial' : 'off_track',
       'התזונה והעקביות חלשות ולכן קשה להתקדם כרגע.',
+      confidence
+    );
+  }
+
+  if (!isUsable(weightTrend)) {
+    return buildDecision(
+      'partial',
+      'מגמת המשקל לא עדכנית ולכן הסטטוס חלקי בלבד.',
       confidence
     );
   }
@@ -506,6 +722,7 @@ export const buildProgressStatus = ({
   nutritionLogs,
   profile,
   workoutConsistency,
+  currentDate,
 }: {
   goal: GoalType;
   exerciseNames: string[];
@@ -514,14 +731,16 @@ export const buildProgressStatus = ({
   nutritionLogs: SavedNutritionLog[];
   profile: ProfileForProgress | null;
   workoutConsistency: WorkoutConsistencyResult;
+  currentDate?: string | Date;
 }): ProgressStatusResult => {
-  const exerciseProgressSummary = summarizeExerciseProgress(exerciseNames, workoutHistory);
-  const weightTrend = summarizeWeightTrend(bodyweightLogs);
+  const exerciseProgressSummary = summarizeExerciseProgress(exerciseNames, workoutHistory, currentDate);
+  const weightTrend = summarizeWeightTrend(bodyweightLogs, currentDate);
   const nutritionAdherence = summarizeNutritionAdherence({
     goal,
     nutritionLogs,
     profile,
     bodyweightLogs,
+    currentDate,
   });
   const workoutConsistencySummary = summarizeWorkoutConsistency(workoutConsistency);
   const decision = calculateProgressStatus({
@@ -530,14 +749,15 @@ export const buildProgressStatus = ({
     weightTrend,
     nutritionAdherence,
     workoutConsistency: workoutConsistencySummary,
+    workoutConsistencyReliability: workoutConsistency.reliability,
   });
 
   return {
     ...decision,
     breakdown: {
       exercise: exerciseProgressSummary,
-      weight: weightTrend,
-      nutrition: nutritionAdherence,
+      weight: weightTrend.trend,
+      nutrition: nutritionAdherence.result,
       consistency: workoutConsistencySummary,
     },
     summaries: {
@@ -545,6 +765,7 @@ export const buildProgressStatus = ({
       weightTrend,
       nutritionAdherence,
       workoutConsistency: workoutConsistencySummary,
+      workoutConsistencyReliability: workoutConsistency.reliability,
     },
   };
 };

@@ -1,5 +1,6 @@
 import type { WorkoutProgram } from '@/lib/repositories/programRepository';
 import type { SavedWorkoutSession } from '@/lib/repositories/workoutSessionRepository';
+import { diffDaysFromCurrentDate, getLatestDate, type DataReliability } from '@/lib/dataReliability';
 
 export type WorkoutConsistencyStatus = 'high' | 'medium' | 'low';
 export type WorkoutPaceStatus = 'on_track' | 'behind' | 'ahead';
@@ -20,6 +21,7 @@ export type WorkoutConsistencyResult = {
   confidence: WorkoutConsistencyConfidence;
   reason: string;
   hasActiveProgram: boolean;
+  reliability: DataReliability;
 };
 
 type DateRange = {
@@ -189,6 +191,67 @@ const getConfidence = (
   return 'low';
 };
 
+const getReliability = (
+  weeklyTarget: number,
+  workoutHistory: SavedWorkoutSession[],
+  currentDate?: string | Date
+): DataReliability => {
+  const lastUpdatedAt = getLatestDate(workoutHistory.map((session) => session?.date));
+
+  if (weeklyTarget <= 0) {
+    return {
+      dataStatus: 'missing',
+      freshness: 'stale',
+      confidence: 'low',
+      lastUpdatedAt,
+      reliabilityReason: 'אין תוכנית אימונים פעילה',
+    };
+  }
+
+  const previousClosedWeeksWithHistory = getWeeksWithHistoryBeforeCurrentWeek(workoutHistory, currentDate);
+  const currentWeekRange = getCurrentWeekRange(currentDate);
+  const currentWeekCompleted = countCompletedWorkoutsInDateRange(workoutHistory, currentWeekRange);
+  const daysSinceLastWorkout = diffDaysFromCurrentDate(lastUpdatedAt, currentDate);
+
+  if (previousClosedWeeksWithHistory >= 2 && currentWeekCompleted > 0) {
+    return {
+      dataStatus: 'complete',
+      freshness: daysSinceLastWorkout !== null && daysSinceLastWorkout <= 14 ? 'fresh' : 'aging',
+      confidence: 'high',
+      lastUpdatedAt,
+      reliabilityReason: 'הדוח מבוסס על כמה שבועות עם היסטוריית אימונים',
+    };
+  }
+
+  if (previousClosedWeeksWithHistory >= 1) {
+    return {
+      dataStatus: 'partial',
+      freshness: daysSinceLastWorkout !== null && daysSinceLastWorkout <= 14 ? 'fresh' : 'aging',
+      confidence: 'medium',
+      lastUpdatedAt,
+      reliabilityReason: 'הדוח מבוסס על שבוע סגור אחד לפחות',
+    };
+  }
+
+  if (workoutHistory.length === 0) {
+    return {
+      dataStatus: 'missing',
+      freshness: 'stale',
+      confidence: 'low',
+      lastUpdatedAt,
+      reliabilityReason: 'אין מספיק שבועות מתועדים',
+    };
+  }
+
+  return {
+    dataStatus: 'partial',
+    freshness: daysSinceLastWorkout !== null && daysSinceLastWorkout <= 14 ? 'aging' : 'stale',
+    confidence: 'low',
+    lastUpdatedAt,
+    reliabilityReason: 'אין מספיק היסטוריה כדי להעריך עקביות ברמת ביטחון גבוהה',
+  };
+};
+
 const getReason = (
   weeklyTarget: number,
   confidence: WorkoutConsistencyConfidence,
@@ -226,6 +289,7 @@ export const calculateWorkoutConsistency = (
   const expectedSoFar = calculateExpectedWorkoutsSoFar(weeklyTarget, currentDate);
   const percentage = weeklyTarget > 0 ? Math.round((lastWeekCompleted / weeklyTarget) * 100) : 0;
   const confidence = getConfidence(weeklyTarget, workoutHistory, currentDate);
+  const reliability = getReliability(weeklyTarget, workoutHistory, currentDate);
 
   return {
     weeklyTarget,
@@ -242,5 +306,6 @@ export const calculateWorkoutConsistency = (
     confidence,
     reason: getReason(weeklyTarget, confidence, workoutHistory),
     hasActiveProgram: weeklyTarget > 0,
+    reliability,
   };
 };
