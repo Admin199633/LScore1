@@ -1,3 +1,4 @@
+import { assessNutritionDataQuality, mapQualityToConfidence } from '@/lib/dataQuality';
 import { diffDaysFromCurrentDate, type DataConfidence, type DataFreshness, type DataStatus } from '@/lib/dataReliability';
 import type { GoalType } from '@/lib/goalDefinitions';
 import {
@@ -134,10 +135,20 @@ const isCaloriesInRange = (actualCalories: number, calorieTarget: number | null)
 const getReliability = ({
   totalTrackedDays,
   daysSinceLastLog,
+  nutritionQuality,
 }: {
   totalTrackedDays: number;
   daysSinceLastLog: number | null;
+  nutritionQuality: ReturnType<typeof assessNutritionDataQuality>;
 }): Pick<NutritionAdherenceResult, 'dataStatus' | 'freshness' | 'confidence'> => {
+  if (nutritionQuality.status === 'invalid') {
+    return {
+      dataStatus: 'missing',
+      freshness: 'stale',
+      confidence: 'low',
+    };
+  }
+
   if (totalTrackedDays <= 1) {
     return {
       dataStatus: 'missing',
@@ -158,7 +169,7 @@ const getReliability = ({
     return {
       dataStatus: 'partial',
       freshness: 'aging',
-      confidence: 'medium',
+      confidence: mapQualityToConfidence(nutritionQuality, 'medium'),
     };
   }
 
@@ -238,6 +249,7 @@ export const calculateNutritionAdherence = ({
   const daysSinceLastLog = diffDaysFromCurrentDate(lastUpdatedAt, currentDate);
   const calorieTarget = getDailyCalorieTarget(profile, bodyweightLogs);
   const proteinTarget = getDailyProteinTarget(profile, bodyweightLogs);
+  const nutritionQuality = assessNutritionDataQuality(recentLogs, currentDate);
   const targets = buildMacroTargets({
     caloriesTarget: calorieTarget,
     proteinTarget,
@@ -245,6 +257,7 @@ export const calculateNutritionAdherence = ({
   const reliability = getReliability({
     totalTrackedDays,
     daysSinceLastLog,
+    nutritionQuality,
   });
 
   const dailyBreakdown: NutritionDailyBreakdown[] = recentLogs.map((log) => {
@@ -282,7 +295,7 @@ export const calculateNutritionAdherence = ({
 
   let status: NutritionAdherenceStatus = 'insufficient_data';
 
-  if (totalTrackedDays < 3 || !proteinTarget || !calorieTarget) {
+  if (nutritionQuality.status === 'invalid' || totalTrackedDays < 3 || !proteinTarget || !calorieTarget) {
     status = 'insufficient_data';
   } else if (totalTrackedDays >= 5 && proteinDaysMet >= 5 && calorieDaysInRange >= 5) {
     status = 'good';
@@ -299,12 +312,15 @@ export const calculateNutritionAdherence = ({
   return {
     status,
     label: buildLabel(status),
-    reason: buildReason({
-      status,
-      proteinDaysMet,
-      calorieDaysInRange,
-      totalTrackedDays,
-    }),
+    reason:
+      status === 'insufficient_data'
+        ? nutritionQuality.reason
+        : buildReason({
+            status,
+            proteinDaysMet,
+            calorieDaysInRange,
+            totalTrackedDays,
+          }),
     proteinDaysMet,
     calorieDaysInRange,
     totalTrackedDays,

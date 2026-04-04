@@ -8,16 +8,25 @@ import { PageSpinner } from '@/components/PageSpinner';
 import { BodyweightChart } from '@/components/BodyweightChart';
 import { fetchBodyweightLogs, upsertBodyweightLog } from '@/lib/repositories/bodyweightRepository';
 import { fetchCurrentProfile } from '@/lib/repositories/profileRepository';
-import { fetchNutritionLogs } from '@/lib/repositories/nutritionLogRepository';
-import { fetchSavedWorkoutSessions } from '@/lib/repositories/workoutSessionRepository';
+import { fetchNutritionLogs, type SavedNutritionLog } from '@/lib/repositories/nutritionLogRepository';
+import { fetchSavedWorkoutSessions, type SavedWorkoutSession } from '@/lib/repositories/workoutSessionRepository';
+import { fetchActiveWorkoutProgram, type WorkoutProgram } from '@/lib/repositories/programRepository';
 import { useSessionContext } from '@/lib/session';
 import {
-  calculateBodyweightTrend,
-  calculatePerformanceTrend,
-  detectFatigue,
-  getBestSet,
-  getDailyRecommendation,
-} from '@shared-engines/index';
+  getDailyCalorieTarget,
+  getDailyProteinTarget,
+  buildProgressStatus,
+  summarizeWeightTrend,
+  type ProgressStatusResult,
+} from '@/lib/progressStatus';
+import { calculateWorkoutConsistency, type WorkoutConsistencyResult } from '@/lib/workoutConsistency';
+import { calculateNutritionAdherence, type NutritionAdherenceResult } from '@/lib/nutritionAdherence';
+import { calculateTrainingLoad, type TrainingLoadResult } from '@/lib/trainingLoad';
+import { getGoalKPIStatus, type GoalKPIStatusResult } from '@/lib/goalKpiStatus';
+import { calculateExerciseProgress } from '@/lib/exerciseProgress';
+import { normalizeGoalType, type GoalType } from '@/lib/goalDefinitions';
+import { generateRecommendations, type ExerciseProgressRecommendationInput, type RecommendationItem } from '@/lib/recommendations';
+import { getHomeDecision, type HomeDecisionResult } from '@/lib/homeDecision';
 
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 const formatDisplayDate = (value: string) => {
@@ -25,71 +34,14 @@ const formatDisplayDate = (value: string) => {
   return year && month && day ? `${day}.${month}.${year}` : value;
 };
 
-const hasValidBestSet = (
-  session: { sets?: Array<{ weight?: number | string; reps?: number | string }> } | null | undefined
-) => {
-  const bestSet = getBestSet(session?.sets || []);
-  return Boolean(bestSet && (Number(bestSet.weight) || 0) * (Number(bestSet.reps) || 0) > 0);
-};
-
-const groupSessionsByExercise = (
-  sessions: Array<{ exercise: string; date: string; sets: Array<{ weight: number; reps: number; difficulty: string }> }>
-) =>
-  sessions.reduce<Record<string, typeof sessions>>((groups, session) => {
-    if (!session.exercise) {
-      return groups;
-    }
-
-    const currentGroup = groups[session.exercise] || [];
-    return {
-      ...groups,
-      [session.exercise]: [...currentGroup, session],
-    };
-  }, {});
-
-const buildExerciseEvaluations = (
-  sessions: Array<{ exercise: string; date: string; sets: Array<{ weight: number; reps: number; difficulty: string }> }>
-) =>
-  Object.entries(groupSessionsByExercise(sessions))
-    .map(([exercise, history]) => {
-      const recentHistory = history.slice(-3);
-      const recentValidCount = recentHistory.filter(hasValidBestSet).length;
-
-      if (recentValidCount < 2) {
-        return null;
-      }
-
-      return {
-        exercise,
-        performanceTrend: calculatePerformanceTrend(recentHistory),
-        fatigue: detectFatigue(recentHistory),
-      };
-    })
-    .filter(Boolean) as Array<{ exercise: string; performanceTrend: string; fatigue: boolean }>;
-
-type Recommendation = {
-  status: string;
-  title: string;
-  action: string;
-  explanation: string;
-  nutritionNote?: string;
-};
-
 export default function HomePage() {
-  const { user } = useSessionContext();
+  useSessionContext();
   const [isLoading, setIsLoading] = useState(true);
   const [bodyweightLogs, setBodyweightLogs] = useState<Array<{ date: string; weight: number }>>([]);
   const [nutritionLogs, setNutritionLogs] = useState<Array<{ date: string; totalProteinGrams: number; totalCalories: number | null }>>([]);
-  const [workoutSessions, setWorkoutSessions] = useState<
-    Array<{
-      date: string;
-      dayName: string;
-      exercises: Array<{
-        exerciseName: string;
-        sets: Array<{ weight: string; reps: string; difficulty: string }>;
-      }>;
-    }>
-  >([]);
+  const [fullNutritionLogs, setFullNutritionLogs] = useState<SavedNutritionLog[]>([]);
+  const [workoutSessions, setWorkoutSessions] = useState<SavedWorkoutSession[]>([]);
+  const [workoutProgram, setWorkoutProgram] = useState<WorkoutProgram>({ id: '', days: [] });
   const [selectedDate, setSelectedDate] = useState(getTodayDate);
   const [weightInput, setWeightInput] = useState('');
   const [isSavingWeight, setIsSavingWeight] = useState(false);
@@ -106,11 +58,12 @@ export default function HomePage() {
       setLoadError('');
 
       try {
-        const [nextBodyweightLogs, nextNutritionLogs, nextWorkoutSessions, profile] = await Promise.all([
+        const [nextBodyweightLogs, nextNutritionLogs, nextWorkoutSessions, profile, activeProgram] = await Promise.all([
           fetchBodyweightLogs(),
           fetchNutritionLogs(),
           fetchSavedWorkoutSessions(),
           fetchCurrentProfile().catch(() => null),
+          fetchActiveWorkoutProgram().catch(() => ({ id: '', days: [] })),
         ]);
 
         if (!isMounted) {
@@ -118,8 +71,16 @@ export default function HomePage() {
         }
 
         setBodyweightLogs(nextBodyweightLogs);
-        setNutritionLogs(nextNutritionLogs);
+        setFullNutritionLogs(nextNutritionLogs);
+        setNutritionLogs(
+          nextNutritionLogs.map((entry) => ({
+            date: entry.date,
+            totalProteinGrams: entry.totalProteinGrams,
+            totalCalories: entry.totalCalories,
+          }))
+        );
         setWorkoutSessions(nextWorkoutSessions);
+        setWorkoutProgram(activeProgram);
         if (profile) {
           setUserProfile({
             age: profile.age,
@@ -162,18 +123,10 @@ export default function HomePage() {
     () => workoutSessions.some((session) => session.date === getTodayDate()),
     [workoutSessions]
   );
+  const normalizedGoal = useMemo<GoalType>(() => normalizeGoalType(userProfile?.goal), [userProfile]);
 
   const dailyCalorieTarget = useMemo(() => {
-    if (!userProfile) return null;
-    const { age, height, gender, goal } = userProfile;
-    const latestWeight = bodyweightLogs.length ? bodyweightLogs[bodyweightLogs.length - 1].weight : 0;
-    if (!latestWeight || !height || !age) return null;
-    const base = 10 * latestWeight + 6.25 * height - 5 * age;
-    const bmr = gender === 'female' ? base - 161 : base + 5;
-    const tdee = bmr * 1.375;
-    if (goal === 'cut') return Math.round(tdee - 400);
-    if (goal === 'bulk') return Math.round(tdee + 300);
-    return Math.round(tdee);
+    return getDailyCalorieTarget(userProfile, bodyweightLogs);
   }, [userProfile, bodyweightLogs]);
 
   const todayCaloriesEaten = useMemo(
@@ -182,11 +135,7 @@ export default function HomePage() {
   );
 
   const dailyProteinTarget = useMemo(() => {
-    if (!userProfile) return null;
-    const latestWeight = bodyweightLogs.length ? bodyweightLogs[bodyweightLogs.length - 1].weight : 0;
-    if (!latestWeight) return null;
-    const multiplier = userProfile.goal === 'cut' ? 2.2 : userProfile.goal === 'bulk' ? 1.8 : 1.6;
-    return Math.round(latestWeight * multiplier);
+    return getDailyProteinTarget(userProfile, bodyweightLogs);
   }, [userProfile, bodyweightLogs]);
 
   useEffect(() => {
@@ -195,42 +144,109 @@ export default function HomePage() {
     setBodyweightMessage('');
   }, [selectedDateEntry]);
 
-  const flattenedWorkoutSessions = useMemo(
-    () =>
-      workoutSessions.flatMap((workout) =>
-        workout.exercises
-          .filter((exercise) => exercise.exerciseName)
-          .map((exercise) => ({
-            date: workout.date,
-            dayName: workout.dayName,
-            exercise: exercise.exerciseName,
-            sets: exercise.sets.map((setItem) => ({
-              weight: Number(setItem.weight),
-              reps: Number(setItem.reps),
-              difficulty: setItem.difficulty,
-            })),
-          }))
-      ),
-    [workoutSessions]
-  );
+  const exerciseNames = useMemo(() => {
+    const fromProgram = Array.from(
+      new Set(
+        (workoutProgram.days || [])
+          .flatMap((day) => day.rows || [])
+          .map((row) => String(row.exercise || '').trim())
+          .filter(Boolean)
+      )
+    );
 
-  const recommendation = useMemo<Recommendation | null>(() => {
-    const exerciseEvaluations = buildExerciseEvaluations(flattenedWorkoutSessions);
-
-    if (exerciseEvaluations.length === 0) {
-      return null;
+    if (fromProgram.length > 0) {
+      return fromProgram;
     }
 
-    const upCount = exerciseEvaluations.filter((item) => item.performanceTrend === 'up').length;
-    const downCount = exerciseEvaluations.filter((item) => item.performanceTrend === 'down').length;
-    const performanceTrend = downCount > upCount ? 'down' : upCount > downCount ? 'up' : 'stable';
+    return Array.from(
+      new Set(
+        workoutSessions.flatMap((session) =>
+          (session.exercises || []).map((exercise) => String(exercise.exerciseName || '').trim()).filter(Boolean)
+        )
+      )
+    );
+  }, [workoutProgram, workoutSessions]);
 
-    return getDailyRecommendation({
-      performanceTrend,
-      fatigue: exerciseEvaluations.some((item) => item.fatigue),
-      bodyweightTrend: calculateBodyweightTrend(bodyweightLogs),
+  const workoutConsistency = useMemo<WorkoutConsistencyResult>(() => {
+    return calculateWorkoutConsistency(workoutProgram, workoutSessions);
+  }, [workoutProgram, workoutSessions]);
+
+  const nutritionAdherence = useMemo<NutritionAdherenceResult>(() => {
+    return calculateNutritionAdherence({
+      goal: normalizedGoal,
+      nutritionLogs: fullNutritionLogs,
+      profile: userProfile,
+      bodyweightLogs,
     });
-  }, [bodyweightLogs, flattenedWorkoutSessions]);
+  }, [normalizedGoal, userProfile, fullNutritionLogs, bodyweightLogs]);
+
+  const trainingLoad = useMemo<TrainingLoadResult>(() => {
+    return calculateTrainingLoad(workoutSessions);
+  }, [workoutSessions]);
+
+  const goalKpiStatus = useMemo<GoalKPIStatusResult>(() => {
+    return getGoalKPIStatus({
+      goal: normalizedGoal,
+      bodyweightLogs,
+      workoutHistory: workoutSessions,
+    });
+  }, [normalizedGoal, bodyweightLogs, workoutSessions]);
+
+  const progressStatus = useMemo<ProgressStatusResult>(() => {
+    return buildProgressStatus({
+      goal: normalizedGoal,
+      exerciseNames,
+      workoutHistory: workoutSessions,
+      bodyweightLogs,
+      nutritionLogs: fullNutritionLogs,
+      profile: userProfile,
+      workoutConsistency,
+    });
+  }, [normalizedGoal, userProfile, exerciseNames, workoutSessions, bodyweightLogs, fullNutritionLogs, workoutConsistency]);
+
+  const weightTrend = useMemo(() => summarizeWeightTrend(bodyweightLogs), [bodyweightLogs]);
+
+  const exerciseProgressResults = useMemo<ExerciseProgressRecommendationInput[]>(() => {
+    return exerciseNames
+      .map((exerciseName) => ({
+        exerciseName,
+        result: calculateExerciseProgress(exerciseName, workoutSessions),
+      }))
+      .filter((item) => item.result.trend !== 'insufficient_data');
+  }, [exerciseNames, workoutSessions]);
+
+  const recommendations = useMemo<RecommendationItem[]>(() => {
+    return generateRecommendations({
+      goal: normalizedGoal,
+      progressStatus,
+      exerciseProgressResults,
+      nutritionAdherence,
+      workoutConsistency,
+      weightTrend,
+    });
+  }, [normalizedGoal, progressStatus, exerciseProgressResults, nutritionAdherence, workoutConsistency, weightTrend]);
+
+  const homeDecision = useMemo<HomeDecisionResult>(() => {
+    return getHomeDecision({
+      goalKpiStatus,
+      progressStatus,
+      trainingLoad,
+      nutritionAdherence,
+      recommendations,
+      hasTodayWorkout: todayWorkoutDone,
+      hasTodayNutritionLog: Boolean(todayNutritionLog),
+      hasTodayWeight: Boolean(todayEntry),
+    });
+  }, [
+    goalKpiStatus,
+    progressStatus,
+    trainingLoad,
+    nutritionAdherence,
+    recommendations,
+    todayWorkoutDone,
+    todayNutritionLog,
+    todayEntry,
+  ]);
 
   const handleSaveBodyweight = async () => {
     const numericWeight = Number(String(weightInput).replace(',', '.'));
@@ -366,27 +382,35 @@ export default function HomePage() {
           <BodyweightChart logs={bodyweightLogs} />
         </div>
 
- {recommendation ? (
-  <div
-    style={{
-      background: 'var(--surface)',
-      borderRadius: 20,
-      padding: 20,
-      display: 'grid',
-      gap: 8,
-    }}
-  >
-    <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>המלצה יומית</div>
-    <div style={{ fontSize: 20, fontWeight: 800 }}>{recommendation.title}</div>
-    <div style={{ color: 'var(--text-muted)' }}>{recommendation.action}</div>
-    <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>{recommendation.explanation}</div>
-    {recommendation.nutritionNote ? (
-      <div style={{ color: 'var(--accent)', fontSize: 14, fontWeight: 700 }}>
-        {recommendation.nutritionNote}
-      </div>
-    ) : null}
-  </div>
-) : null}
+        <div
+          style={{
+            background: 'var(--surface)',
+            borderRadius: 20,
+            padding: 20,
+            display: 'grid',
+            gap: 10,
+          }}
+        >
+          <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>החלטה יומית</div>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>{homeDecision.title}</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>{homeDecision.reason}</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+            רמת ביטחון: {homeDecision.confidence === 'high' ? 'גבוהה' : homeDecision.confidence === 'medium' ? 'בינונית' : 'נמוכה'}
+          </div>
+          {homeDecision.secondaryNote ? (
+            <div style={{ color: 'var(--accent)', fontSize: 14, fontWeight: 700 }}>
+              {homeDecision.secondaryNote}
+            </div>
+          ) : null}
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <Link
+              href={homeDecision.primaryActionHref}
+              style={{ ...primaryButtonStyle(false), textDecoration: 'none' }}
+            >
+              {homeDecision.primaryActionLabel}
+            </Link>
+          </div>
+        </div>
 
       </div>
     </ProtectedPage>

@@ -32,7 +32,10 @@ type DraftExercise = {
   sets: Array<{ weight: string; reps: string; difficulty: string }>;
 };
 
-const buildDraftExercises = (day: WorkoutProgramDay | null): DraftExercise[] =>
+const buildDraftExercises = (
+  day: WorkoutProgramDay | null,
+  prevSetsLookup: Record<string, Array<{ weight: string; reps: string }>> = {}
+): DraftExercise[] =>
   (day?.rows || [])
     .filter((row) => row.exercise)
     .map((row) => ({
@@ -42,7 +45,10 @@ const buildDraftExercises = (day: WorkoutProgramDay | null): DraftExercise[] =>
       plannedReps: row.repsHeavy || '',
       plannedWeight: row.weightHeavy || '',
       completed: false,
-      sets: Array.from({ length: parsePlannedSets(row.sets) }, () => emptySet()),
+      sets: Array.from({ length: parsePlannedSets(row.sets) }, (_, i) => {
+        const prev = prevSetsLookup[row.exercise]?.[i];
+        return prev ? { weight: prev.weight, reps: prev.reps, difficulty: 'good' } : emptySet();
+      }),
     }));
 
 const formatTimer = (seconds: number) => {
@@ -116,6 +122,7 @@ export default function WorkoutPage() {
             lookup[ex.exerciseName] = ex.sets.map((s) => ({ weight: s.weight, reps: s.reps }));
           }
           setPrevSets(lookup);
+          setDraftExercises(buildDraftExercises(program.days?.[0] || null, lookup));
         }).catch(() => {});
       } catch (loadError) {
         if (isMounted) {
@@ -142,7 +149,7 @@ export default function WorkoutPage() {
 
   const handleSelectDay = (day: WorkoutProgramDay) => {
     setSelectedDayId(day.id || '');
-    setDraftExercises(buildDraftExercises(day));
+    setDraftExercises(buildDraftExercises(day, prevSets));
     setMessage('');
     setError('');
     setCurrentExerciseIndex(0);
@@ -150,7 +157,7 @@ export default function WorkoutPage() {
 
   const handleResetWorkout = () => {
     if (selectedDay) {
-      setDraftExercises(buildDraftExercises(selectedDay));
+      setDraftExercises(buildDraftExercises(selectedDay, prevSets));
     }
     setCurrentExerciseIndex(0);
     setTimer(0);

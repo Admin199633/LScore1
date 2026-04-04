@@ -1,4 +1,5 @@
 import { calculateExerciseProgress, type ExerciseProgressTrend } from '@/lib/exerciseProgress';
+import { getGoalKPIStatus, type GoalKPIStatusResult } from '@/lib/goalKpiStatus';
 import { getGoalDefinition, normalizeGoalType, type GoalType } from '@/lib/goalDefinitions';
 import { diffDaysFromCurrentDate, getLatestDate, type DataReliability } from '@/lib/dataReliability';
 import type { SavedNutritionLog } from '@/lib/repositories/nutritionLogRepository';
@@ -46,6 +47,7 @@ export type ProgressStatusResult = {
     nutritionAdherence: NutritionAdherenceSummaryResult;
     workoutConsistency: WorkoutConsistencySummary;
     workoutConsistencyReliability: DataReliability;
+    goalKPIStatus: GoalKPIStatusResult;
   };
 };
 
@@ -741,10 +743,16 @@ export const buildProgressStatus = ({
   workoutConsistency: WorkoutConsistencyResult;
   currentDate?: string | Date;
 }): ProgressStatusResult => {
+  const resolvedGoal = normalizeGoalType(goal);
+  const goalKPIStatus = getGoalKPIStatus({
+    goal: resolvedGoal,
+    bodyweightLogs,
+    workoutHistory,
+  });
   const exerciseProgressSummary = summarizeExerciseProgress(exerciseNames, workoutHistory, currentDate);
   const weightTrend = summarizeWeightTrend(bodyweightLogs, currentDate);
   const nutritionAdherence = summarizeNutritionAdherence({
-    goal,
+    goal: resolvedGoal,
     nutritionLogs,
     profile,
     bodyweightLogs,
@@ -752,7 +760,7 @@ export const buildProgressStatus = ({
   });
   const workoutConsistencySummary = summarizeWorkoutConsistency(workoutConsistency);
   const decision = calculateProgressStatus({
-    goal,
+    goal: resolvedGoal,
     exerciseProgressSummary,
     weightTrend,
     nutritionAdherence,
@@ -762,6 +770,10 @@ export const buildProgressStatus = ({
 
   return {
     ...decision,
+    reason:
+      decision.status === 'insufficient_data' && goalKPIStatus.status !== 'insufficient_data'
+        ? goalKPIStatus.reason
+        : decision.reason,
     breakdown: {
       exercise: exerciseProgressSummary,
       weight: weightTrend.trend,
@@ -774,6 +786,7 @@ export const buildProgressStatus = ({
       nutritionAdherence,
       workoutConsistency: workoutConsistencySummary,
       workoutConsistencyReliability: workoutConsistency.reliability,
+      goalKPIStatus,
     },
   };
 };

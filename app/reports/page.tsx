@@ -796,6 +796,14 @@ function ProgressStatusAccordion({
           : 'אין מספיק נתונים';
   const confidenceLabel =
     result.confidence === 'high' ? 'גבוהה' : result.confidence === 'medium' ? 'בינונית' : 'נמוכה';
+  const goalKpiLabel =
+    result.summaries.goalKPIStatus.status === 'positive'
+      ? 'חיובי'
+      : result.summaries.goalKPIStatus.status === 'neutral'
+        ? 'ניטרלי'
+        : result.summaries.goalKPIStatus.status === 'negative'
+          ? 'שלילי'
+          : 'אין מספיק נתונים';
   const recommendationPriorityColor =
     recommendation.priority === 'high'
       ? 'var(--danger)'
@@ -868,6 +876,9 @@ function ProgressStatusAccordion({
                   <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>תוצאה מסכמת</div>
                   <div style={{ fontSize: 26, fontWeight: 800, color: statusAccent }}>{result.label}</div>
                   <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>{result.reason}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                    KPI ראשי: {goalKpiLabel}
+                  </div>
                   <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>רמת ביטחון: {confidenceLabel}</div>
                 </div>
 

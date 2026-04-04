@@ -46,7 +46,10 @@ const buildRecommendation = (
   item: RecommendationItem
 ): RecommendationItem => item;
 
-const buildSummaryRecommendations = (progressStatus: ProgressStatusResult): RecommendationItem[] => {
+const buildSummaryRecommendations = (goal: GoalType, progressStatus: ProgressStatusResult): RecommendationItem[] => {
+  const goalDefinition = getGoalDefinition(goal);
+  const goalSuffix = goalDefinition ? ` למטרת ${goalDefinition.label}` : '';
+
   if (progressStatus.status === 'on_track') {
     return [
       buildRecommendation({
@@ -54,7 +57,7 @@ const buildSummaryRecommendations = (progressStatus: ProgressStatusResult): Reco
         type: 'summary',
         priority: 'low',
         title: 'אתה בכיוון',
-        message: 'הביצועים והנתונים שלך תומכים בהתקדמות לפי המטרה.',
+        message: `הביצועים והנתונים שלך תומכים בהתקדמות${goalSuffix}.`,
       }),
     ];
   }
@@ -66,7 +69,7 @@ const buildSummaryRecommendations = (progressStatus: ProgressStatusResult): Reco
         type: 'summary',
         priority: 'medium',
         title: 'יש שיפור חלקי',
-        message: 'חלק מהמדדים נראים טוב, אבל יש תחומים שעדיין דורשים שיפור.',
+        message: `חלק מהמדדים נראים טוב, אבל יש תחומים שעדיין דורשים שיפור${goalSuffix}.`,
       }),
     ];
   }
@@ -78,7 +81,7 @@ const buildSummaryRecommendations = (progressStatus: ProgressStatusResult): Reco
         type: 'summary',
         priority: 'high',
         title: 'נדרש שינוי',
-        message: 'הנתונים מצביעים על כך שאתה לא מתקדם כרגע לפי המטרה.',
+        message: `הנתונים מצביעים על כך שאתה לא מתקדם כרגע${goalSuffix}.`,
       }),
     ];
   }
@@ -343,7 +346,7 @@ export const generateRecommendations = ({
   });
 
   const candidates: RecommendationItem[] = [
-    ...buildSummaryRecommendations(progressStatus),
+    ...buildSummaryRecommendations(goal, progressStatus),
     ...severeDataIssues,
     ...(!progressInsufficient ? buildTrainingRecommendations(exerciseProgressResults) : []),
     ...buildNutritionRecommendations(nutritionAdherence),

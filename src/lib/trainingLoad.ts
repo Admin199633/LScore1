@@ -1,4 +1,5 @@
 import { calculateExerciseProgress, type ExerciseProgressResult } from '@/lib/exerciseProgress';
+import { assessWorkoutDataQuality, isWorkoutValidForAnalysis } from '@/lib/dataQuality';
 import type { SavedWorkoutSession } from '@/lib/repositories/workoutSessionRepository';
 
 export type TrainingLoadStatus = 'low_load' | 'medium_load' | 'high_load' | 'insufficient_data';
@@ -278,12 +279,14 @@ export const calculateTrainingLoad = (
   workoutHistory: SavedWorkoutSession[]
 ): TrainingLoadResult => {
   const recentSessions = getRecentSessions(workoutHistory);
+  const workoutQuality = assessWorkoutDataQuality(workoutHistory);
+  const validRecentSessions = recentSessions.filter(isWorkoutValidForAnalysis);
 
-  if (recentSessions.length < 2) {
+  if (validRecentSessions.length < 2 || workoutQuality.status === 'invalid') {
     return {
       status: 'insufficient_data',
       label: 'אין מספיק נתונים',
-      reason: 'אין מספיק נתונים כדי להעריך עומס.',
+      reason: workoutQuality.reason,
       confidence: 'low',
       flags: {
         performanceFlag: 'unknown',
@@ -295,22 +298,23 @@ export const calculateTrainingLoad = (
     };
   }
 
-  const performanceSummary = calculatePerformanceFlag(workoutHistory, recentSessions);
+  const performanceSummary = calculatePerformanceFlag(workoutHistory, validRecentSessions);
   const flags: TrainingLoadFlags = {
     performanceFlag: performanceSummary.flag,
-    effortFlag: calculateEffortFlag(recentSessions, performanceSummary),
-    energyFlag: calculateEnergyFlag(recentSessions),
-    executionFlag: calculateExecutionFlag(recentSessions),
-    durationFlag: calculateDurationFlag(workoutHistory, recentSessions),
+    effortFlag: calculateEffortFlag(validRecentSessions, performanceSummary),
+    energyFlag: calculateEnergyFlag(validRecentSessions),
+    executionFlag: calculateExecutionFlag(validRecentSessions),
+    durationFlag: calculateDurationFlag(workoutHistory, validRecentSessions),
   };
 
   const unknownCount = getUnknownCount(flags);
   const onCount = getOnCount(flags);
-  const confidence = getConfidence(recentSessions.length, unknownCount);
+  const confidence =
+    workoutQuality.status === 'partial' ? 'low' : getConfidence(validRecentSessions.length, unknownCount);
 
   let status: TrainingLoadStatus = 'low_load';
 
-  if (recentSessions.length < 2 || unknownCount >= 3) {
+  if (validRecentSessions.length < 2 || unknownCount >= 3) {
     status = 'insufficient_data';
   } else if (
     onCount >= 3 ||
