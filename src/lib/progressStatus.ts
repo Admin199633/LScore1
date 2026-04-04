@@ -1,11 +1,11 @@
 import { calculateExerciseProgress, type ExerciseProgressTrend } from '@/lib/exerciseProgress';
+import { getGoalDefinition, normalizeGoalType, type GoalType } from '@/lib/goalDefinitions';
 import { diffDaysFromCurrentDate, getLatestDate, type DataReliability } from '@/lib/dataReliability';
 import type { SavedNutritionLog } from '@/lib/repositories/nutritionLogRepository';
 import type { SavedWorkoutSession } from '@/lib/repositories/workoutSessionRepository';
 import type { WorkoutConsistencyResult } from '@/lib/workoutConsistency';
 import { calculateBodyweightTrend } from '@shared-engines/index';
 
-export type GoalType = 'bulk' | 'cut' | 'maintain' | '';
 export type ExerciseProgressSummaryTrend = 'up' | 'stable' | 'down' | 'insufficient_data';
 export type WeightTrendSummary = 'up' | 'stable' | 'down' | 'insufficient_data';
 export type NutritionAdherenceSummary = 'good' | 'partial' | 'poor' | 'insufficient_data';
@@ -69,13 +69,14 @@ export const getDailyCalorieTarget = (
 
   const latestWeight = getLatestBodyweight(bodyweightLogs);
   if (!latestWeight || !profile.height || !profile.age) return null;
+  const normalizedGoal = normalizeGoalType(profile.goal);
 
   const base = 10 * latestWeight + 6.25 * profile.height - 5 * profile.age;
   const bmr = profile.gender === 'female' ? base - 161 : base + 5;
   const tdee = bmr * 1.375;
 
-  if (profile.goal === 'cut') return Math.round(tdee - 400);
-  if (profile.goal === 'bulk') return Math.round(tdee + 300);
+  if (normalizedGoal === 'cut') return Math.round(tdee - 400);
+  if (normalizedGoal === 'bulk') return Math.round(tdee + 300);
   return Math.round(tdee);
 };
 
@@ -87,8 +88,9 @@ export const getDailyProteinTarget = (
 
   const latestWeight = getLatestBodyweight(bodyweightLogs);
   if (!latestWeight) return null;
+  const normalizedGoal = normalizeGoalType(profile.goal);
 
-  const multiplier = profile.goal === 'cut' ? 2.2 : profile.goal === 'bulk' ? 1.8 : 1.6;
+  const multiplier = normalizedGoal === 'cut' ? 2.2 : normalizedGoal === 'bulk' ? 1.8 : 1.6;
   return Math.round(latestWeight * multiplier);
 };
 
@@ -105,13 +107,15 @@ const getNutritionScore = (actual: number | null, target: number | null, mode: '
     return 0;
   }
 
-  if (goal === 'bulk') {
+  const normalizedGoal = normalizeGoalType(goal);
+
+  if (normalizedGoal === 'bulk') {
     if (ratio >= 0.9 && ratio <= 1.15) return 2;
     if (ratio >= 0.75 && ratio <= 1.25) return 1;
     return 0;
   }
 
-  if (goal === 'cut') {
+  if (normalizedGoal === 'cut') {
     if (ratio >= 0.85 && ratio <= 1.1) return 2;
     if (ratio >= 0.7 && ratio <= 1.2) return 1;
     return 0;
@@ -452,6 +456,8 @@ export const calculateProgressStatus = ({
   workoutConsistency: WorkoutConsistencySummary;
   workoutConsistencyReliability: ReliabilityLike;
 }): Omit<ProgressStatusResult, 'summaries' | 'breakdown'> => {
+  const resolvedGoal = normalizeGoalType(goal);
+  const goalDefinition = getGoalDefinition(resolvedGoal);
   const confidence = getProgressReliabilityConfidence({
     exerciseProgressSummary,
     weightTrend,
@@ -487,12 +493,14 @@ export const calculateProgressStatus = ({
   if (hasTooLittleData) {
     return buildDecision(
       'insufficient_data',
-      'אין מספיק נתונים עדכניים כדי לקבוע אם אתה בכיוון.',
+      goalDefinition
+        ? `אין מספיק נתונים עדכניים כדי לקבוע אם אתה בכיוון למטרת ${goalDefinition.label}.`
+        : 'אין מספיק נתונים עדכניים כדי לקבוע אם אתה בכיוון.',
       confidence
     );
   }
 
-  if (goal === 'maintain' && effectiveWeightTrend !== 'stable' && effectiveExerciseTrend === 'down') {
+  if (resolvedGoal === 'maintain' && effectiveWeightTrend !== 'stable' && effectiveExerciseTrend === 'down') {
     return buildDecision(
       'off_track',
       'המשקל זז מהיעד והביצועים בירידה, ולכן אתה לא בכיוון.',
@@ -500,7 +508,7 @@ export const calculateProgressStatus = ({
     );
   }
 
-  if (goal === 'bulk') {
+  if (resolvedGoal === 'bulk') {
     const weightGood = effectiveWeightTrend === 'up';
     const nutritionGood = effectiveNutrition === 'good' || effectiveNutrition === 'partial';
     const consistencyGood = workoutConsistency === 'high' || workoutConsistency === 'medium';
@@ -574,7 +582,7 @@ export const calculateProgressStatus = ({
     );
   }
 
-  if (goal === 'cut') {
+  if (resolvedGoal === 'cut') {
     const weightGood = effectiveWeightTrend === 'down';
     const exerciseGood = effectiveExerciseTrend === 'up' || effectiveExerciseTrend === 'stable';
     const nutritionGood = effectiveNutrition === 'good' || effectiveNutrition === 'partial';

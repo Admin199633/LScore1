@@ -1,4 +1,5 @@
 import { webSupabase } from '@/lib/supabase/browser';
+import { normalizeGoalType } from '@/lib/goalDefinitions';
 
 const requireCurrentUser = async () => {
   const {
@@ -58,7 +59,7 @@ const rowToUser = (
     weight: latestWeight || 0,
     height: Number(profileRow.height || 0),
     experience: profileRow.experience || 'beginner',
-    goal: profileRow.goal || 'bulk',
+    goal: normalizeGoalType(profileRow.goal) || 'bulk',
     focusAreas: Array.isArray(profileRow.focus_areas) ? profileRow.focus_areas : [],
     trainingDaysPerWeek: Number(profileRow.training_days_per_week || 0),
     gender: profileRow.gender || '',
@@ -118,7 +119,7 @@ export const saveCurrentProfile = async (
       age: Number(userInput.age) || null,
       height: Number(userInput.height) || null,
       experience: userInput.experience?.trim?.() || userInput.experience || null,
-      goal: userInput.goal?.trim?.() || userInput.goal || null,
+      goal: normalizeGoalType(userInput.goal) || null,
       training_days_per_week: Number(userInput.trainingDaysPerWeek) || null,
       focus_areas: Array.isArray(userInput.focusAreas)
         ? userInput.focusAreas.map((item) => String(item).trim()).filter(Boolean)

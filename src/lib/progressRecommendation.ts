@@ -1,6 +1,6 @@
 import type { DataReliability } from '@/lib/dataReliability';
+import { getGoalDefinition, type GoalType } from '@/lib/goalDefinitions';
 import type {
-  GoalType,
   NutritionAdherenceSummary,
   ProgressStatusResult,
   WeightTrendSummary,
@@ -41,23 +41,13 @@ const isReliableEnoughForIntervention = (reliability: DataReliability) =>
   isUsable(reliability) && reliability.freshness !== 'stale' && reliability.confidence !== 'low';
 
 const isWeightAlignedWithGoal = (goal: GoalType, trend: WeightTrendSummary) => {
+  const goalDefinition = getGoalDefinition(goal);
+
   if (trend === 'insufficient_data') {
     return null;
   }
 
-  if (goal === 'bulk') {
-    return trend === 'up';
-  }
-
-  if (goal === 'cut') {
-    return trend === 'down';
-  }
-
-  if (goal === 'maintain') {
-    return trend === 'stable';
-  }
-
-  return null;
+  return goalDefinition?.preferredWeightTrend ? trend === goalDefinition.preferredWeightTrend : null;
 };
 
 const buildRecommendation = (
@@ -111,19 +101,21 @@ const shouldReviewPlan = ({
   weightTrend: WeightTrendSummary;
   exerciseTrend: ProgressStatusResult['summaries']['exerciseProgress']['trend'];
 }) => {
+  const goalDefinition = getGoalDefinition(goal);
+
   if (exerciseTrend !== 'down') {
     return false;
   }
 
-  if (goal === 'bulk') {
+  if (goalDefinition?.type === 'bulk') {
     return weightTrend === 'down' || weightTrend === 'stable';
   }
 
-  if (goal === 'cut') {
+  if (goalDefinition?.type === 'cut') {
     return weightTrend === 'up' || weightTrend === 'stable';
   }
 
-  if (goal === 'maintain') {
+  if (goalDefinition?.type === 'maintain') {
     return weightTrend === 'up' || weightTrend === 'down';
   }
 

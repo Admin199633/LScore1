@@ -1,7 +1,8 @@
 import type { DataReliability } from '@/lib/dataReliability';
 import type { ExerciseProgressResult } from '@/lib/exerciseProgress';
+import { getGoalDefinition, type GoalType } from '@/lib/goalDefinitions';
 import type { NutritionAdherenceResult } from '@/lib/nutritionAdherence';
-import type { GoalType, ProgressStatusResult, WeightTrendSummaryResult } from '@/lib/progressStatus';
+import type { ProgressStatusResult, WeightTrendSummaryResult } from '@/lib/progressStatus';
 import type { WorkoutConsistencyResult } from '@/lib/workoutConsistency';
 
 export type RecommendationType = 'training' | 'nutrition' | 'consistency' | 'data' | 'summary';

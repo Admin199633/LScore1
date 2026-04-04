@@ -35,6 +35,10 @@ import {
   calculateNutritionAdherence,
   type NutritionAdherenceResult,
 } from '@/lib/nutritionAdherence';
+import {
+  calculateTrainingLoad,
+  type TrainingLoadResult,
+} from '@/lib/trainingLoad';
 
 type ProfileData = {
   age: number;
@@ -232,6 +236,10 @@ export default function ReportsPage() {
     });
   }, [profile, nutritionLogs, bodyweightLogs]);
 
+  const trainingLoad = useMemo<TrainingLoadResult>(() => {
+    return calculateTrainingLoad(workoutHistory);
+  }, [workoutHistory]);
+
   const progressStatus = useMemo<ProgressStatusResult>(() => {
     return buildProgressStatus({
       goal: (profile?.goal || '') as 'bulk' | 'cut' | 'maintain' | '',
@@ -295,6 +303,11 @@ export default function ReportsPage() {
           isLoading={isLoading}
           error={error}
           result={nutritionAdherence}
+        />
+        <TrainingLoadAccordion
+          isLoading={isWorkoutHistoryLoading}
+          error={workoutHistoryError}
+          result={trainingLoad}
         />
         <ProgressStatusAccordion
           isLoading={isWorkoutHistoryLoading}
@@ -584,6 +597,140 @@ function NutritionAdherenceAccordion({
                   <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>ממוצע חלבון: {result.averages.protein} גרם</div>
                   <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>ממוצע פחמימות: {result.averages.carbs} גרם</div>
                   <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>ממוצע שומן: {result.averages.fat} גרם</div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function TrainingLoadAccordion({
+  isLoading,
+  error,
+  result,
+}: {
+  isLoading: boolean;
+  error: string;
+  result: TrainingLoadResult;
+}) {
+  const [open, setOpen] = useState(false);
+  const statusAccent =
+    result.status === 'low_load'
+      ? 'var(--success)'
+      : result.status === 'medium_load'
+        ? 'var(--accent)'
+        : result.status === 'high_load'
+          ? 'var(--danger)'
+          : 'var(--text-muted)';
+  const confidenceLabel =
+    result.confidence === 'high' ? 'גבוהה' : result.confidence === 'medium' ? 'בינונית' : 'נמוכה';
+  const flagLabels = {
+    performance: result.flags.performanceFlag === 'on' ? 'פעיל' : result.flags.performanceFlag === 'off' ? 'תקין' : 'לא ידוע',
+    effort:
+      result.flags.effortFlag === 'strong'
+        ? 'גבוה'
+        : result.flags.effortFlag === 'moderate'
+          ? 'בינוני'
+          : result.flags.effortFlag === 'off'
+            ? 'תקין'
+            : 'לא ידוע',
+    energy: result.flags.energyFlag === 'on' ? 'נמוכה' : result.flags.energyFlag === 'off' ? 'תקין' : 'לא ידוע',
+    execution: result.flags.executionFlag === 'on' ? 'פעיל' : result.flags.executionFlag === 'off' ? 'תקין' : 'לא ידוע',
+    duration: result.flags.durationFlag === 'on' ? 'ארוך מהרגיל' : result.flags.durationFlag === 'off' ? 'תקין' : 'לא ידוע',
+  };
+
+  return (
+    <div style={{ background: 'var(--surface)', borderRadius: 20, overflow: 'hidden' }}>
+      <button
+        type='button'
+        onClick={() => setOpen((prev) => !prev)}
+        style={{
+          width: '100%',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: 20,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          color: 'var(--text)',
+        }}
+      >
+        <div style={{ textAlign: 'right', flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 18, fontWeight: 800 }}>עומס / עייפות</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>{result.label}</div>
+        </div>
+        <span
+          style={{
+            fontSize: 18,
+            color: 'var(--text-muted)',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s',
+            flexShrink: 0,
+          }}
+        >
+          ג–¼
+        </span>
+      </button>
+
+      {open ? (
+        <div style={{ padding: '0 20px 20px' }}>
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800 }}>עומס / עייפות</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6, marginTop: 6 }}>
+                הדוח מעריך האם יש סימנים לכך שהעומס מהאימונים האחרונים מתחיל לפגוע בהתאוששות ובביצועים.
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div style={{ background: 'var(--surface-2)', borderRadius: 16, padding: 18, display: 'grid', gap: 10 }}>
+                <div style={{ fontSize: 20, fontWeight: 800 }}>עומס / עייפות</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>
+                  טוען היסטוריית אימונים...
+                </div>
+              </div>
+            ) : error ? (
+              <div style={{ background: 'var(--surface-2)', borderRadius: 16, padding: 18, display: 'grid', gap: 10 }}>
+                <div style={{ fontSize: 20, fontWeight: 800 }}>עומס / עייפות</div>
+                <div style={{ color: 'var(--danger)', fontSize: 14, lineHeight: 1.6 }}>{error}</div>
+              </div>
+            ) : (
+              <>
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 16,
+                    padding: 18,
+                    display: 'grid',
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>תוצאה מסכמת</div>
+                  <div style={{ fontSize: 26, fontWeight: 800, color: statusAccent }}>{result.label}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>{result.reason}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>רמת ביטחון: {confidenceLabel}</div>
+                </div>
+
+                <div
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 16,
+                    padding: 18,
+                    display: 'grid',
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>פירוק דגלים</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>ביצועים: {flagLabels.performance}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>מאמץ: {flagLabels.effort}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>אנרגיה: {flagLabels.energy}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>השלמת אימון: {flagLabels.execution}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>משך אימון: {flagLabels.duration}</div>
                 </div>
               </>
             )}

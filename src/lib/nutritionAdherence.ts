@@ -1,8 +1,8 @@
 import { diffDaysFromCurrentDate, type DataConfidence, type DataFreshness, type DataStatus } from '@/lib/dataReliability';
+import type { GoalType } from '@/lib/goalDefinitions';
 import {
   getDailyCalorieTarget,
   getDailyProteinTarget,
-  type GoalType,
   type ProfileForProgress,
 } from '@/lib/progressStatus';
 import type { SavedNutritionLog } from '@/lib/repositories/nutritionLogRepository';
