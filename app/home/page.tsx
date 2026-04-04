@@ -2,7 +2,8 @@
 
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { PageSpinner } from '@/components/PageSpinner';
 import { BodyweightChart } from '@/components/BodyweightChart';
@@ -23,9 +24,16 @@ import { calculateNutritionAdherence, type NutritionAdherenceResult } from '@/li
 import { calculateTrainingLoad, type TrainingLoadResult } from '@/lib/trainingLoad';
 import { getGoalKPIStatus, type GoalKPIStatusResult } from '@/lib/goalKpiStatus';
 import { normalizeGoalType, type GoalType } from '@/lib/goalDefinitions';
-import { getHomePriorityRecommendation, type HomeRecommendation } from '@/lib/homePriorityEngine';
 import { calculateDataCompleteness, type DataCompletenessResult } from '@/lib/dataCompleteness';
-import { getSecondaryHomeRecommendation, type SecondaryRecommendation } from '@/lib/homeSecondaryRecommendation';
+import { buildRecommendationContext } from '@/lib/recommendationContext';
+import {
+  selectDailyRecommendation,
+  selectWeeklyRecommendation,
+  selectRecoveryRecommendation,
+} from '@/lib/recommendationSelector';
+import type { RenderedRecommendation } from '@/lib/recommendationRenderer';
+import { parseRecoveryParam } from '@/lib/recoveryContext';
+import { RecoveryBanner } from '@/components/RecoveryBanner';
 
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 const formatDisplayDate = (value: string) => {
@@ -35,6 +43,10 @@ const formatDisplayDate = (value: string) => {
 
 export default function HomePage() {
   useSessionContext();
+  const searchParams = useSearchParams();
+  const recoveryType = parseRecoveryParam(searchParams.get('recovery'));
+  const [recoveryDismissed, setRecoveryDismissed] = useState(false);
+  const weightInputRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [bodyweightLogs, setBodyweightLogs] = useState<Array<{ date: string; weight: number }>>([]);
   const [nutritionLogs, setNutritionLogs] = useState<Array<{ date: string; totalProteinGrams: number; totalCalories: number | null }>>([]);
@@ -143,6 +155,12 @@ export default function HomePage() {
     setBodyweightMessage('');
   }, [selectedDateEntry]);
 
+  useEffect(() => {
+    if (recoveryType === 'weight' && !recoveryDismissed && !isLoading) {
+      weightInputRef.current?.focus();
+    }
+  }, [recoveryType, recoveryDismissed, isLoading]);
+
   const exerciseNames = useMemo(() => {
     const fromProgram = Array.from(
       new Set(
@@ -203,19 +221,6 @@ export default function HomePage() {
     });
   }, [normalizedGoal, userProfile, exerciseNames, workoutSessions, bodyweightLogs, fullNutritionLogs, workoutConsistency]);
 
-  const priorityRecommendation = useMemo<HomeRecommendation>(() => {
-    return getHomePriorityRecommendation({
-      goal: normalizedGoal,
-      progressStatus,
-      nutritionAdherence,
-      trainingLoad,
-      goalKpiStatus,
-      workoutConsistency,
-      hasTodayNutritionLog: Boolean(todayNutritionLog),
-      hasTodayWeight: Boolean(todayEntry),
-    });
-  }, [normalizedGoal, progressStatus, nutritionAdherence, trainingLoad, goalKpiStatus, workoutConsistency, todayNutritionLog, todayEntry]);
-
   const dataCompleteness = useMemo<DataCompletenessResult>(() => {
     return calculateDataCompleteness({
       bodyweightLogs,
@@ -225,20 +230,55 @@ export default function HomePage() {
     });
   }, [bodyweightLogs, fullNutritionLogs, workoutSessions, workoutProgram]);
 
-  const secondaryRecommendation = useMemo<SecondaryRecommendation | null>(
-    () => getSecondaryHomeRecommendation(dataCompleteness),
-    [dataCompleteness]
+  const recommendationCtx = useMemo(
+    () =>
+      buildRecommendationContext({
+        goal: normalizedGoal,
+        progressStatus,
+        nutritionAdherence,
+        trainingLoad,
+        goalKpiStatus,
+        workoutConsistency,
+        dataCompleteness,
+        workoutSessions,
+        workoutProgram,
+        hasTodayNutritionLog: Boolean(todayNutritionLog),
+        hasTodayWeight: Boolean(todayEntry),
+        todayWorkoutDone,
+      }),
+    [
+      normalizedGoal, progressStatus, nutritionAdherence, trainingLoad,
+      goalKpiStatus, workoutConsistency, dataCompleteness,
+      workoutSessions, workoutProgram, todayNutritionLog, todayEntry, todayWorkoutDone,
+    ]
+  );
+
+  const dailyRec = useMemo<RenderedRecommendation>(
+    () => selectDailyRecommendation(recommendationCtx),
+    [recommendationCtx]
+  );
+
+  const weeklyRec = useMemo<RenderedRecommendation>(
+    () => selectWeeklyRecommendation(recommendationCtx),
+    [recommendationCtx]
+  );
+
+  const recoveryRec = useMemo<RenderedRecommendation | null>(
+    () => selectRecoveryRecommendation(recommendationCtx, dataCompleteness.overallStatus),
+    [recommendationCtx, dataCompleteness]
   );
 
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[HomePriorityEngine]', {
-        id: priorityRecommendation.id,
-        score: priorityRecommendation.score,
-        scoreVector: priorityRecommendation.scoreVector,
+      console.log('[RecommendationEngine]', {
+        daily: dailyRec.id,
+        weekly: weeklyRec.id,
+        recovery: recoveryRec?.id ?? null,
+        todayIsWorkoutDay: recommendationCtx.todayIsWorkoutDay,
+        progressStatus: recommendationCtx.progressStatusLevel,
       });
     }
-  }, [priorityRecommendation]);
+  }, [dailyRec, weeklyRec, recoveryRec, recommendationCtx]);
 
   const handleSaveBodyweight = async () => {
     const numericWeight = Number(String(weightInput).replace(',', '.'));
@@ -264,6 +304,7 @@ export default function HomePage() {
         )
       );
       setBodyweightMessage('משקל הגוף נשמר.');
+      setRecoveryDismissed(true);
     } catch (error) {
       setBodyweightError(error instanceof Error ? error.message : 'שמירת משקל הגוף נכשלה.');
     } finally {
@@ -308,11 +349,18 @@ export default function HomePage() {
             padding: 20,
             display: 'grid',
             gap: 12,
+            ...(recoveryType === 'weight' && !recoveryDismissed
+              ? { outline: '2px solid var(--accent)', outlineOffset: 2 }
+              : {}),
           }}
         >
+          {recoveryType === 'weight' && !recoveryDismissed ? (
+            <RecoveryBanner message="כדאי לעדכן משקל כדי לשפר את דיוק התובנות וההמלצות." />
+          ) : null}
           <div style={{ fontSize: 20, fontWeight: 800 }}>רישום משקל</div>
           <div style={{ display: 'flex', gap: 8 }}>
             <input
+              ref={weightInputRef}
               type="number"
               inputMode="decimal"
               placeholder="80.5"
@@ -374,6 +422,32 @@ export default function HomePage() {
           <BodyweightChart logs={bodyweightLogs} />
         </div>
 
+        {/* ── Box 1: המלצה יומית ראשית ─────────────────────────────────── */}
+        <div
+          style={{
+            background: 'var(--surface)',
+            borderRadius: 20,
+            padding: 20,
+            display: 'grid',
+            gap: 12,
+          }}
+        >
+          <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>המלצה יומית</div>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>{dailyRec.title}</div>
+          <div style={{ color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>{dailyRec.body}</div>
+          {dailyRec.cta ? (
+            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+              <Link
+                href={dailyRec.cta.href as Parameters<typeof Link>[0]['href']}
+                style={{ ...primaryButtonStyle(false), textDecoration: 'none' }}
+              >
+                {dailyRec.cta.label}
+              </Link>
+            </div>
+          ) : null}
+        </div>
+
+        {/* ── Box 2: מטרת השבוע ─────────────────────────────────────────── */}
         <div
           style={{
             background: 'var(--surface)',
@@ -383,65 +457,56 @@ export default function HomePage() {
             gap: 10,
           }}
         >
-          <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>המלצה יומית</div>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>{priorityRecommendation.title}</div>
-          <div style={{ color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>
-            {priorityRecommendation.message}
-          </div>
-          {priorityRecommendation.reason !== priorityRecommendation.message ? (
-            <div style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.5 }}>
-              {priorityRecommendation.reason}
-            </div>
-          ) : null}
-          <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>
-            ביטחון:{' '}
-            {priorityRecommendation.confidence >= 0.8
-              ? 'גבוהה'
-              : priorityRecommendation.confidence >= 0.5
-                ? 'בינונית'
-                : 'נמוכה'}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>מטרת השבוע</div>
+          <div style={{ fontSize: 18, fontWeight: 800 }}>{weeklyRec.title}</div>
+          <div style={{ color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>{weeklyRec.body}</div>
+          {weeklyRec.cta ? (
             <Link
-              href={priorityRecommendation.cta.href as Parameters<typeof Link>[0]['href']}
-              style={{ ...primaryButtonStyle(false), textDecoration: 'none' }}
-            >
-              {priorityRecommendation.cta.label}
-            </Link>
-          </div>
-
-          {secondaryRecommendation ? (
-            <div
+              href={weeklyRec.cta.href as Parameters<typeof Link>[0]['href']}
               style={{
-                borderTop: '1px solid var(--border)',
-                paddingTop: 12,
-                display: 'grid',
-                gap: 6,
+                fontSize: 13,
+                fontWeight: 700,
+                color: 'var(--accent)',
+                textDecoration: 'none',
+                alignSelf: 'flex-start',
               }}
             >
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>
-                {secondaryRecommendation.title}
-              </div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                {secondaryRecommendation.message}
-              </div>
-              {secondaryRecommendation.cta ? (
-                <Link
-                  href={secondaryRecommendation.cta.href as Parameters<typeof Link>[0]['href']}
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: 'var(--accent)',
-                    textDecoration: 'none',
-                    alignSelf: 'flex-start',
-                  }}
-                >
-                  {secondaryRecommendation.cta.label} ←
-                </Link>
-              ) : null}
-            </div>
+              {weeklyRec.cta.label} ←
+            </Link>
           ) : null}
         </div>
+
+        {/* ── Box 3: השלמת נתונים — מוצג רק אם יש gap ──────────────────── */}
+        {recoveryRec ? (
+          <div
+            style={{
+              background: 'var(--surface-2)',
+              borderRadius: 20,
+              padding: 16,
+              display: 'grid',
+              gap: 8,
+              border: '1px solid var(--border)',
+            }}
+          >
+            <div style={{ color: 'var(--text-muted)', fontSize: 12, fontWeight: 700 }}>השלמת נתונים</div>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>{recoveryRec.title}</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.5 }}>{recoveryRec.body}</div>
+            {recoveryRec.cta ? (
+              <Link
+                href={recoveryRec.cta.href as Parameters<typeof Link>[0]['href']}
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'var(--accent)',
+                  textDecoration: 'none',
+                  alignSelf: 'flex-start',
+                }}
+              >
+                {recoveryRec.cta.label} ←
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
 
         <DataCompletenessCard completeness={dataCompleteness} />
 
