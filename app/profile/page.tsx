@@ -3,7 +3,10 @@
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ProtectedPage } from '@/components/ProtectedPage';
+import { parseRecoveryParam } from '@/lib/recoveryContext';
+import { RecoveryBanner } from '@/components/RecoveryBanner';
 import { PageSpinner } from '@/components/PageSpinner';
 import { fetchLatestBodyweight } from '@/lib/repositories/bodyweightRepository';
 import {
@@ -74,6 +77,9 @@ const parseCommaList = (value: string) =>
     .filter(Boolean);
 
 export default function ProfilePage() {
+  const searchParams = useSearchParams();
+  const recoveryType = parseRecoveryParam(searchParams.get('recovery'));
+  const [recoveryDismissed, setRecoveryDismissed] = useState(false);
   const { user, signOut } = useSessionContext();
   const { themePreference, setThemePreference } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
@@ -321,6 +327,7 @@ export default function ProfilePage() {
         names: savedDays.map((day) => day.name).filter(Boolean),
       });
       setProgramMessage('התוכנית נשמרה בהצלחה.');
+      setRecoveryDismissed(true);
     } catch (saveError) {
       setProgramError(saveError instanceof Error ? saveError.message : 'שמירת התוכנית נכשלה.');
       setProgramMessage('');
@@ -527,8 +534,14 @@ export default function ProfilePage() {
             padding: 20,
             display: 'grid',
             gap: 14,
+            ...(recoveryType === 'program' && !recoveryDismissed
+              ? { outline: '2px solid var(--accent)', outlineOffset: 2 }
+              : {}),
           }}
         >
+          {recoveryType === 'program' && !recoveryDismissed ? (
+            <RecoveryBanner message="כדאי להגדיר תוכנית אימונים פעילה כדי שנוכל לעקוב נכון אחרי ההתקדמות שלך." />
+          ) : null}
           <div style={{ display: 'grid', gap: 4 }}>
             <div style={{ fontSize: 18, fontWeight: 800 }}>עריכת תוכנית אימון</div>
             <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>

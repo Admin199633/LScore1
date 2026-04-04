@@ -2,7 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ProtectedPage } from '@/components/ProtectedPage';
+import { parseRecoveryParam } from '@/lib/recoveryContext';
+import { RecoveryBanner } from '@/components/RecoveryBanner';
 import { PageSpinner } from '@/components/PageSpinner';
 import {
   fetchActiveWorkoutProgram,
@@ -69,6 +72,9 @@ const energyLevels: Array<{ value: string; label: string }> = [
 const energyLabelMap = Object.fromEntries(energyLevels.map((level) => [level.value, level.label]));
 
 export default function WorkoutPage() {
+  const searchParams = useSearchParams();
+  const recoveryType = parseRecoveryParam(searchParams.get('recovery'));
+  const [recoveryDismissed, setRecoveryDismissed] = useState(false);
   const [programDays, setProgramDays] = useState<WorkoutProgramDay[]>([]);
   const [selectedDate, setSelectedDate] = useState(getTodayDate);
   const [selectedDayId, setSelectedDayId] = useState('');
@@ -307,6 +313,7 @@ export default function WorkoutPage() {
 
       setIsTimerRunning(false);
       setMessage('האימון נשמר.');
+      setRecoveryDismissed(true);
     } catch (saveError) {
       console.error('SAVE ERROR:', saveError);
       const rawMessage =
@@ -386,8 +393,14 @@ export default function WorkoutPage() {
             display: 'grid',
             gap: 14,
             color: '#eef4ff',
+            ...(recoveryType === 'workout' && !recoveryDismissed
+              ? { outline: '2px solid var(--accent)', outlineOffset: 2 }
+              : {}),
           }}
         >
+          {recoveryType === 'workout' && !recoveryDismissed ? (
+            <RecoveryBanner message="חסר תיעוד של אימון מהתקופה האחרונה. שמירת האימון הבא תשפר את דיוק המעקב." />
+          ) : null}
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
             <Link
               href="/workout-history"
