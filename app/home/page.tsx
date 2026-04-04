@@ -24,6 +24,8 @@ import { calculateTrainingLoad, type TrainingLoadResult } from '@/lib/trainingLo
 import { getGoalKPIStatus, type GoalKPIStatusResult } from '@/lib/goalKpiStatus';
 import { normalizeGoalType, type GoalType } from '@/lib/goalDefinitions';
 import { getHomePriorityRecommendation, type HomeRecommendation } from '@/lib/homePriorityEngine';
+import { calculateDataCompleteness, type DataCompletenessResult } from '@/lib/dataCompleteness';
+import { getSecondaryHomeRecommendation, type SecondaryRecommendation } from '@/lib/homeSecondaryRecommendation';
 
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 const formatDisplayDate = (value: string) => {
@@ -214,6 +216,20 @@ export default function HomePage() {
     });
   }, [normalizedGoal, progressStatus, nutritionAdherence, trainingLoad, goalKpiStatus, workoutConsistency, todayNutritionLog, todayEntry]);
 
+  const dataCompleteness = useMemo<DataCompletenessResult>(() => {
+    return calculateDataCompleteness({
+      bodyweightLogs,
+      nutritionLogs: fullNutritionLogs,
+      workoutSessions,
+      workoutProgram,
+    });
+  }, [bodyweightLogs, fullNutritionLogs, workoutSessions, workoutProgram]);
+
+  const secondaryRecommendation = useMemo<SecondaryRecommendation | null>(
+    () => getSecondaryHomeRecommendation(dataCompleteness),
+    [dataCompleteness]
+  );
+
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       console.log('[HomePriorityEngine]', {
@@ -393,10 +409,142 @@ export default function HomePage() {
               {priorityRecommendation.cta.label}
             </Link>
           </div>
+
+          {secondaryRecommendation ? (
+            <div
+              style={{
+                borderTop: '1px solid var(--border)',
+                paddingTop: 12,
+                display: 'grid',
+                gap: 6,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>
+                {secondaryRecommendation.title}
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                {secondaryRecommendation.message}
+              </div>
+              {secondaryRecommendation.cta ? (
+                <Link
+                  href={secondaryRecommendation.cta.href as Parameters<typeof Link>[0]['href']}
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: 'var(--accent)',
+                    textDecoration: 'none',
+                    alignSelf: 'flex-start',
+                  }}
+                >
+                  {secondaryRecommendation.cta.label} ←
+                </Link>
+              ) : null}
+            </div>
+          ) : null}
         </div>
+
+        <DataCompletenessCard completeness={dataCompleteness} />
 
       </div>
     </ProtectedPage>
+  );
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  complete: 'מלא',
+  partial:  'חלקי',
+  poor:     'חסר',
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  complete: 'var(--success)',
+  partial:  'var(--accent)',
+  poor:     'var(--danger)',
+};
+
+function DataCompletenessCard({ completeness }: { completeness: DataCompletenessResult }) {
+  const topGaps = completeness.gaps.slice(0, 2);
+  return (
+    <div
+      style={{
+        background: 'var(--surface)',
+        borderRadius: 20,
+        padding: 20,
+        display: 'grid',
+        gap: 12,
+      }}
+    >
+      <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>מצב נתונים</div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span
+          style={{
+            fontSize: 15,
+            fontWeight: 800,
+            color: STATUS_COLOR[completeness.overallStatus],
+          }}
+        >
+          {STATUS_LABEL[completeness.overallStatus]}
+        </span>
+        <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 700 }}>
+          {completeness.score}%
+        </span>
+      </div>
+
+      {/* score bar */}
+      <div style={{ height: 4, borderRadius: 999, background: 'var(--surface-2)', overflow: 'hidden' }}>
+        <div
+          style={{
+            height: '100%',
+            width: `${completeness.score}%`,
+            borderRadius: 999,
+            background: STATUS_COLOR[completeness.overallStatus],
+            transition: 'width 0.3s',
+          }}
+        />
+      </div>
+
+      {topGaps.length === 0 ? (
+        <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+          כל הנתונים עדכניים. המערכת יכולה לתת לך תובנות מדויקות.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: 8 }}>
+          {topGaps.map((gap) => (
+            <div
+              key={gap.type}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 8,
+              }}
+            >
+              <span style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.4, flex: 1 }}>
+                {gap.message}
+              </span>
+              <Link
+                href={gap.cta.href as Parameters<typeof Link>[0]['href']}
+                style={{
+                  border: 0,
+                  borderRadius: 10,
+                  background: 'var(--surface-2)',
+                  color: 'var(--text)',
+                  padding: '6px 12px',
+                  fontWeight: 700,
+                  fontSize: 12,
+                  whiteSpace: 'nowrap',
+                  textDecoration: 'none',
+                  flexShrink: 0,
+                }}
+              >
+                {gap.cta.label}
+              </Link>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
