@@ -16,17 +16,14 @@ import {
   getDailyCalorieTarget,
   getDailyProteinTarget,
   buildProgressStatus,
-  summarizeWeightTrend,
   type ProgressStatusResult,
 } from '@/lib/progressStatus';
 import { calculateWorkoutConsistency, type WorkoutConsistencyResult } from '@/lib/workoutConsistency';
 import { calculateNutritionAdherence, type NutritionAdherenceResult } from '@/lib/nutritionAdherence';
 import { calculateTrainingLoad, type TrainingLoadResult } from '@/lib/trainingLoad';
 import { getGoalKPIStatus, type GoalKPIStatusResult } from '@/lib/goalKpiStatus';
-import { calculateExerciseProgress } from '@/lib/exerciseProgress';
 import { normalizeGoalType, type GoalType } from '@/lib/goalDefinitions';
-import { generateRecommendations, type ExerciseProgressRecommendationInput, type RecommendationItem } from '@/lib/recommendations';
-import { getHomeDecision, type HomeDecisionResult } from '@/lib/homeDecision';
+import { getHomePriorityRecommendation, type HomeRecommendation } from '@/lib/homePriorityEngine';
 
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 const formatDisplayDate = (value: string) => {
@@ -204,49 +201,28 @@ export default function HomePage() {
     });
   }, [normalizedGoal, userProfile, exerciseNames, workoutSessions, bodyweightLogs, fullNutritionLogs, workoutConsistency]);
 
-  const weightTrend = useMemo(() => summarizeWeightTrend(bodyweightLogs), [bodyweightLogs]);
-
-  const exerciseProgressResults = useMemo<ExerciseProgressRecommendationInput[]>(() => {
-    return exerciseNames
-      .map((exerciseName) => ({
-        exerciseName,
-        result: calculateExerciseProgress(exerciseName, workoutSessions),
-      }))
-      .filter((item) => item.result.trend !== 'insufficient_data');
-  }, [exerciseNames, workoutSessions]);
-
-  const recommendations = useMemo<RecommendationItem[]>(() => {
-    return generateRecommendations({
+  const priorityRecommendation = useMemo<HomeRecommendation>(() => {
+    return getHomePriorityRecommendation({
       goal: normalizedGoal,
       progressStatus,
-      exerciseProgressResults,
       nutritionAdherence,
-      workoutConsistency,
-      weightTrend,
-    });
-  }, [normalizedGoal, progressStatus, exerciseProgressResults, nutritionAdherence, workoutConsistency, weightTrend]);
-
-  const homeDecision = useMemo<HomeDecisionResult>(() => {
-    return getHomeDecision({
-      goalKpiStatus,
-      progressStatus,
       trainingLoad,
-      nutritionAdherence,
-      recommendations,
-      hasTodayWorkout: todayWorkoutDone,
+      goalKpiStatus,
+      workoutConsistency,
       hasTodayNutritionLog: Boolean(todayNutritionLog),
       hasTodayWeight: Boolean(todayEntry),
     });
-  }, [
-    goalKpiStatus,
-    progressStatus,
-    trainingLoad,
-    nutritionAdherence,
-    recommendations,
-    todayWorkoutDone,
-    todayNutritionLog,
-    todayEntry,
-  ]);
+  }, [normalizedGoal, progressStatus, nutritionAdherence, trainingLoad, goalKpiStatus, workoutConsistency, todayNutritionLog, todayEntry]);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[HomePriorityEngine]', {
+        id: priorityRecommendation.id,
+        score: priorityRecommendation.score,
+        scoreVector: priorityRecommendation.scoreVector,
+      });
+    }
+  }, [priorityRecommendation]);
 
   const handleSaveBodyweight = async () => {
     const numericWeight = Number(String(weightInput).replace(',', '.'));
@@ -391,23 +367,30 @@ export default function HomePage() {
             gap: 10,
           }}
         >
-          <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>החלטה יומית</div>
-          <div style={{ fontSize: 22, fontWeight: 800 }}>{homeDecision.title}</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>{homeDecision.reason}</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-            רמת ביטחון: {homeDecision.confidence === 'high' ? 'גבוהה' : homeDecision.confidence === 'medium' ? 'בינונית' : 'נמוכה'}
+          <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>המלצה יומית</div>
+          <div style={{ fontSize: 22, fontWeight: 800 }}>{priorityRecommendation.title}</div>
+          <div style={{ color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>
+            {priorityRecommendation.message}
           </div>
-          {homeDecision.secondaryNote ? (
-            <div style={{ color: 'var(--accent)', fontSize: 14, fontWeight: 700 }}>
-              {homeDecision.secondaryNote}
+          {priorityRecommendation.reason !== priorityRecommendation.message ? (
+            <div style={{ color: 'var(--text-muted)', fontSize: 13, lineHeight: 1.5 }}>
+              {priorityRecommendation.reason}
             </div>
           ) : null}
+          <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+            ביטחון:{' '}
+            {priorityRecommendation.confidence >= 0.8
+              ? 'גבוהה'
+              : priorityRecommendation.confidence >= 0.5
+                ? 'בינונית'
+                : 'נמוכה'}
+          </div>
           <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
             <Link
-              href={homeDecision.primaryActionHref}
+              href={priorityRecommendation.cta.href as Parameters<typeof Link>[0]['href']}
               style={{ ...primaryButtonStyle(false), textDecoration: 'none' }}
             >
-              {homeDecision.primaryActionLabel}
+              {priorityRecommendation.cta.label}
             </Link>
           </div>
         </div>
