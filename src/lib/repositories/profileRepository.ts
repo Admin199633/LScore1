@@ -23,9 +23,30 @@ const requireCurrentUserId = async () => {
   return user.id;
 };
 
+const normalizeEmail = (value: string | null | undefined) => {
+  const normalized = String(value || '').trim().toLowerCase();
+  return normalized || null;
+};
+
+const mapProfileWriteError = (error: { message?: string; code?: string; details?: string | null }) => {
+  const message = String(error?.message || '');
+  const details = String(error?.details || '');
+
+  if (
+    error?.code === '23505' ||
+    message.includes('PROFILE_EMAIL_ALREADY_LINKED') ||
+    message.includes('profiles_email_unique_idx') ||
+    details.includes('profiles_email_unique_idx')
+  ) {
+    return new Error('This email is already linked to another account. Clean up the duplicate Auth user before continuing.');
+  }
+
+  return error instanceof Error ? error : new Error(message || 'Profile write failed.');
+};
+
 const buildProfilePayload = (user: Awaited<ReturnType<typeof requireCurrentUser>>) => ({
   id: user.id,
-  email: user.email || '',
+  email: normalizeEmail(user.email),
   auth_provider: user.app_metadata?.provider || 'email',
   ...(user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.user_name
     ? {
@@ -75,11 +96,12 @@ export const ensureProfile = async () => {
   });
 
   if (error) {
-    throw error;
+    throw mapProfileWriteError(error);
   }
 };
 
 export const fetchCurrentProfileRow = async () => {
+  await ensureProfile();
   const userId = await requireCurrentUserId();
   const { data, error } = await webSupabase
     .from('profiles')
@@ -130,7 +152,7 @@ export const saveCurrentProfile = async (
   );
 
   if (error) {
-    throw error;
+    throw mapProfileWriteError(error);
   }
 
   return {

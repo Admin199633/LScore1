@@ -34,6 +34,8 @@ import type { RenderedRecommendation } from '@/lib/recommendationRenderer';
 import { parseRecoveryParam } from '@/lib/recoveryContext';
 import { RecoveryBanner } from '@/components/RecoveryBanner';
 import { selectStableWeeklyRecommendation } from '@/lib/weeklyRecommendationEngine';
+import type { WeeklyGoalSnapshot } from '@/lib/weeklyGoalSnapshots';
+import { syncCurrentWeeklyGoalSnapshot } from '@/lib/weeklyGoalSnapshotService';
 
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 const formatDisplayDate = (value: string) => {
@@ -42,7 +44,7 @@ const formatDisplayDate = (value: string) => {
 };
 
 export default function HomePage() {
-  useSessionContext();
+  const { user } = useSessionContext();
   const searchParams = useSearchParams();
   const recoveryType = parseRecoveryParam(searchParams.get('recovery'));
   const [recoveryDismissed, setRecoveryDismissed] = useState(false);
@@ -60,6 +62,7 @@ export default function HomePage() {
   const [bodyweightMessage, setBodyweightMessage] = useState('');
   const [loadError, setLoadError] = useState('');
   const [userProfile, setUserProfile] = useState<{ age: number; height: number; gender: string; goal: string } | null>(null);
+  const [weeklySnapshot, setWeeklySnapshot] = useState<WeeklyGoalSnapshot | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -284,6 +287,71 @@ export default function HomePage() {
     ]
   );
 
+  useEffect(() => {
+    if (isLoading || !user?.id) {
+      return;
+    }
+
+    let isMounted = true;
+
+    syncCurrentWeeklyGoalSnapshot({
+      userId: user.id,
+      goal: normalizedGoal,
+      recommendation: weeklyRec,
+      recommendationContext: recommendationCtx,
+      progressStatus,
+      nutritionAdherence,
+      goalKpiStatus,
+      workoutConsistency,
+      bodyweightLogs,
+      nutritionLogs: fullNutritionLogs,
+      workoutSessions,
+      profile: userProfile,
+    })
+      .then((snapshot) => {
+        if (isMounted) {
+          setWeeklySnapshot(snapshot);
+        }
+      })
+      .catch((error) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[WeeklyGoalSnapshot]', error);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    isLoading,
+    user,
+    normalizedGoal,
+    weeklyRec,
+    recommendationCtx,
+    progressStatus,
+    nutritionAdherence,
+    goalKpiStatus,
+    workoutConsistency,
+    bodyweightLogs,
+    fullNutritionLogs,
+    workoutSessions,
+    userProfile,
+  ]);
+
+  const displayedWeeklyRec = useMemo<RenderedRecommendation>(
+    () =>
+      weeklySnapshot
+        ? {
+            id: weeklySnapshot.templateId || weeklySnapshot.id,
+            type: 'weekly',
+            title: weeklySnapshot.title,
+            body: weeklySnapshot.body,
+            cta: weeklyRec.cta,
+          }
+        : weeklyRec,
+    [weeklySnapshot, weeklyRec]
+  );
+
   const recoveryRec = useMemo<RenderedRecommendation | null>(
     () => selectRecoveryRecommendation(recommendationCtx, dataCompleteness.overallStatus),
     [recommendationCtx, dataCompleteness]
@@ -479,11 +547,11 @@ export default function HomePage() {
           }}
         >
           <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>מטרת השבוע</div>
-          <div style={{ fontSize: 18, fontWeight: 800 }}>{weeklyRec.title}</div>
-          <div style={{ color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>{weeklyRec.body}</div>
-          {weeklyRec.cta ? (
+          <div style={{ fontSize: 18, fontWeight: 800 }}>{displayedWeeklyRec.title}</div>
+          <div style={{ color: 'var(--text)', fontSize: 14, lineHeight: 1.6 }}>{displayedWeeklyRec.body}</div>
+          {displayedWeeklyRec.cta && weeklyRec.cta ? (
             <Link
-              href={weeklyRec.cta.href as Parameters<typeof Link>[0]['href']}
+              href={displayedWeeklyRec.cta.href as Parameters<typeof Link>[0]['href']}
               style={{
                 fontSize: 13,
                 fontWeight: 700,

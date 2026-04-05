@@ -1,5 +1,7 @@
 import { webSupabase } from '@/lib/supabase/browser';
 
+const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
 export const getCurrentSession = async () => {
   const { data, error } = await webSupabase.auth.getSession();
   if (error) {
@@ -20,7 +22,10 @@ export const signInWithEmail = async ({
   email: string;
   password: string;
 }) => {
-  const { data, error } = await webSupabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await webSupabase.auth.signInWithPassword({
+    email: normalizeEmail(email),
+    password,
+  });
   if (error) {
     throw error;
   }
@@ -35,7 +40,10 @@ export const signUpWithEmail = async ({
   email: string;
   password: string;
 }) => {
-  const { data, error } = await webSupabase.auth.signUp({ email, password });
+  const { data, error } = await webSupabase.auth.signUp({
+    email: normalizeEmail(email),
+    password,
+  });
   if (error) {
     throw error;
   }
