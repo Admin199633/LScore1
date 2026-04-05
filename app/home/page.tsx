@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { PageSpinner } from '@/components/PageSpinner';
@@ -43,7 +43,7 @@ const formatDisplayDate = (value: string) => {
   return year && month && day ? `${day}.${month}.${year}` : value;
 };
 
-export default function HomePage() {
+function HomePageContent() {
   const { user } = useSessionContext();
   const searchParams = useSearchParams();
   const recoveryType = parseRecoveryParam(searchParams.get('recovery'));
@@ -774,3 +774,11 @@ const primaryButtonStyle = (disabled: boolean): CSSProperties => ({
   cursor: disabled ? 'default' : 'pointer',
   opacity: disabled ? 0.7 : 1,
 });
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<PageSpinner />}>
+      <HomePageContent />
+    </Suspense>
+  );
+}

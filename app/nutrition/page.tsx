@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   calculateNutritionFromText,
@@ -38,7 +38,7 @@ const getResultStatus = (results: NutritionCalculationResult) => {
   };
 };
 
-export default function NutritionPage() {
+function NutritionPageContent() {
   const searchParams = useSearchParams();
   const recoveryType = parseRecoveryParam(searchParams.get('recovery'));
   const [recoveryDismissed, setRecoveryDismissed] = useState(false);
@@ -378,5 +378,13 @@ export default function NutritionPage() {
         </div>
       </div>
     </ProtectedPage>
+  );
+}
+
+export default function NutritionPage() {
+  return (
+    <Suspense fallback={null}>
+      <NutritionPageContent />
+    </Suspense>
   );
 }

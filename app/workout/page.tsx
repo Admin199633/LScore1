@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { parseRecoveryParam } from '@/lib/recoveryContext';
@@ -134,7 +134,7 @@ const energyLevels: Array<{ value: string; label: string }> = [
 ];
 const energyLabelMap = Object.fromEntries(energyLevels.map((level) => [level.value, level.label]));
 
-export default function WorkoutPage() {
+function WorkoutPageContent() {
   const searchParams = useSearchParams();
   const recoveryType = parseRecoveryParam(searchParams.get('recovery'));
   const [recoveryDismissed, setRecoveryDismissed] = useState(false);
@@ -1205,5 +1205,13 @@ export default function WorkoutPage() {
         );
       })()}
     </ProtectedPage>
+  );
+}
+
+export default function WorkoutPage() {
+  return (
+    <Suspense fallback={<PageSpinner />}>
+      <WorkoutPageContent />
+    </Suspense>
   );
 }

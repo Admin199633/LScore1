@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from 'react';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { parseRecoveryParam } from '@/lib/recoveryContext';
@@ -76,7 +76,7 @@ const parseCommaList = (value: string) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const searchParams = useSearchParams();
   const recoveryType = parseRecoveryParam(searchParams.get('recovery'));
   const [recoveryDismissed, setRecoveryDismissed] = useState(false);
@@ -737,3 +737,11 @@ const ghostButtonStyle: CSSProperties = {
   cursor: 'pointer',
   padding: 0,
 };
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<PageSpinner />}>
+      <ProfilePageContent />
+    </Suspense>
+  );
+}
