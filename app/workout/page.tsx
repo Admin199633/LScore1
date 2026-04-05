@@ -20,6 +20,11 @@ import {
 } from '@/lib/repositories/workoutSessionRepository';
 import { getExerciseInstruction } from '@/lib/exerciseInstructions';
 import { useVibrationSettings } from '@/lib/vibrationSettings';
+import {
+  loadWorkoutDraft,
+  saveWorkoutDraft,
+  clearWorkoutDraft,
+} from '@/lib/workoutDraftStorage';
 
 const emptySet = () => ({ weight: '', reps: '', difficulty: 'good' });
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
@@ -65,15 +70,6 @@ const formatTimer = (seconds: number) => {
 const buildProgressValue = (current: number, total: number) =>
   total > 0 ? Math.min(100, Math.round(((current + 1) / total) * 100)) : 0;
 
-const ACTIVE_WORKOUT_TIMER_STORAGE_KEY = 'gym.activeWorkoutTimer';
-
-type PersistedWorkoutTimer = {
-  startedAt: string;
-  energyLevel: string | null;
-  selectedDate: string;
-  selectedDayId: string;
-};
-
 const calculateElapsedSeconds = (startedAt: string) => {
   const startedAtMs = new Date(startedAt).getTime();
   if (!Number.isFinite(startedAtMs) || startedAtMs <= 0) {
@@ -81,51 +77,6 @@ const calculateElapsedSeconds = (startedAt: string) => {
   }
 
   return Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000));
-};
-
-const readPersistedWorkoutTimer = (): PersistedWorkoutTimer | null => {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(ACTIVE_WORKOUT_TIMER_STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    const parsed = JSON.parse(raw) as Partial<PersistedWorkoutTimer>;
-    if (!parsed.startedAt || !Number.isFinite(new Date(parsed.startedAt).getTime())) {
-      window.localStorage.removeItem(ACTIVE_WORKOUT_TIMER_STORAGE_KEY);
-      return null;
-    }
-
-    return {
-      startedAt: parsed.startedAt,
-      energyLevel: parsed.energyLevel ?? null,
-      selectedDate: String(parsed.selectedDate || '').trim(),
-      selectedDayId: String(parsed.selectedDayId || '').trim(),
-    };
-  } catch {
-    window.localStorage.removeItem(ACTIVE_WORKOUT_TIMER_STORAGE_KEY);
-    return null;
-  }
-};
-
-const persistWorkoutTimer = (payload: PersistedWorkoutTimer) => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.setItem(ACTIVE_WORKOUT_TIMER_STORAGE_KEY, JSON.stringify(payload));
-};
-
-const clearPersistedWorkoutTimer = () => {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.localStorage.removeItem(ACTIVE_WORKOUT_TIMER_STORAGE_KEY);
 };
 
 const energyLevels: Array<{ value: string; label: string }> = [
@@ -172,43 +123,48 @@ function WorkoutPageContent() {
       setError('');
 
       try {
-        const persistedTimer = readPersistedWorkoutTimer();
+        const draft = loadWorkoutDraft();
         const program = await fetchActiveWorkoutProgram();
         if (!isMounted) {
           return;
         }
 
         setProgramDays(program.days || []);
-        const firstDay = program.days?.[0] || null;
-        const restoredDay = persistedTimer?.selectedDayId
-          ? (program.days || []).find((day) => day.id === persistedTimer.selectedDayId) || null
-          : null;
-        const initialDay = restoredDay || firstDay;
-        setSelectedDate(persistedTimer?.selectedDate || getTodayDate());
-        setSelectedDayId(initialDay?.id || '');
-        setDraftExercises(buildDraftExercises(initialDay));
-        setCurrentExerciseIndex(0);
-        if (persistedTimer) {
-          setTimer(calculateElapsedSeconds(persistedTimer.startedAt));
+
+        if (draft) {
+          // Restore full active session from draft — do NOT rebuild from program template
+          setSelectedDate(draft.selectedDate);
+          setSelectedDayId(draft.selectedDayId);
+          setDraftExercises(draft.draftExercises);
+          setCurrentExerciseIndex(Math.min(draft.currentExerciseIndex, Math.max(0, draft.draftExercises.length - 1)));
+          setExerciseNotes(draft.exerciseNotes);
+          setReorderCount(draft.reorderCount);
+          setEnergyLevel(draft.energyLevel);
+          setTimer(calculateElapsedSeconds(draft.startedAt));
           setIsTimerRunning(true);
-          setEnergyLevel(persistedTimer.energyLevel);
-          workoutStartedAt.current = persistedTimer.startedAt;
+          workoutStartedAt.current = draft.startedAt;
           exerciseStartTime.current = Date.now();
         } else {
+          // No active draft — start fresh from program template
+          const firstDay = program.days?.[0] || null;
+          setSelectedDate(getTodayDate());
+          setSelectedDayId(firstDay?.id || '');
+          setDraftExercises(buildDraftExercises(firstDay));
+          setCurrentExerciseIndex(0);
           setTimer(0);
           setIsTimerRunning(false);
-        }
 
-        fetchSavedWorkoutSessions().then((sessions) => {
-          if (!isMounted || sessions.length === 0) return;
-          const last = sessions[0];
-          const lookup: Record<string, Array<{ weight: string; reps: string }>> = {};
-          for (const ex of last.exercises) {
-            lookup[ex.exerciseName] = ex.sets.map((s) => ({ weight: s.weight, reps: s.reps }));
-          }
-          setPrevSets(lookup);
-          setDraftExercises(buildDraftExercises(initialDay, lookup));
-        }).catch(() => {});
+          fetchSavedWorkoutSessions().then((sessions) => {
+            if (!isMounted || sessions.length === 0) return;
+            const last = sessions[0];
+            const lookup: Record<string, Array<{ weight: string; reps: string }>> = {};
+            for (const ex of last.exercises) {
+              lookup[ex.exerciseName] = ex.sets.map((s) => ({ weight: s.weight, reps: s.reps }));
+            }
+            setPrevSets(lookup);
+            setDraftExercises(buildDraftExercises(firstDay, lookup));
+          }).catch(() => {});
+        }
       } catch (loadError) {
         if (isMounted) {
           setError(loadError instanceof Error ? loadError.message : 'טעינת תוכנית האימון נכשלה.');
@@ -251,7 +207,7 @@ function WorkoutPageContent() {
     setReorderCount(0);
     exerciseStartTime.current = null;
     workoutStartedAt.current = null;
-    clearPersistedWorkoutTimer();
+    clearWorkoutDraft();
     setMessage('');
     setError('');
   };
@@ -295,11 +251,16 @@ function WorkoutPageContent() {
     setIsTimerRunning(true);
     exerciseStartTime.current = Date.now();
     workoutStartedAt.current = startedAt;
-    persistWorkoutTimer({
+    // Save full draft immediately so startedAt is captured even if user leaves right away
+    saveWorkoutDraft({
       startedAt,
-      energyLevel: nextEnergyLevel,
       selectedDate,
       selectedDayId,
+      energyLevel: nextEnergyLevel,
+      draftExercises,
+      currentExerciseIndex,
+      exerciseNotes,
+      reorderCount,
     });
   };
 
@@ -410,7 +371,7 @@ function WorkoutPageContent() {
       setIsTimerRunning(false);
       setTimer(totalDurationSeconds);
       workoutStartedAt.current = null;
-      clearPersistedWorkoutTimer();
+      clearWorkoutDraft();
       setMessage('האימון נשמר.');
       setRecoveryDismissed(true);
     } catch (saveError) {
@@ -487,13 +448,17 @@ function WorkoutPageContent() {
       return;
     }
 
-    persistWorkoutTimer({
+    saveWorkoutDraft({
       startedAt: workoutStartedAt.current,
-      energyLevel,
       selectedDate,
       selectedDayId,
+      energyLevel,
+      draftExercises,
+      currentExerciseIndex,
+      exerciseNotes,
+      reorderCount,
     });
-  }, [isTimerRunning, energyLevel, selectedDate, selectedDayId]);
+  }, [isTimerRunning, draftExercises, currentExerciseIndex, exerciseNotes, reorderCount, energyLevel, selectedDate, selectedDayId]);
 
   useEffect(() => {
     if (!isTimerRunning || !vibrationEnabled) return;

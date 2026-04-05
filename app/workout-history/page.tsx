@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import {
   fetchSavedWorkoutSessions,
+  deleteWorkoutSessionById,
   type SavedWorkoutSession,
 } from '@/lib/repositories/workoutSessionRepository';
 
@@ -37,9 +38,10 @@ const getSkippedExercises = (workout: SavedWorkoutSession) =>
 
 export default function WorkoutHistoryPage() {
   const [workouts, setWorkouts] = useState<SavedWorkoutSession[]>([]);
-  const [expandedKey, setExpandedKey] = useState('');
+  const [expandedId, setExpandedId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -56,7 +58,7 @@ export default function WorkoutHistoryPage() {
 
         setWorkouts(nextWorkouts);
         if (nextWorkouts[0]) {
-          setExpandedKey(`${nextWorkouts[0].date}-${nextWorkouts[0].dayName}`);
+          setExpandedId(nextWorkouts[0].id);
         }
       } catch (loadError) {
         if (isMounted) {
@@ -75,6 +77,20 @@ export default function WorkoutHistoryPage() {
       isMounted = false;
     };
   }, []);
+
+  const handleDelete = async (workout: SavedWorkoutSession) => {
+    if (!window.confirm('למחוק את האימון הזה?')) return;
+    setDeletingId(workout.id);
+    try {
+      await deleteWorkoutSessionById(workout.id);
+      setWorkouts((current) => current.filter((w) => w.id !== workout.id));
+      if (expandedId === workout.id) setExpandedId('');
+    } catch {
+      alert('שגיאה במחיקה, נסה שוב');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const sortedWorkouts = useMemo(
     () =>
@@ -125,23 +141,24 @@ export default function WorkoutHistoryPage() {
         ) : null}
 
         {sortedWorkouts.map((workout) => {
-          const key = `${workout.date}-${workout.dayName}`;
-          const isExpanded = expandedKey === key;
+          const isExpanded = expandedId === workout.id;
+          const isDeleting = deletingId === workout.id;
 
           return (
             <div
-              key={key}
+              key={workout.id}
               style={{
                 background: 'var(--surface)',
                 borderRadius: 20,
                 padding: 20,
                 display: 'grid',
                 gap: 12,
+                opacity: isDeleting ? 0.5 : 1,
               }}
             >
               <button
                 type="button"
-                onClick={() => setExpandedKey(isExpanded ? '' : key)}
+                onClick={() => setExpandedId(isExpanded ? '' : workout.id)}
                 style={{
                   border: 0,
                   background: 'transparent',
@@ -189,6 +206,44 @@ export default function WorkoutHistoryPage() {
                 ) : null}
               </div>
 
+              {/* Action buttons */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Link
+                  href={`/workout-history/${workout.id}/edit`}
+                  style={{
+                    border: 0,
+                    borderRadius: 10,
+                    background: 'var(--surface-2)',
+                    color: 'var(--text)',
+                    padding: '8px 14px',
+                    fontWeight: 700,
+                    fontSize: 14,
+                    cursor: 'pointer',
+                    textDecoration: 'none',
+                    display: 'inline-block',
+                  }}
+                >
+                  ערוך
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(workout)}
+                  disabled={isDeleting}
+                  style={{
+                    border: 0,
+                    borderRadius: 10,
+                    background: 'var(--danger-bg)',
+                    color: 'var(--danger)',
+                    padding: '8px 14px',
+                    fontWeight: 700,
+                    fontSize: 14,
+                    cursor: isDeleting ? 'default' : 'pointer',
+                  }}
+                >
+                  {isDeleting ? '...' : 'מחק'}
+                </button>
+              </div>
+
               {isExpanded ? (
                 <div style={{ display: 'grid', gap: 10 }}>
                   {getSkippedExercises(workout).length > 0 ? (
@@ -213,7 +268,7 @@ export default function WorkoutHistoryPage() {
                   ) : null}
                   {workout.exercises.filter((ex) => ex.sets.length > 0).map((exercise, exerciseIndex) => (
                     <div
-                      key={`${key}-done-${exercise.exerciseName}-${exerciseIndex}`}
+                      key={`${workout.id}-done-${exercise.exerciseName}-${exerciseIndex}`}
                       style={{
                         background: 'var(--surface-2)',
                         borderRadius: 16,
@@ -237,7 +292,7 @@ export default function WorkoutHistoryPage() {
                       <div style={{ display: 'grid', gap: 6 }}>
                         {exercise.sets.map((setItem, setIndex) => (
                           <div
-                            key={`${key}-${exercise.exerciseName}-${setIndex}`}
+                            key={`${workout.id}-${exercise.exerciseName}-${setIndex}`}
                             style={{
                               background: '#121212',
                               borderRadius: 12,

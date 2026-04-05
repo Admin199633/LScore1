@@ -8,6 +8,7 @@ const normalizeSet = (row: { weight?: number | string; reps?: number | string; d
 });
 
 export type SavedWorkoutSession = {
+  id: string;
   date: string;
   dayId: string;
   dayName: string;
@@ -115,6 +116,7 @@ const buildLegacyExercisesPayload = (
 
 const normalizeWorkout = (
   sessionRow: {
+    id: string;
     session_date: string;
     day_id?: string | null;
     day_name?: string | null;
@@ -143,6 +145,7 @@ const normalizeWorkout = (
     difficulty?: string | null;
   }> = []
 ): SavedWorkoutSession => ({
+  id: sessionRow.id,
   date: sessionRow.session_date,
   dayId: sessionRow.day_id || '',
   dayName: sessionRow.day_name || '',
@@ -244,6 +247,71 @@ export const deleteWorkoutSession = async (date: string, dayId: string): Promise
 
   const { error } = await query;
   if (error) throw error;
+};
+
+export const deleteWorkoutSessionById = async (id: string): Promise<void> => {
+  const {
+    data: { user },
+    error: userError,
+  } = await webSupabase.auth.getUser();
+
+  if (userError || !user?.id) throw userError || new Error('המשתמש לא מחובר.');
+
+  const { error } = await webSupabase
+    .from('workout_sessions')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id); // RLS guard: user can only delete their own sessions
+
+  if (error) throw error;
+};
+
+export const getWorkoutSessionById = async (id: string): Promise<SavedWorkoutSession | null> => {
+  const {
+    data: { user },
+    error: userError,
+  } = await webSupabase.auth.getUser();
+
+  if (userError || !user?.id) throw userError || new Error('המשתמש לא מחובר.');
+
+  const { data: sessionRow, error: sessionError } = await webSupabase
+    .from('workout_sessions')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single();
+
+  if (sessionError || !sessionRow) return null;
+
+  const { data: exerciseRows, error: exerciseError } = await webSupabase
+    .from('workout_session_exercises')
+    .select('*')
+    .eq('workout_session_id', id)
+    .order('exercise_order', { ascending: true });
+
+  if (exerciseError) throw exerciseError;
+
+  const exerciseIds = (exerciseRows || []).map((row) => row.id);
+  let setRows: Array<{
+    workout_session_exercise_id: string;
+    set_order: number;
+    weight?: number | string;
+    reps?: number | string;
+    difficulty?: string | null;
+  }> = [];
+
+  if (exerciseIds.length > 0) {
+    const { data, error } = await webSupabase
+      .from('workout_session_sets')
+      .select('*')
+      .in('workout_session_exercise_id', exerciseIds)
+      .order('set_order', { ascending: true });
+
+    if (error) throw error;
+    setRows = data || [];
+  }
+
+  return normalizeWorkout(sessionRow, exerciseRows || [], setRows);
 };
 
 export const fetchSavedWorkoutSessions = async (): Promise<SavedWorkoutSession[]> => {
