@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, FormEvent, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   calculateNutritionFromText,
@@ -10,8 +10,8 @@ import {
 import { proteinFoods, type ProteinFoodEntry } from '@shared-engines/proteinFoods';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { appendNutritionLog, saveNutritionLog } from '@/lib/repositories/nutritionLogRepository';
-import { listUserFoods } from '@/lib/repositories/userFoodRepository';
-import { mapUserFoodsToEntries } from '@/lib/userFoodMapper';
+import { createUserFood, listUserFoods } from '@/lib/repositories/userFoodRepository';
+import { mapUserFoodToEntry, mapUserFoodsToEntries } from '@/lib/userFoodMapper';
 import { parseRecoveryParam } from '@/lib/recoveryContext';
 import { RecoveryBanner } from '@/components/RecoveryBanner';
 
@@ -55,6 +55,18 @@ function NutritionPageContent() {
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [errorsExpanded, setErrorsExpanded] = useState(false);
   const [userFoodEntries, setUserFoodEntries] = useState<ProteinFoodEntry[]>([]);
+
+  type AddFoodModal = {
+    sourceText: string;
+    name: string;
+    calories: string;
+    protein: string;
+    carbs: string;
+    fat: string;
+    error: string;
+    saving: boolean;
+  };
+  const [addFoodModal, setAddFoodModal] = useState<AddFoodModal | null>(null);
 
   const unresolvedItems = useMemo(
     () => results?.items.filter((item) => item.status === 'unresolved') ?? [],
@@ -134,6 +146,68 @@ function NutritionPageContent() {
       setSaveError(error instanceof Error ? error.message : 'הוספה ליומן התזונה נכשלה.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleAddFoodSave = async () => {
+    if (!addFoodModal) return;
+
+    const name = addFoodModal.name.trim();
+    const calories = Number(addFoodModal.calories);
+    const protein = Number(addFoodModal.protein);
+    const carbs = Number(addFoodModal.carbs);
+    const fat = Number(addFoodModal.fat);
+
+    if (!name) {
+      setAddFoodModal((m) => m ? { ...m, error: 'שם המזון הוא שדה חובה.' } : null);
+      return;
+    }
+    if (addFoodModal.calories === '' || isNaN(calories) || calories < 0) {
+      setAddFoodModal((m) => m ? { ...m, error: 'יש להזין ערך קלוריות תקין.' } : null);
+      return;
+    }
+    if (addFoodModal.protein === '' || isNaN(protein) || protein < 0) {
+      setAddFoodModal((m) => m ? { ...m, error: 'יש להזין ערך חלבון תקין.' } : null);
+      return;
+    }
+    if (addFoodModal.carbs === '' || isNaN(carbs) || carbs < 0) {
+      setAddFoodModal((m) => m ? { ...m, error: 'יש להזין ערך פחמימות תקין.' } : null);
+      return;
+    }
+    if (addFoodModal.fat === '' || isNaN(fat) || fat < 0) {
+      setAddFoodModal((m) => m ? { ...m, error: 'יש להזין ערך שומן תקין.' } : null);
+      return;
+    }
+
+    setAddFoodModal((m) => m ? { ...m, saving: true, error: '' } : null);
+
+    try {
+      const created = await createUserFood({
+        name,
+        aliases: [],
+        calories,
+        protein,
+        carbs,
+        fat,
+        unit_type: 'weight',
+        unit_label: '100g',
+        unit_grams: 100,
+        source_unresolved_text: addFoodModal.sourceText || null,
+      });
+
+      const newEntry = mapUserFoodToEntry(created);
+      const nextUserFoods = [newEntry, ...userFoodEntries];
+      setUserFoodEntries(nextUserFoods);
+
+      // Re-run calculation immediately with the updated food list
+      const nextMerged = [...nextUserFoods, ...proteinFoods];
+      setResults(calculateNutritionFromText(input, nextMerged));
+
+      setAddFoodModal(null);
+    } catch (error) {
+      setAddFoodModal((m) =>
+        m ? { ...m, saving: false, error: error instanceof Error ? error.message : 'שמירת המזון נכשלה.' } : null
+      );
     }
   };
 
@@ -266,8 +340,31 @@ function NutritionPageContent() {
                     ⚠️ {unresolvedItems.length} פריטים לא זוהו:
                   </div>
                   {unresolvedItems.map((item, index) => (
-                    <div key={index} style={{ fontSize: 13, color: 'var(--danger)' }}>
-                      • {item.originalText}{item.reason ? ` — ${item.reason}` : ''}
+                    <div
+                      key={index}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}
+                    >
+                      <div style={{ fontSize: 13, color: 'var(--danger)', flex: 1 }}>
+                        • {item.originalText}{item.reason ? ` — ${item.reason}` : ''}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setAddFoodModal({
+                            sourceText: item.originalText,
+                            name: item.name || item.originalText,
+                            calories: '',
+                            protein: '',
+                            carbs: '',
+                            fat: '',
+                            error: '',
+                            saving: false,
+                          })
+                        }
+                        style={addFoodButtonStyle}
+                      >
+                        הוסף מזון
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -392,9 +489,170 @@ function NutritionPageContent() {
           </Link>
         </div>
       </div>
+
+      {/* ── Add Custom Food Modal ─────────────────────────────────────────── */}
+      {addFoodModal !== null ? (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.6)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !addFoodModal.saving) setAddFoodModal(null);
+          }}
+        >
+          <div
+            style={{
+              background: 'var(--surface)',
+              borderRadius: '20px 20px 0 0',
+              padding: 24,
+              width: '100%',
+              maxWidth: 480,
+              display: 'grid',
+              gap: 14,
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: 18, fontWeight: 800 }}>הוספת מזון מותאם אישית</div>
+              <button
+                type="button"
+                onClick={() => { if (!addFoodModal.saving) setAddFoodModal(null); }}
+                style={{ border: 0, background: 'transparent', color: 'var(--text-muted)', fontSize: 20, cursor: 'pointer', padding: 0, lineHeight: 1 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Source text hint */}
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', background: 'var(--surface-2)', borderRadius: 10, padding: '8px 12px' }}>
+              מזון לא זוהה: &ldquo;{addFoodModal.sourceText}&rdquo;
+            </div>
+
+            {/* Name */}
+            <div style={{ display: 'grid', gap: 6 }}>
+              <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>שם המזון *</label>
+              <input
+                type="text"
+                value={addFoodModal.name}
+                onChange={(e) => setAddFoodModal((m) => m ? { ...m, name: e.target.value } : null)}
+                placeholder="שם המזון"
+                disabled={addFoodModal.saving}
+                style={modalInputStyle}
+              />
+            </div>
+
+            {/* Macro fields per 100g */}
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>ערכים תזונתיים ל-100 גרם:</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ display: 'grid', gap: 6 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>קלוריות *</label>
+                <input
+                  type="number"
+                  value={addFoodModal.calories}
+                  onChange={(e) => setAddFoodModal((m) => m ? { ...m, calories: e.target.value } : null)}
+                  placeholder="0"
+                  min="0"
+                  disabled={addFoodModal.saving}
+                  style={modalInputStyle}
+                />
+              </div>
+              <div style={{ display: 'grid', gap: 6 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>חלבון (g) *</label>
+                <input
+                  type="number"
+                  value={addFoodModal.protein}
+                  onChange={(e) => setAddFoodModal((m) => m ? { ...m, protein: e.target.value } : null)}
+                  placeholder="0"
+                  min="0"
+                  disabled={addFoodModal.saving}
+                  style={modalInputStyle}
+                />
+              </div>
+              <div style={{ display: 'grid', gap: 6 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>פחמימות (g) *</label>
+                <input
+                  type="number"
+                  value={addFoodModal.carbs}
+                  onChange={(e) => setAddFoodModal((m) => m ? { ...m, carbs: e.target.value } : null)}
+                  placeholder="0"
+                  min="0"
+                  disabled={addFoodModal.saving}
+                  style={modalInputStyle}
+                />
+              </div>
+              <div style={{ display: 'grid', gap: 6 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>שומן (g) *</label>
+                <input
+                  type="number"
+                  value={addFoodModal.fat}
+                  onChange={(e) => setAddFoodModal((m) => m ? { ...m, fat: e.target.value } : null)}
+                  placeholder="0"
+                  min="0"
+                  disabled={addFoodModal.saving}
+                  style={modalInputStyle}
+                />
+              </div>
+            </div>
+
+            {addFoodModal.error ? (
+              <div style={{ color: 'var(--danger)', fontSize: 13 }}>{addFoodModal.error}</div>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={handleAddFoodSave}
+              disabled={addFoodModal.saving}
+              style={{
+                border: 0,
+                borderRadius: 14,
+                background: 'var(--accent)',
+                color: '#fff',
+                padding: '14px 16px',
+                fontWeight: 800,
+                cursor: addFoodModal.saving ? 'default' : 'pointer',
+                opacity: addFoodModal.saving ? 0.7 : 1,
+                fontSize: 15,
+              }}
+            >
+              {addFoodModal.saving ? 'שומר...' : 'שמור מזון'}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </ProtectedPage>
   );
 }
+
+const modalInputStyle: CSSProperties = {
+  width: '100%',
+  borderRadius: 12,
+  border: '1px solid var(--border)',
+  background: 'var(--surface-2)',
+  color: 'var(--text)',
+  padding: '10px 12px',
+  fontSize: 15,
+};
+
+const addFoodButtonStyle: CSSProperties = {
+  border: '1px solid var(--danger)',
+  borderRadius: 8,
+  background: 'transparent',
+  color: 'var(--danger)',
+  fontSize: 11,
+  fontWeight: 700,
+  cursor: 'pointer',
+  padding: '3px 8px',
+  whiteSpace: 'nowrap',
+  flexShrink: 0,
+};
 
 export default function NutritionPage() {
   return (
