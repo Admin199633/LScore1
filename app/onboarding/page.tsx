@@ -109,7 +109,12 @@ const parseCommaList = (value: string) =>
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { hasOnboarding, refreshOnboarding } = useSessionContext();
+  const { hasOnboarding, refreshOnboarding, signOut } = useSessionContext();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.replace('/auth');
+  };
   const [form, setForm] = useState(buildInitialState);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -302,7 +307,23 @@ export default function OnboardingPage() {
             gap: 8,
           }}
         >
-          <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>פתיחה</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>פתיחה</div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              style={{
+                border: 0,
+                background: 'transparent',
+                color: 'var(--text-muted)',
+                fontSize: 13,
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              התנתק
+            </button>
+          </div>
           <div style={{ fontSize: 26, fontWeight: 800 }}>השלמת פרופיל ותוכנית</div>
           <div style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
             הזן פרטים אישיים והגדר את ימי האימון הראשונים שלך.
