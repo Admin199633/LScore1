@@ -7,8 +7,11 @@ import {
   calculateNutritionFromText,
   type NutritionCalculationResult,
 } from '@shared-engines/proteinEngine';
+import { proteinFoods, type ProteinFoodEntry } from '@shared-engines/proteinFoods';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { appendNutritionLog, saveNutritionLog } from '@/lib/repositories/nutritionLogRepository';
+import { listUserFoods } from '@/lib/repositories/userFoodRepository';
+import { mapUserFoodsToEntries } from '@/lib/userFoodMapper';
 import { parseRecoveryParam } from '@/lib/recoveryContext';
 import { RecoveryBanner } from '@/components/RecoveryBanner';
 
@@ -51,6 +54,7 @@ function NutritionPageContent() {
   const [saveError, setSaveError] = useState('');
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [errorsExpanded, setErrorsExpanded] = useState(false);
+  const [userFoodEntries, setUserFoodEntries] = useState<ProteinFoodEntry[]>([]);
 
   const unresolvedItems = useMemo(
     () => results?.items.filter((item) => item.status === 'unresolved') ?? [],
@@ -65,11 +69,22 @@ function NutritionPageContent() {
     }
   }, [recoveryType, recoveryDismissed]);
 
+  useEffect(() => {
+    listUserFoods()
+      .then((rows) => setUserFoodEntries(mapUserFoodsToEntries(rows)))
+      .catch(() => {}); // silent fail — falls back to JSON foods only
+  }, []);
+
+  const mergedFoods = useMemo<ProteinFoodEntry[]>(
+    () => (userFoodEntries.length > 0 ? [...userFoodEntries, ...proteinFoods] : proteinFoods),
+    [userFoodEntries]
+  );
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaveMessage('');
     setSaveError('');
-    setResults(calculateNutritionFromText(input));
+    setResults(calculateNutritionFromText(input, mergedFoods));
   };
 
   const buildNutritionLogInput = () => ({

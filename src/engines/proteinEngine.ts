@@ -340,20 +340,20 @@ const parseLine = (line: string): ProteinLineParse => {
   };
 };
 
-const matchFood = (foodText: string): ProteinFoodEntry | null => {
+const matchFood = (foodText: string, foods: ProteinFoodEntry[]): ProteinFoodEntry | null => {
   const trimmedFoodText = foodText.trim();
   if (!trimmedFoodText) {
     return null;
   }
 
   const exactCanonicalMatch =
-    proteinFoods.find((food) => food.name === trimmedFoodText) || null;
+    foods.find((food) => food.name === trimmedFoodText) || null;
   if (exactCanonicalMatch) {
     return exactCanonicalMatch;
   }
 
   const exactAliasMatch =
-    proteinFoods.find((food) => food.aliases.some((alias) => alias === trimmedFoodText)) || null;
+    foods.find((food) => food.aliases.some((alias) => alias === trimmedFoodText)) || null;
   if (exactAliasMatch) {
     return exactAliasMatch;
   }
@@ -364,7 +364,7 @@ const matchFood = (foodText: string): ProteinFoodEntry | null => {
   }
 
   const normalizedMatch =
-    proteinFoods.find((food) => {
+    foods.find((food) => {
       const normalizedNames = [food.name, ...food.aliases].map(normalizeFoodText);
       return normalizedNames.includes(normalizedFoodText);
     }) || null;
@@ -372,7 +372,10 @@ const matchFood = (foodText: string): ProteinFoodEntry | null => {
   return normalizedMatch;
 };
 
-export const resolveFoodMatch = (parsedItem: ProteinLineParse): FoodMatchResult => {
+export const resolveFoodMatch = (
+  parsedItem: ProteinLineParse,
+  foods: ProteinFoodEntry[] = proteinFoods
+): FoodMatchResult => {
   const cleanedFoodText = String(parsedItem.cleanedFoodText || '').trim();
   if (!cleanedFoodText) {
     return {
@@ -385,7 +388,7 @@ export const resolveFoodMatch = (parsedItem: ProteinLineParse): FoodMatchResult 
   }
 
   const exactCanonicalMatch =
-    proteinFoods.find((food) => food.name === cleanedFoodText) || null;
+    foods.find((food) => food.name === cleanedFoodText) || null;
   if (exactCanonicalMatch) {
     return {
       matchedFood: exactCanonicalMatch,
@@ -396,7 +399,7 @@ export const resolveFoodMatch = (parsedItem: ProteinLineParse): FoodMatchResult 
   }
 
   const exactAliasMatch =
-    proteinFoods.find((food) => food.aliases.some((alias) => alias === cleanedFoodText)) || null;
+    foods.find((food) => food.aliases.some((alias) => alias === cleanedFoodText)) || null;
   if (exactAliasMatch) {
     return {
       matchedFood: exactAliasMatch,
@@ -417,7 +420,7 @@ export const resolveFoodMatch = (parsedItem: ProteinLineParse): FoodMatchResult 
     };
   }
 
-  const normalizedMatch = matchFood(cleanedFoodText);
+  const normalizedMatch = matchFood(cleanedFoodText, foods);
   if (normalizedMatch) {
     return {
       matchedFood: normalizedMatch,
@@ -438,7 +441,7 @@ export const resolveFoodMatch = (parsedItem: ProteinLineParse): FoodMatchResult 
     };
   }
 
-  const fuzzyCandidates = proteinFoods
+  const fuzzyCandidates = foods
     .map((food) => {
       const candidateNames = [food.name, ...food.aliases];
       let bestScore = 0;
@@ -605,12 +608,15 @@ const resolveNutritionFromUnits = (
   };
 };
 
-const calculateProteinForParsedLine = (parsedLine: ProteinLineParse): ProteinItemResult => {
+const calculateProteinForParsedLine = (
+  parsedLine: ProteinLineParse,
+  foods: ProteinFoodEntry[]
+): ProteinItemResult => {
   if (!parsedLine.cleanedFoodText) {
     return buildUnresolvedItem(parsedLine.originalText, parsedLine.originalText, 'לא זוהה מזון');
   }
 
-  const matchResult = resolveFoodMatch(parsedLine);
+  const matchResult = resolveFoodMatch(parsedLine, foods);
   const matchedFood = matchResult.matchedFood;
   if (!matchedFood) {
     return buildUnresolvedItem(
@@ -640,7 +646,10 @@ const calculateProteinForParsedLine = (parsedLine: ProteinLineParse): ProteinIte
   );
 };
 
-const calculateNutritionForParsedLine = (parsedLine: ProteinLineParse): NutritionItemResult => {
+const calculateNutritionForParsedLine = (
+  parsedLine: ProteinLineParse,
+  foods: ProteinFoodEntry[]
+): NutritionItemResult => {
   if (!parsedLine.cleanedFoodText) {
     return {
       originalText: parsedLine.originalText,
@@ -652,7 +661,7 @@ const calculateNutritionForParsedLine = (parsedLine: ProteinLineParse): Nutritio
     };
   }
 
-  const matchResult = resolveFoodMatch(parsedLine);
+  const matchResult = resolveFoodMatch(parsedLine, foods);
   const matchedFood = matchResult.matchedFood;
   if (!matchedFood) {
     return {
@@ -693,9 +702,12 @@ const calculateNutritionForParsedLine = (parsedLine: ProteinLineParse): Nutritio
 export const parseProteinText = (input: string): ProteinLineParse[] =>
   splitNutritionItems(input).map(parseLine);
 
-export const calculateProteinFromText = (input: string): ProteinCalculationResult => {
+export const calculateProteinFromText = (
+  input: string,
+  foods: ProteinFoodEntry[] = proteinFoods
+): ProteinCalculationResult => {
   const parsedLines = parseProteinText(input);
-  const items = parsedLines.map(calculateProteinForParsedLine);
+  const items = parsedLines.map((line) => calculateProteinForParsedLine(line, foods));
   const totalProteinGrams = roundToOneDecimal(
     items.reduce((sum, item) => sum + (item.proteinGrams || 0), 0)
   );
@@ -736,8 +748,11 @@ export const aggregateNutrition = (items: NutritionItemResult[]): Partial<Nutrit
   };
 };
 
-export const calculateNutritionFromParsedInput = (parsedLines: ProteinLineParse[]): NutritionCalculationResult => {
-  const items = parsedLines.map(calculateNutritionForParsedLine);
+export const calculateNutritionFromParsedInput = (
+  parsedLines: ProteinLineParse[],
+  foods: ProteinFoodEntry[] = proteinFoods
+): NutritionCalculationResult => {
+  const items = parsedLines.map((line) => calculateNutritionForParsedLine(line, foods));
   const calculatedItems = items.filter((item) => item.status === 'calculated');
   const totals = aggregateNutrition(items);
   const totalProteinGrams = totals.protein ?? 0;
@@ -747,7 +762,10 @@ export const calculateNutritionFromParsedInput = (parsedLines: ProteinLineParse[
   return { items, totals, totalProteinGrams, hasPartialNutrition, unresolvedCount };
 };
 
-export const calculateNutritionFromText = (input: string): NutritionCalculationResult => {
+export const calculateNutritionFromText = (
+  input: string,
+  foods: ProteinFoodEntry[] = proteinFoods
+): NutritionCalculationResult => {
   const parsedLines = parseProteinText(input);
-  return calculateNutritionFromParsedInput(parsedLines);
+  return calculateNutritionFromParsedInput(parsedLines, foods);
 };
