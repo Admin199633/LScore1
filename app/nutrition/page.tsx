@@ -205,9 +205,11 @@ function NutritionPageContent() {
 
       setAddFoodModal(null);
     } catch (error) {
-      setAddFoodModal((m) =>
-        m ? { ...m, saving: false, error: error instanceof Error ? error.message : 'שמירת המזון נכשלה.' } : null
-      );
+      const msg =
+        error instanceof Error
+          ? error.message
+          : (error as { message?: string })?.message || 'שמירת המזון נכשלה.';
+      setAddFoodModal((m) => m ? { ...m, saving: false, error: msg } : null);
     }
   };
 
