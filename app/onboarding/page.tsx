@@ -299,25 +299,7 @@ export default function OnboardingPage() {
             gap: 8,
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>פתיחה</div>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              style={{
-                border: '1px solid var(--border)',
-                borderRadius: 10,
-                background: 'var(--surface-2)',
-                color: 'var(--text)',
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                padding: '6px 14px',
-              }}
-            >
-              התנתק
-            </button>
-          </div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>פתיחה</div>
           <div style={{ fontSize: 26, fontWeight: 800 }}>השלמת פרופיל ותוכנית</div>
           <div style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
             הזן פרטים אישיים והגדר את ימי האימון הראשונים שלך.
@@ -527,6 +509,22 @@ export default function OnboardingPage() {
           }}
         >
           {isSaving ? 'שומר...' : 'שמור והמשך'}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleSignOut}
+          style={{
+            border: 0,
+            borderRadius: 18,
+            background: 'var(--danger-bg)',
+            color: 'var(--danger)',
+            padding: '16px 18px',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          התנתק
         </button>
         </>)}
       </div>
