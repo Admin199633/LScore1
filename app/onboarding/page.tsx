@@ -287,14 +287,6 @@ export default function OnboardingPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <ProtectedPage allowIncompleteOnboarding>
-        <div style={{ color: 'var(--text-muted)' }}>טוען פתיחה...</div>
-      </ProtectedPage>
-    );
-  }
-
   return (
     <ProtectedPage allowIncompleteOnboarding>
       <div style={{ display: 'grid', gap: 16 }}>
@@ -313,12 +305,14 @@ export default function OnboardingPage() {
               type="button"
               onClick={handleSignOut}
               style={{
-                border: 0,
-                background: 'transparent',
-                color: 'var(--text-muted)',
+                border: '1px solid var(--border)',
+                borderRadius: 10,
+                background: 'var(--surface-2)',
+                color: 'var(--text)',
                 fontSize: 13,
+                fontWeight: 600,
                 cursor: 'pointer',
-                padding: 0,
+                padding: '6px 14px',
               }}
             >
               התנתק
@@ -329,6 +323,10 @@ export default function OnboardingPage() {
             הזן פרטים אישיים והגדר את ימי האימון הראשונים שלך.
           </div>
         </div>
+
+        {isLoading ? (
+          <div style={{ color: 'var(--text-muted)', padding: '8px 4px' }}>טוען פתיחה...</div>
+        ) : (<>
 
         <div
           style={{
@@ -530,6 +528,7 @@ export default function OnboardingPage() {
         >
           {isSaving ? 'שומר...' : 'שמור והמשך'}
         </button>
+        </>)}
       </div>
     </ProtectedPage>
   );
