@@ -70,3 +70,40 @@ export const createUserFood = async (input: CreateUserFoodInput): Promise<UserFo
   if (error) throw error;
   return data as UserFoodRow;
 };
+
+export const deleteUserFood = async (id: string): Promise<void> => {
+  const { error } = await webSupabase
+    .from('user_foods')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+};
+
+export const updateUserFood = async (
+  id: string,
+  input: {
+    name: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  }
+): Promise<UserFoodRow> => {
+  const { data, error } = await webSupabase
+    .from('user_foods')
+    .update({
+      name: input.name,
+      calories: input.calories,
+      protein: input.protein,
+      carbs: input.carbs,
+      fat: input.fat,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data as UserFoodRow;
+};

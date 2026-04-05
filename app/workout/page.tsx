@@ -19,6 +19,7 @@ import {
   updateReorderCount,
 } from '@/lib/repositories/workoutSessionRepository';
 import { getExerciseInstruction } from '@/lib/exerciseInstructions';
+import { useVibrationSettings } from '@/lib/vibrationSettings';
 
 const emptySet = () => ({ weight: '', reps: '', difficulty: 'good' });
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
@@ -135,6 +136,7 @@ const energyLevels: Array<{ value: string; label: string }> = [
 const energyLabelMap = Object.fromEntries(energyLevels.map((level) => [level.value, level.label]));
 
 function WorkoutPageContent() {
+  const { enabled: vibrationEnabled, intervalSeconds: vibrationInterval } = useVibrationSettings();
   const searchParams = useSearchParams();
   const recoveryType = parseRecoveryParam(searchParams.get('recovery'));
   const [recoveryDismissed, setRecoveryDismissed] = useState(false);
@@ -493,6 +495,16 @@ function WorkoutPageContent() {
     });
   }, [isTimerRunning, energyLevel, selectedDate, selectedDayId]);
 
+  useEffect(() => {
+    if (!isTimerRunning || !vibrationEnabled) return;
+    const id = setInterval(() => {
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate(200);
+      }
+    }, vibrationInterval * 1000);
+    return () => clearInterval(id);
+  }, [isTimerRunning, vibrationEnabled, vibrationInterval]);
+
   const currentExercise = draftExercises[currentExerciseIndex] || null;
   const completedExercisesCount = draftExercises.filter((exercise) => exercise.completed).length;
   const heroProgressValue = buildProgressValue(currentExerciseIndex, draftExercises.length);
@@ -586,6 +598,11 @@ function WorkoutPageContent() {
             <div>
               <div style={{ fontSize: 12, textTransform: 'uppercase', color: '#9fb5e4' }}>זמן אימון</div>
               <div style={{ fontSize: 28, fontWeight: 700 }}>{formatTimer(timer)}</div>
+              {vibrationEnabled ? (
+                <div style={{ fontSize: 11, color: '#9fb5e4', marginTop: 2 }}>
+                  רטט כל {vibrationInterval >= 60 ? `${vibrationInterval / 60} דקות` : `${vibrationInterval} שניות`}
+                </div>
+              ) : null}
             </div>
             <button
               type="button"

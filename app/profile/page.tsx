@@ -18,8 +18,18 @@ import {
   saveActiveWorkoutProgram,
   type WorkoutProgramDay,
 } from '@/lib/repositories/programRepository';
+import {
+  listUserFoods,
+  deleteUserFood,
+  updateUserFood,
+  type UserFoodRow,
+} from '@/lib/repositories/userFoodRepository';
 import { useSessionContext } from '@/lib/session';
 import { useTheme } from '@/lib/theme';
+import {
+  useVibrationSettings,
+  VIBRATION_INTERVAL_OPTIONS,
+} from '@/lib/vibrationSettings';
 
 const EXPERIENCE_OPTIONS = [
   ['beginner', 'מתחיל'],
@@ -82,6 +92,12 @@ function ProfilePageContent() {
   const [recoveryDismissed, setRecoveryDismissed] = useState(false);
   const { user, signOut } = useSessionContext();
   const { themePreference, setThemePreference } = useTheme();
+  const {
+    enabled: vibrationEnabled,
+    setEnabled: setVibrationEnabled,
+    intervalSeconds: vibrationInterval,
+    setIntervalSeconds: setVibrationInterval,
+  } = useVibrationSettings();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
@@ -103,6 +119,20 @@ function ProfilePageContent() {
     goal: 'bulk',
     focusAreasText: '',
   });
+  const [userFoods, setUserFoods] = useState<UserFoodRow[]>([]);
+  const [userFoodsLoading, setUserFoodsLoading] = useState(true);
+  const [userFoodsError, setUserFoodsError] = useState('');
+  type EditFoodModal = {
+    id: string;
+    name: string;
+    calories: string;
+    protein: string;
+    carbs: string;
+    fat: string;
+    error: string;
+    saving: boolean;
+  };
+  const [editFoodModal, setEditFoodModal] = useState<EditFoodModal | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -158,6 +188,68 @@ function ProfilePageContent() {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    setUserFoodsLoading(true);
+    listUserFoods()
+      .then((rows) => { if (isMounted) setUserFoods(rows); })
+      .catch(() => { if (isMounted) setUserFoodsError('טעינת המזונות נכשלה.'); })
+      .finally(() => { if (isMounted) setUserFoodsLoading(false); });
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleDeleteUserFood = async (id: string) => {
+    if (!window.confirm('למחוק את המזון הזה?')) return;
+    try {
+      await deleteUserFood(id);
+      setUserFoods((current) => current.filter((f) => f.id !== id));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : (err as { message?: string })?.message || 'מחיקת המזון נכשלה.';
+      alert(msg);
+    }
+  };
+
+  const handleOpenEditFood = (food: UserFoodRow) => {
+    setEditFoodModal({
+      id: food.id,
+      name: food.name,
+      calories: String(food.calories),
+      protein: String(food.protein),
+      carbs: String(food.carbs),
+      fat: String(food.fat),
+      error: '',
+      saving: false,
+    });
+  };
+
+  const handleEditFoodSave = async () => {
+    if (!editFoodModal) return;
+    const name = editFoodModal.name.trim();
+    const calories = Number(editFoodModal.calories);
+    const protein = Number(editFoodModal.protein);
+    const carbs = Number(editFoodModal.carbs);
+    const fat = Number(editFoodModal.fat);
+
+    if (!name) {
+      setEditFoodModal((m) => m && ({ ...m, error: 'יש למלא שם.' }));
+      return;
+    }
+    if ([calories, protein, carbs, fat].some((v) => isNaN(v) || v < 0)) {
+      setEditFoodModal((m) => m && ({ ...m, error: 'ערכים תזונתיים חייבים להיות מספרים אי-שליליים.' }));
+      return;
+    }
+
+    setEditFoodModal((m) => m && ({ ...m, saving: true, error: '' }));
+    try {
+      const updated = await updateUserFood(editFoodModal.id, { name, calories, protein, carbs, fat });
+      setUserFoods((current) => current.map((f) => f.id === updated.id ? updated : f));
+      setEditFoodModal(null);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : (err as { message?: string })?.message || 'שגיאה בשמירה, נסה שוב';
+      setEditFoodModal((m) => m && ({ ...m, saving: false, error: msg }));
+    }
+  };
 
   const updateField = (field: string, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -516,6 +608,66 @@ function ProfilePageContent() {
             borderRadius: 20,
             padding: 20,
             display: 'grid',
+            gap: 12,
+          }}
+        >
+          <div style={{ fontSize: 18, fontWeight: 800 }}>תזכורות אימון</div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>תזכורת רטט בזמן אימון</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                רטט קצר בכל מרווח זמן קבוע
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setVibrationEnabled(!vibrationEnabled)}
+              style={{
+                border: 0,
+                borderRadius: 999,
+                padding: '10px 16px',
+                background: vibrationEnabled ? 'var(--accent)' : 'var(--surface-2)',
+                color: '#fff',
+                fontWeight: 700,
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              {vibrationEnabled ? 'פעיל' : 'כבוי'}
+            </button>
+          </div>
+          {vibrationEnabled ? (
+            <div style={{ display: 'grid', gap: 8 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>מרווח בין תזכורות</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {VIBRATION_INTERVAL_OPTIONS.map((seconds) => (
+                  <button
+                    key={seconds}
+                    type="button"
+                    onClick={() => setVibrationInterval(seconds)}
+                    style={chipStyle(vibrationInterval === seconds)}
+                  >
+                    {seconds >= 60 ? `${seconds / 60} דקות` : `${seconds} שניות`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <div
+          style={{
+            background: 'var(--surface)',
+            borderRadius: 20,
+            padding: 20,
+            display: 'grid',
             gap: 10,
           }}
         >
@@ -668,6 +820,81 @@ function ProfilePageContent() {
         {programMessage ? <div style={{ color: 'var(--success)' }}>{programMessage}</div> : null}
         {programError ? <div style={{ color: 'var(--danger)' }}>{programError}</div> : null}
 
+        <div
+          style={{
+            background: 'var(--surface)',
+            borderRadius: 20,
+            padding: 20,
+            display: 'grid',
+            gap: 12,
+          }}
+        >
+          <div style={{ fontSize: 18, fontWeight: 800 }}>המזונות שלי</div>
+          {userFoodsLoading ? (
+            <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>טוען...</div>
+          ) : userFoodsError ? (
+            <div style={{ color: 'var(--danger)', fontSize: 14 }}>{userFoodsError}</div>
+          ) : userFoods.length === 0 ? (
+            <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>אין מזונות מותאמים אישית עדיין.</div>
+          ) : (
+            <div style={{ display: 'grid', gap: 8 }}>
+              {userFoods.map((food) => (
+                <div
+                  key={food.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    background: 'var(--surface-2)',
+                    borderRadius: 14,
+                    padding: '12px 14px',
+                  }}
+                >
+                  <div style={{ display: 'grid', gap: 2 }}>
+                    <div style={{ fontWeight: 700 }}>{food.name}</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                      {food.calories} קלוריות | {food.protein} חלבון
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditFood(food)}
+                      style={{
+                        border: 0,
+                        borderRadius: 10,
+                        background: 'var(--surface)',
+                        color: 'var(--text)',
+                        padding: '8px 12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ערוך
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteUserFood(food.id)}
+                      style={{
+                        border: 0,
+                        borderRadius: 10,
+                        background: 'var(--danger-bg)',
+                        color: 'var(--danger)',
+                        padding: '8px 12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      מחק
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <button
           type="button"
           onClick={signOut}
@@ -688,6 +915,100 @@ function ProfilePageContent() {
           חזרה לבית
         </Link>
       </div>
+      {editFoodModal ? (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'flex-end',
+            zIndex: 100,
+          }}
+          onClick={() => !editFoodModal.saving && setEditFoodModal(null)}
+        >
+          <div
+            style={{
+              background: 'var(--surface)',
+              borderRadius: '20px 20px 0 0',
+              padding: 24,
+              width: '100%',
+              display: 'grid',
+              gap: 12,
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 18, fontWeight: 800 }}>עריכת מזון</div>
+            <input
+              type="text"
+              placeholder="שם"
+              value={editFoodModal.name}
+              onChange={(e) => setEditFoodModal((m) => m && ({ ...m, name: e.target.value }))}
+              style={inputStyle}
+            />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <input
+                type="number"
+                placeholder="קלוריות"
+                value={editFoodModal.calories}
+                onChange={(e) => setEditFoodModal((m) => m && ({ ...m, calories: e.target.value }))}
+                style={inputStyle}
+              />
+              <input
+                type="number"
+                placeholder="חלבון"
+                value={editFoodModal.protein}
+                onChange={(e) => setEditFoodModal((m) => m && ({ ...m, protein: e.target.value }))}
+                style={inputStyle}
+              />
+              <input
+                type="number"
+                placeholder="פחמימות"
+                value={editFoodModal.carbs}
+                onChange={(e) => setEditFoodModal((m) => m && ({ ...m, carbs: e.target.value }))}
+                style={inputStyle}
+              />
+              <input
+                type="number"
+                placeholder="שומן"
+                value={editFoodModal.fat}
+                onChange={(e) => setEditFoodModal((m) => m && ({ ...m, fat: e.target.value }))}
+                style={inputStyle}
+              />
+            </div>
+            {editFoodModal.error ? (
+              <div style={{ color: 'var(--danger)', fontSize: 14 }}>{editFoodModal.error}</div>
+            ) : null}
+            <button
+              type="button"
+              onClick={handleEditFoodSave}
+              disabled={editFoodModal.saving}
+              style={{
+                border: 0,
+                borderRadius: 18,
+                background: 'var(--accent)',
+                color: '#fff',
+                padding: '16px 18px',
+                fontWeight: 800,
+                cursor: editFoodModal.saving ? 'default' : 'pointer',
+                opacity: editFoodModal.saving ? 0.7 : 1,
+              }}
+            >
+              {editFoodModal.saving ? 'שומר...' : 'שמור'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditFoodModal(null)}
+              disabled={editFoodModal.saving}
+              style={{ ...ghostButtonStyle, textAlign: 'center', padding: '8px 0' }}
+            >
+              ביטול
+            </button>
+          </div>
+        </div>
+      ) : null}
     </ProtectedPage>
   );
 }
