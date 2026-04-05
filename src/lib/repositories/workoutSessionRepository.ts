@@ -1,7 +1,8 @@
 import { webSupabase } from '@/lib/supabase/browser';
 import { fetchActiveProgramRecord } from '@/lib/repositories/programRepository';
 
-const normalizeSet = (row: { weight?: number | string; reps?: number | string; difficulty?: string | null }) => ({
+const normalizeSet = (row: { id: string; weight?: number | string; reps?: number | string; difficulty?: string | null }) => ({
+  id: row.id,
   weight: String(row.weight ?? ''),
   reps: String(row.reps ?? ''),
   difficulty: row.difficulty || 'good',
@@ -18,6 +19,7 @@ export type SavedWorkoutSession = {
   energyLevel: string;
   reorderCount: number;
   exercises: Array<{
+    rowId: string;      // workout_session_exercises row UUID
     exerciseId: string;
     exerciseName: string;
     plannedSets: string;
@@ -25,7 +27,12 @@ export type SavedWorkoutSession = {
     plannedWeight: string;
     completed: boolean;
     durationSeconds?: number | null;
-    sets: Array<{ weight: string; reps: string; difficulty: string }>;
+    sets: Array<{
+      id: string;       // workout_session_sets row UUID
+      weight: string;
+      reps: string;
+      difficulty: string;
+    }>;
   }>;
 };
 
@@ -138,6 +145,7 @@ const normalizeWorkout = (
     exercise_order: number;
   }> = [],
   setRows: Array<{
+    id: string;
     workout_session_exercise_id: string;
     set_order: number;
     weight?: number | string;
@@ -157,6 +165,7 @@ const normalizeWorkout = (
   exercises: exerciseRows
     .sort((left, right) => left.exercise_order - right.exercise_order)
     .map((exerciseRow) => ({
+      rowId: exerciseRow.id,
       exerciseId: exerciseRow.exercise_id || '',
       exerciseName: exerciseRow.exercise_name || '',
       plannedSets: exerciseRow.planned_sets || '',
@@ -266,6 +275,109 @@ export const deleteWorkoutSessionById = async (id: string): Promise<void> => {
   if (error) throw error;
 };
 
+export const updateWorkoutSessionById = async (
+  id: string,
+  input: {
+    sessionDate: string;
+    energyLevel: string;
+    exercises: Array<{
+      id: string; // workout_session_exercises row UUID
+      completed: boolean;
+      sets: Array<{
+        id?: string; // DB UUID if existing; absent/undefined for new sets
+        setOrder: number;
+        weight: number;
+        reps: number;
+        difficulty: string;
+      }>;
+    }>;
+  }
+): Promise<void> => {
+  const {
+    data: { user },
+    error: userError,
+  } = await webSupabase.auth.getUser();
+
+  if (userError || !user?.id) throw userError || new Error('המשתמש לא מחובר.');
+
+  // 1. Update the session-level fields
+  const { error: sessionError } = await webSupabase
+    .from('workout_sessions')
+    .update({
+      session_date: input.sessionDate,
+      energy_level: input.energyLevel || null,
+    })
+    .eq('id', id)
+    .eq('user_id', user.id);
+
+  if (sessionError) throw sessionError;
+
+  // 2. For each exercise: update completed flag, sync sets
+  await Promise.all(
+    input.exercises.map(async (exercise) => {
+      // Update exercise completed flag
+      const { error: exError } = await webSupabase
+        .from('workout_session_exercises')
+        .update({ completed: exercise.completed })
+        .eq('id', exercise.id);
+
+      if (exError) throw exError;
+
+      // Collect real DB ids of sets that are kept
+      const keptSetIds = exercise.sets
+        .map((s) => s.id)
+        .filter((sid): sid is string => Boolean(sid));
+
+      // Delete removed sets: any set for this exercise NOT in the kept list
+      if (keptSetIds.length === 0) {
+        const { error: delError } = await webSupabase
+          .from('workout_session_sets')
+          .delete()
+          .eq('workout_session_exercise_id', exercise.id);
+        if (delError) throw delError;
+      } else {
+        const { error: delError } = await webSupabase
+          .from('workout_session_sets')
+          .delete()
+          .eq('workout_session_exercise_id', exercise.id)
+          .not('id', 'in', `(${keptSetIds.join(',')})`);
+        if (delError) throw delError;
+      }
+
+      // Update existing sets / insert new ones
+      await Promise.all(
+        exercise.sets.map(async (setItem) => {
+          if (setItem.id) {
+            // Existing set — update in place
+            const { error: updateError } = await webSupabase
+              .from('workout_session_sets')
+              .update({
+                set_order: setItem.setOrder,
+                weight: setItem.weight,
+                reps: setItem.reps,
+                difficulty: setItem.difficulty,
+              })
+              .eq('id', setItem.id);
+            if (updateError) throw updateError;
+          } else {
+            // New set — insert
+            const { error: insertError } = await webSupabase
+              .from('workout_session_sets')
+              .insert({
+                workout_session_exercise_id: exercise.id,
+                set_order: setItem.setOrder,
+                weight: setItem.weight,
+                reps: setItem.reps,
+                difficulty: setItem.difficulty,
+              });
+            if (insertError) throw insertError;
+          }
+        })
+      );
+    })
+  );
+};
+
 export const getWorkoutSessionById = async (id: string): Promise<SavedWorkoutSession | null> => {
   const {
     data: { user },
@@ -293,6 +405,7 @@ export const getWorkoutSessionById = async (id: string): Promise<SavedWorkoutSes
 
   const exerciseIds = (exerciseRows || []).map((row) => row.id);
   let setRows: Array<{
+    id: string;
     workout_session_exercise_id: string;
     set_order: number;
     weight?: number | string;
@@ -356,6 +469,7 @@ export const fetchSavedWorkoutSessions = async (): Promise<SavedWorkoutSession[]
 
   const exerciseIds = (exerciseRows || []).map((row) => row.id);
   let setRows: Array<{
+    id: string;
     workout_session_exercise_id: string;
     set_order: number;
     weight?: number | string;
