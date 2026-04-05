@@ -1,4 +1,5 @@
 import type { DataCompletenessResult, DataGap } from './dataCompleteness';
+import { withRecovery } from './recoveryContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -18,7 +19,7 @@ const gapToRecommendation = (gap: DataGap): SecondaryRecommendation => {
       id: 'secondary_weight',
       title: 'עדכן נתוני משקל',
       message: 'לא הוזן משקל בימים האחרונים, ולכן חלק מהתובנות עשויות להיות פחות מדויקות.',
-      cta: { label: 'הזן משקל', href: '/home' },
+      cta: { label: 'הזן משקל', href: withRecovery('/home', 'weight') },
       severity: gap.severity,
     };
   }
@@ -28,7 +29,7 @@ const gapToRecommendation = (gap: DataGap): SecondaryRecommendation => {
       id: 'secondary_nutrition',
       title: 'עדכן נתוני תזונה',
       message: 'חסרים נתוני תזונה מהימים האחרונים. השלמתם תשפר את דיוק ההמלצות.',
-      cta: { label: 'עדכן תזונה', href: '/nutrition' },
+      cta: { label: 'עדכן תזונה', href: withRecovery('/nutrition', 'nutrition') },
       severity: gap.severity,
     };
   }
@@ -41,7 +42,10 @@ const gapToRecommendation = (gap: DataGap): SecondaryRecommendation => {
     message: noProgram
       ? 'אין תוכנית אימונים פעילה, ולכן קשה לעקוב בצורה מדויקת אחרי ההתקדמות שלך.'
       : 'חסר תיעוד של אימונים מהתקופה האחרונה. כדאי לשמור את האימון הבא באפליקציה.',
-    cta: gap.cta,
+    cta: {
+      label: gap.cta.label,
+      href: withRecovery(gap.cta.href, noProgram ? 'program' : 'workout'),
+    },
     severity: gap.severity,
   };
 };

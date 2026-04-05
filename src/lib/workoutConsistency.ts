@@ -1,6 +1,14 @@
 import type { WorkoutProgram } from '@/lib/repositories/programRepository';
 import type { SavedWorkoutSession } from '@/lib/repositories/workoutSessionRepository';
 import { diffDaysFromCurrentDate, getLatestDate, type DataReliability } from '@/lib/dataReliability';
+import {
+  getCurrentWeekRange,
+  getPreviousWeekRange,
+  normalizeDateInput,
+  type WeekRange,
+} from '@/lib/weeklyDate';
+
+export { getCurrentWeekRange, getPreviousWeekRange } from '@/lib/weeklyDate';
 
 export type WorkoutConsistencyStatus = 'high' | 'medium' | 'low';
 export type WorkoutPaceStatus = 'on_track' | 'behind' | 'ahead';
@@ -24,48 +32,6 @@ export type WorkoutConsistencyResult = {
   reliability: DataReliability;
 };
 
-type DateRange = {
-  start: string;
-  end: string;
-};
-
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-const normalizeDateInput = (value?: string | Date) => {
-  if (value instanceof Date) {
-    return new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()));
-  }
-
-  const normalized = String(value || '').trim();
-  if (!normalized) {
-    const now = new Date();
-    return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-  }
-
-  const [year, month, day] = normalized.slice(0, 10).split('-').map(Number);
-  if (!year || !month || !day) {
-    const now = new Date();
-    return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-  }
-
-  return new Date(Date.UTC(year, month - 1, day));
-};
-
-const toDateKey = (date: Date) => {
-  const year = date.getUTCFullYear();
-  const month = `${date.getUTCMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getUTCDate()}`.padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const addDays = (date: Date, days: number) => new Date(date.getTime() + days * MS_PER_DAY);
-
-const getWeekStart = (dateInput?: string | Date) => {
-  const date = normalizeDateInput(dateInput);
-  const dayOfWeek = date.getUTCDay();
-  return addDays(date, -dayOfWeek);
-};
-
 export const getWeeklyWorkoutTarget = (workoutProgram: WorkoutProgram | null | undefined) => {
   if (!workoutProgram || !Array.isArray(workoutProgram.days)) {
     return 0;
@@ -78,30 +44,9 @@ export const getWeeklyWorkoutTarget = (workoutProgram: WorkoutProgram | null | u
   }).length;
 };
 
-export const getCurrentWeekRange = (currentDate?: string | Date): DateRange => {
-  const startDate = getWeekStart(currentDate);
-  const endDate = addDays(startDate, 6);
-
-  return {
-    start: toDateKey(startDate),
-    end: toDateKey(endDate),
-  };
-};
-
-export const getPreviousWeekRange = (currentDate?: string | Date): DateRange => {
-  const currentWeekStart = getWeekStart(currentDate);
-  const previousWeekStart = addDays(currentWeekStart, -7);
-  const previousWeekEnd = addDays(previousWeekStart, 6);
-
-  return {
-    start: toDateKey(previousWeekStart),
-    end: toDateKey(previousWeekEnd),
-  };
-};
-
 export const countCompletedWorkoutsInDateRange = (
   workoutHistory: SavedWorkoutSession[],
-  range: DateRange
+  range: WeekRange
 ) => {
   if (!Array.isArray(workoutHistory)) {
     return 0;
@@ -109,7 +54,7 @@ export const countCompletedWorkoutsInDateRange = (
 
   return workoutHistory.filter((session) => {
     const sessionDate = String(session?.date || '').slice(0, 10);
-    return Boolean(sessionDate) && sessionDate >= range.start && sessionDate <= range.end;
+    return Boolean(sessionDate) && sessionDate >= range.startOfWeek && sessionDate <= range.endOfWeek;
   }).length;
 };
 
@@ -121,9 +66,9 @@ export const calculateExpectedWorkoutsSoFar = (
     return 0;
   }
 
-  const currentWeekStart = getWeekStart(currentDate);
+  const currentWeekStart = normalizeDateInput(getCurrentWeekRange(currentDate).startOfWeek);
   const today = normalizeDateInput(currentDate);
-  const daysElapsedInWeek = Math.floor((today.getTime() - currentWeekStart.getTime()) / MS_PER_DAY) + 1;
+  const daysElapsedInWeek = Math.floor((today.getTime() - currentWeekStart.getTime()) / (24 * 60 * 60 * 1000)) + 1;
 
   return Math.ceil((daysElapsedInWeek / 7) * weeklyTarget);
 };
@@ -164,8 +109,8 @@ const getWeeksWithHistoryBeforeCurrentWeek = (
   return new Set(
     workoutHistory
       .map((session) => String(session?.date || '').slice(0, 10))
-      .filter((date) => Boolean(date) && date < currentWeekRange.start)
-      .map((date) => getCurrentWeekRange(date).start)
+      .filter((date) => Boolean(date) && date < currentWeekRange.startOfWeek)
+      .map((date) => getCurrentWeekRange(date).startOfWeek)
   ).size;
 };
 

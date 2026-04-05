@@ -5,6 +5,7 @@ import {
   countCompletedWorkoutsInDateRange,
   calculateExpectedWorkoutsSoFar,
 } from './workoutConsistency';
+import { normalizeDateInput, toDateKey } from './weeklyDate';
 import type { WorkoutProgram } from './repositories/programRepository';
 import type { SavedWorkoutSession } from './repositories/workoutSessionRepository';
 import type { SavedNutritionLog } from './repositories/nutritionLogRepository';
@@ -89,16 +90,15 @@ const evaluateNutrition = (
   nutritionLogs: Array<{ date: string }>,
   currentDate?: string | Date
 ): DataCompletenessResult['breakdown']['nutrition'] & { status: DataStatus } => {
-  const today = currentDate
-    ? new Date(currentDate)
-    : new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+  const today = normalizeDateInput(currentDate);
+  const todayStr = toDateKey(today);
 
   // Build set of last-7-day date strings
   const last7Dates = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    return d.toISOString().slice(0, 10);
+    d.setHours(0, 0, 0, 0);
+    return toDateKey(d);
   });
 
   const loggedDates = new Set(nutritionLogs.map((l) => l.date));

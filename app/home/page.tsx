@@ -28,12 +28,12 @@ import { calculateDataCompleteness, type DataCompletenessResult } from '@/lib/da
 import { buildRecommendationContext } from '@/lib/recommendationContext';
 import {
   selectDailyRecommendation,
-  selectWeeklyRecommendation,
   selectRecoveryRecommendation,
 } from '@/lib/recommendationSelector';
 import type { RenderedRecommendation } from '@/lib/recommendationRenderer';
 import { parseRecoveryParam } from '@/lib/recoveryContext';
 import { RecoveryBanner } from '@/components/RecoveryBanner';
+import { selectStableWeeklyRecommendation } from '@/lib/weeklyRecommendationEngine';
 
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 const formatDisplayDate = (value: string) => {
@@ -259,8 +259,29 @@ export default function HomePage() {
   );
 
   const weeklyRec = useMemo<RenderedRecommendation>(
-    () => selectWeeklyRecommendation(recommendationCtx),
-    [recommendationCtx]
+    () =>
+      selectStableWeeklyRecommendation({
+        goal: normalizedGoal,
+        recommendationContext: recommendationCtx,
+        progressStatus,
+        nutritionAdherence,
+        goalKpiStatus,
+        workoutConsistency,
+        bodyweightLogs,
+        nutritionLogs: fullNutritionLogs,
+        workoutSessions,
+      }),
+    [
+      normalizedGoal,
+      recommendationCtx,
+      progressStatus,
+      nutritionAdherence,
+      goalKpiStatus,
+      workoutConsistency,
+      bodyweightLogs,
+      fullNutritionLogs,
+      workoutSessions,
+    ]
   );
 
   const recoveryRec = useMemo<RenderedRecommendation | null>(

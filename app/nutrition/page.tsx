@@ -1,13 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   calculateNutritionFromText,
   type NutritionCalculationResult,
 } from '@shared-engines/proteinEngine';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { appendNutritionLog, saveNutritionLog } from '@/lib/repositories/nutritionLogRepository';
+import { parseRecoveryParam } from '@/lib/recoveryContext';
+import { RecoveryBanner } from '@/components/RecoveryBanner';
 
 const EXAMPLE_INPUT = [''].join('\n');
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
@@ -36,6 +39,10 @@ const getResultStatus = (results: NutritionCalculationResult) => {
 };
 
 export default function NutritionPage() {
+  const searchParams = useSearchParams();
+  const recoveryType = parseRecoveryParam(searchParams.get('recovery'));
+  const [recoveryDismissed, setRecoveryDismissed] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState(EXAMPLE_INPUT);
   const [selectedDate, setSelectedDate] = useState(getTodayDate);
   const [results, setResults] = useState<NutritionCalculationResult | null>(null);
@@ -51,6 +58,12 @@ export default function NutritionPage() {
   );
   const unresolvedPreview = useMemo(() => unresolvedItems.slice(0, 2), [unresolvedItems]);
   const resultStatus = useMemo(() => (results ? getResultStatus(results) : null), [results]);
+
+  useEffect(() => {
+    if (recoveryType === 'nutrition' && !recoveryDismissed) {
+      textareaRef.current?.focus();
+    }
+  }, [recoveryType, recoveryDismissed]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -86,6 +99,7 @@ export default function NutritionPage() {
     try {
       await saveNutritionLog(buildNutritionLogInput());
       setSaveMessage('יומן התזונה נשמר.');
+      setRecoveryDismissed(true);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : 'שמירת יומן התזונה נכשלה.');
     } finally {
@@ -120,8 +134,14 @@ export default function NutritionPage() {
             padding: 20,
             display: 'grid',
             gap: 14,
+            ...(recoveryType === 'nutrition' && !recoveryDismissed
+              ? { outline: '2px solid var(--accent)', outlineOffset: 2 }
+              : {}),
           }}
         >
+          {recoveryType === 'nutrition' && !recoveryDismissed ? (
+            <RecoveryBanner message="חסרים נתוני תזונה מהימים האחרונים. עדכון קצר יעזור לדייק את ההמלצות." />
+          ) : null}
           {/* שורת תאריך + כותרת */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <div style={{ fontSize: 16, fontWeight: 800 }}>מחשבון תזונה</div>
@@ -144,6 +164,7 @@ export default function NutritionPage() {
           {/* טקסטאריה */}
           <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 10 }}>
             <textarea
+              ref={textareaRef}
               id="nutrition-input"
               value={input}
               onChange={(event) => setInput(event.target.value)}
