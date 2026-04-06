@@ -1,766 +1,484 @@
 ================================================================================
-GYM TRACKER — PROJECT SUMMARY
-Last updated: 2026-04-05
+GYM TRACKER - PROJECT SUMMARY
+Last updated: 2026-04-06
 ================================================================================
 
-This is a Hebrew-language, RTL, mobile-first Progressive Web App (PWA) for
-personal fitness tracking. Users log workouts, nutrition, and bodyweight, and
-receive AI-like recommendations driven by a deterministic template engine.
+This project is a Hebrew RTL mobile-first fitness PWA built with:
+- Next.js 15 App Router
+- React 19
+- TypeScript
+- Supabase
+- Vercel
 
-Stack: Next.js 15 (App Router) · React 19 · TypeScript · Supabase · Vercel
-No external UI library — all styling via inline CSSProperties / CSS variables.
+The product tracks:
+- workouts
+- nutrition
+- bodyweight
+- weekly goal focus
+- recovery/data completeness
 
-================================================================================
-1. PROJECT STRUCTURE
-================================================================================
-
-web/
-├── app/                        Next.js App Router pages
-│   ├── layout.tsx              Root layout (RTL, providers, PWA meta)
-│   ├── page.tsx                Root redirect (→ /auth | /onboarding | /home)
-│   ├── auth/page.tsx           Sign in / Sign up
-│   ├── onboarding/page.tsx     New-user profile + workout program setup
-│   ├── home/page.tsx           Dashboard (main screen)
-│   ├── workout/page.tsx        Live workout logger
-│   ├── nutrition/page.tsx      Nutrition text parser + logger
-│   ├── nutrition-history/      Browse & edit past nutrition logs
-│   ├── workout-history/        Browse past workout sessions
-│   ├── profile/page.tsx        Settings, theme picker, edit program
-│   ├── reports/page.tsx        Charts & analytics
-│   └── home-v2/                (WIP – experimental new home layout)
-│
-├── src/
-│   ├── components/             Reusable React components
-│   ├── lib/                    All business logic, engine, repositories
-│   │   ├── repositories/       Supabase data access layer
-│   │   └── supabase/           Supabase client setup
-│   └── engines/                Shared nutrition parsing engine
-│
-├── public/
-│   ├── manifest.json           PWA manifest
-│   └── sw.js                   Service worker (cache strategy)
-│
-├── .env.local                  NEXT_PUBLIC_SUPABASE_URL + ANON_KEY
-└── next.config.mjs             Experimental typed routes enabled
+The app uses deterministic business logic and fixed recommendation templates.
+There is no LLM-generated recommendation text in the core product flow.
 
 
 ================================================================================
-2. AUTHENTICATION & SESSION
+1. CURRENT PRODUCT SURFACE
 ================================================================================
 
-Provider: Supabase (email + password only, no OAuth)
+Main routes:
+- `app/auth/page.tsx`
+- `app/onboarding/page.tsx`
+- `app/home/page.tsx`
+- `app/workout/page.tsx`
+- `app/nutrition/page.tsx`
+- `app/nutrition-history/page.tsx`
+- `app/workout-history/page.tsx`
+- `app/workout-history/[id]/edit/page.tsx`
+- `app/profile/page.tsx`
+- `app/reports/page.tsx`
 
-Flow:
-  1. User visits / → SessionProvider reads current session from Supabase
-  2. Not logged in → redirect to /auth
-  3. Logged in, no onboarding → redirect to /onboarding
-  4. Logged in + onboarding complete → redirect to /home
-
-Key files:
-  src/lib/auth.ts          Thin wrapper: signIn, signUp, signOut, getSession,
-                           onAuthStateChange (all delegate to Supabase SDK)
-
-  src/lib/session.tsx      React Context (SessionProvider + useSessionContext).
-                           Exposes: isLoading, isOnboardingLoading, session,
-                           user, hasOnboarding, refreshOnboarding(), signOut().
-                           Caches onboarding status in sessionStorage to avoid
-                           redundant DB calls.
-
-  src/components/
-    ProtectedPage.tsx      Wrapper for all authenticated routes. Shows spinner
-                           while session/onboarding loads; redirects to /auth
-                           if no session; redirects to /onboarding if onboarding
-                           incomplete (unless allowIncompleteOnboarding=true).
-    AuthForm.tsx           Email/password form with sign-in/sign-up mode toggle.
-
-Onboarding completion check (src/lib/onboarding.ts):
-  isOnboardingComplete({ user, program }) → requires age + weight + height on
-  user profile AND at least one workout day with at least one exercise.
+Core behavior:
+- New users sign up or sign in on `/auth`
+- Users without completed onboarding are redirected to `/onboarding`
+- Completed users land on `/home`
+- Protected pages use the shared session/onboarding gate
 
 
 ================================================================================
-3. PAGES — DETAILED
+2. AUTHENTICATION AND IDENTITY
 ================================================================================
 
-─── /auth ───────────────────────────────────────────────────────────────────
-File: app/auth/page.tsx
-Renders AuthForm. On successful auth, SessionProvider detects SIGNED_IN event,
-hydrates onboarding status, then redirects to /onboarding or /home.
+Provider:
+- Supabase Auth
 
-─── /onboarding ─────────────────────────────────────────────────────────────
-File: app/onboarding/page.tsx
-Who sees it: new users (no completed onboarding) AND users navigating here
-             who want to re-edit initial setup.
+Current auth characteristics:
+- email/password flow is implemented
+- app session state is exposed through `src/lib/session.tsx`
+- sign-in and sign-up normalize emails to lowercase in `src/lib/auth.ts`
+- sign-out is available through the shared auth/session layer
 
-Form sections:
-  1. Personal data: age, weight, height, gender (chip), experience (chip:
-     beginner/intermediate/advanced), goal (chip: bulk/cut/maintain), focus
-     areas (comma-separated text)
-  2. Workout program: dynamic list of training days; each day has a name and
-     a list of exercise rows (exercise name, sets, reps, planned weight)
-  3. Sign-out button (red, below submit) — for users who signed in with the
-     wrong account
+Identity model:
+- `auth.users.id` is the source of truth for user identity
+- `public.profiles.id` is the profile identifier
+- profile ownership is by `id`, not by email
+- email is informational metadata, not the logical profile key
 
-On submit: validates required fields → saveOnboardingData() → refreshOnboarding()
-           → router.replace('/home')
+Current protections added for duplicate-profile bugs:
+- `profiles.id` is hardened as `uuid`
+- `profiles.id` is the primary key
+- `profiles.id` references `auth.users(id)`
+- profile email is normalized to lowercase
+- duplicate/orphaned profiles are cleaned in migration before constraints
+- `profiles_email_unique_idx` prevents duplicate profile emails when present
+- `sync_profile_from_auth_user()` upserts profile rows from `auth.users`
+- duplicate invalid email linkage raises `PROFILE_EMAIL_ALREADY_LINKED`
 
-The header card (with title) is always visible even during page loading.
-The form fields only show after loadOnboardingData() resolves.
-
-─── /home ────────────────────────────────────────────────────────────────────
-File: app/home/page.tsx
-Main dashboard. Loads in parallel: bodyweight logs, nutrition logs, workout
-sessions, user profile, active workout program.
-
-Sections (top to bottom):
-  1. Status row: current weight card + protein-today card + calories-today card
-  2. Bodyweight entry: date picker + weight input + save button. Highlights
-     with accent outline when navigated with ?recovery=weight param.
-  3. Bodyweight chart: line chart of weight history (BodyweightChart component)
-  4. Box 1 – Daily recommendation: title + body + optional CTA link
-  5. Box 2 – Weekly goal: title + body + optional CTA link (uses stable weekly
-     snapshot from DB if available, otherwise freshly computed)
-  6. Box 3 – Data recovery (only shown if data gaps exist): prompts user to
-     fill missing data with a direct link
-  7. Data completeness card: score bar (0-100%), top 2 gaps with CTA links
-
-The page wraps its content in <Suspense> (required by Next.js 15 for
-useSearchParams in static prerendering).
-
-─── /workout ─────────────────────────────────────────────────────────────────
-File: app/workout/page.tsx
-Live workout session tracker.
-
-States:
-  - "no session" (pre-workout): shows today's program day, exercise list,
-    energy level picker, "start workout" button
-  - "active session": timer running, exercise checkboxes + inline set logging
-    (weight/reps/difficulty per set), add set, reorder exercises (counts
-    reorders), exercise instructions (collapsible)
-  - "completed": summary view + save button
-
-Set difficulty: easy / good / hard
-Energy level: low / normal / high
-
-Recovery UX: when navigated with ?recovery=workout, shows RecoveryBanner and
-highlights hero card with accent outline. Dismissed on successful session save.
-
-Wraps content in <Suspense> for Next.js 15 compatibility.
-
-─── /nutrition ───────────────────────────────────────────────────────────────
-File: app/nutrition/page.tsx
-Free-form text nutritional calculator.
-
-Flow:
-  1. User types meals in Hebrew/English (one per line, e.g. "חזה עוף 150 גרם")
-  2. On calculate: calls calculateNutritionFromText() (shared engine)
-  3. Shows results table: each item with name, calories, protein, carbs, fat,
-     status (calculated / unresolved)
-  4. Shows totals + status message (full/partial/unresolved count)
-  5. Save: creates new log for selected date
-  6. Append: adds to existing log for that date
-
-Recovery UX: ?recovery=nutrition shows RecoveryBanner, focuses textarea,
-dismissed on save.
-
-Wraps content in <Suspense> for Next.js 15 compatibility.
-
-─── /nutrition-history ──────────────────────────────────────────────────────
-File: app/nutrition-history/page.tsx
-Browse and edit past nutrition logs. List by date descending.
-Each entry: expandable with raw text input, macro fields, delete button.
-Inline save per entry.
-
-─── /workout-history ────────────────────────────────────────────────────────
-File: app/workout-history/page.tsx
-Read-only list of saved workout sessions (newest first).
-Each entry: date, day name, duration, energy, exercises with sets.
-Expandable accordion layout.
-
-─── /profile ────────────────────────────────────────────────────────────────
-File: app/profile/page.tsx
-Three sections:
-  1. Personal profile: age, weight, height, gender, experience, goal,
-     focus areas — editable, saves to Supabase profiles table
-  2. Theme picker: 6 themes (dark/light/AI/clean/fitness/dashboard) as chips.
-     Saved to localStorage.
-  3. Workout program editor: same UI as onboarding program section — add/remove
-     days and exercise rows, save with replace_active_workout_program RPC.
-
-Recovery UX: ?recovery=program shows RecoveryBanner on program section, accent
-outline, dismissed on save.
-
-Sign-out button at bottom.
-
-Wraps content in <Suspense> for Next.js 15 compatibility.
-
-─── /reports ────────────────────────────────────────────────────────────────
-File: app/reports/page.tsx
-Analytics and charts page. Shows exercise performance trends per exercise,
-bodyweight chart, nutrition adherence summary, workout consistency.
-Uses ExerciseProgressChart component.
-
-─── /home-v2 ────────────────────────────────────────────────────────────────
-Directory: app/home-v2/ (WIP — not yet linked in navigation)
-Experimental alternative home layout.
+Relevant files:
+- `src/lib/auth.ts`
+- `src/lib/session.tsx`
+- `src/lib/repositories/profileRepository.ts`
+- `supabase/migrations/20260405_harden_profiles_identity.sql`
 
 
 ================================================================================
-4. COMPONENTS
+3. ONBOARDING
 ================================================================================
 
-AppShell.tsx
-  Root wrapper rendered inside RootLayout. Applies max-width: 480px centered
-  container with padding. Renders BottomNavigation at bottom.
+Route:
+- `app/onboarding/page.tsx`
 
-BottomNavigation.tsx
-  Fixed pill-shaped bottom nav bar (gradient background).
-  Items: Home (/home), Nutrition (/nutrition), Workout (/workout) [center/large],
-         Reports (/reports), Profile (/profile).
-  Active state: highlighted icon + scale transform.
+Purpose:
+- first-time profile completion
+- initial workout-program setup
 
-ProtectedPage.tsx   (see Section 2 above)
-AuthForm.tsx        (see Section 2 above)
+Current onboarding behavior:
+- personal profile fields
+- workout days and exercises editor
+- saves onboarding data through shared persistence logic
+- redirects to `/home` when complete
 
-PageSpinner.tsx
-  Centered full-screen spinner with CSS animation. Used as Suspense fallback
-  and loading state in ProtectedPage.
-
-BodyweightChart.tsx
-  SVG line chart of weight over time. Responsive, shows data points,
-  last value highlighted.
-
-ExerciseProgressChart.tsx
-  SVG chart for individual exercise performance over sessions.
-  Shows weight or reps progression.
-
-RecoveryBanner.tsx
-  Orange banner with message text. Shown on pages when navigated via
-  ?recovery= param. Dismisses after user takes action.
-
-SwRegister.tsx
-  Client-only component. Registers /sw.js service worker on mount.
+Important UX fix already included:
+- onboarding now contains a visible `התנתק` button
+- sign-out is available from the first onboarding screen
+- sign-out sends the user back to `/auth`
+- this does not change profile-save logic
 
 
 ================================================================================
-5. BUSINESS LOGIC — src/lib/
+4. HOME PAGE
 ================================================================================
 
-─── Goal System ─────────────────────────────────────────────────────────────
-goalDefinitions.ts
-  GoalType = 'bulk' | 'cut' | 'maintain' | ''
-  normalizeGoalType(raw) → GoalType
-  Goal definitions include: label, KPI type (weight_up/weight_down/stable),
-  preferred weight trend, preferred exercise trend, ideal nutrition status.
+Route:
+- `app/home/page.tsx`
 
-─── Progress Status ─────────────────────────────────────────────────────────
-progressStatus.ts
-  buildProgressStatus({ goal, exerciseNames, workoutHistory, bodyweightLogs,
-                         nutritionLogs, profile, workoutConsistency })
-  Returns:
-    status: 'on_track' | 'partial' | 'off_track' | 'insufficient_data'
-    confidence: 'low' | 'medium' | 'high'
-    breakdown:
-      exercise: { trend, upCount, downCount, validExercisesCount, ... }
-      weight: 'up' | 'stable' | 'down' | 'insufficient_data'
-      nutrition: adherence result
-      consistency: consistency result
+Home loads in parallel:
+- bodyweight logs
+- nutrition logs
+- workout sessions
+- user profile
+- active workout program
 
-getDailyCalorieTarget(profile, bodyweightLogs) → number | null
-  Calculates TDEE from weight, height, age, gender, experience level.
+Main sections:
+- weight status
+- protein today
+- calories today
+- bodyweight entry
+- bodyweight chart
+- daily recommendation
+- weekly goal box
+- recovery/data-completeness messaging
 
-getDailyProteinTarget(profile, bodyweightLogs) → number | null
-  Calculates protein target based on bodyweight and goal.
+Daily nutrition reset rule:
+- "today" is determined only by `Asia/Jerusalem`
+- source of truth: `src/lib/date/getIsraelDateKey.ts`
+- all Home daily nutrition filters use the same Israel date key
 
-─── Exercise Progress ────────────────────────────────────────────────────────
-exerciseProgress.ts
-  analyzeExerciseProgress(exerciseName, workoutSessions)
-  Compares last 2-4 sessions to baseline. Returns:
-    trend: 'up' | 'stable' | 'down' | 'insufficient_data'
-    confidence: 'low' | 'medium' | 'high'
-    lastValue, baselineValue, percentChange
+Midnight rollover behavior:
+- Home computes exact milliseconds until next midnight in Israel
+- schedules one `setTimeout`
+- when it fires, local today state is updated
+- derived daily nutrition values recalculate automatically
+- next midnight timeout is scheduled again
 
-─── Workout Consistency ─────────────────────────────────────────────────────
-workoutConsistency.ts
-  calculateWorkoutConsistency(workoutProgram, workoutSessions)
-  Returns:
-    weeklyTarget: number (days per week in program)
-    currentWeek: { completed, target, paceStatus }
-    lastWeek: { completed, target }
-    status: 'ahead' | 'on_track' | 'behind' | 'insufficient_data'
+Result:
+- if the user stays on Home across midnight in Israel, protein/calories switch
+  to the new day automatically
+- if no nutrition log exists for the new day yet, both values show `0`
 
-─── Nutrition Adherence ─────────────────────────────────────────────────────
-nutritionAdherence.ts
-  calculateNutritionAdherence({ goal, nutritionLogs, profile, bodyweightLogs })
-  Analyzes last 7 days of logs vs. calorie + protein targets.
-  Returns:
-    status: 'good' | 'partial' | 'poor' | 'insufficient_data'
-    loggedDays, targetCalories, targetProtein, avgCalories, avgProtein
+Weekly goal behavior:
+- Home uses structured weekly goal snapshots when available
+- if no snapshot exists for the current week, the app can create one lazily
+- prior unfinalized snapshots are finalized lazily when the user enters a new
+  week
 
-─── Training Load ────────────────────────────────────────────────────────────
-trainingLoad.ts
-  calculateTrainingLoad(workoutSessions)
-  Analyzes recent sessions: performance trend, set effort (difficulty),
-  energy level, set count vs. planned, session duration.
-  Returns:
-    status: 'low_load' | 'normal' | 'high_load'
-    confidence: 'low' | 'medium' | 'high'
-
-─── Goal KPI Status ─────────────────────────────────────────────────────────
-goalKpiStatus.ts
-  getGoalKPIStatus({ goal, bodyweightLogs, workoutHistory })
-  Evaluates whether the user's KPI is moving in the right direction for
-  their goal (e.g., bulk→ weight should go up, cut→ weight should go down).
-  Returns:
-    status: 'positive' | 'neutral' | 'negative' | 'insufficient_data'
-
-─── Data Completeness ───────────────────────────────────────────────────────
-dataCompleteness.ts
-  calculateDataCompleteness({ bodyweightLogs, nutritionLogs, workoutSessions,
-                               workoutProgram })
-  Scores 0-100. Identifies gaps:
-    type: 'weight' | 'nutrition' | 'workout'
-    severity: 'high' | 'medium'
-    message: Hebrew string
-    cta: { href, label } (links to recovery page with ?recovery= param)
-  Returns:
-    score: number
-    overallStatus: 'complete' | 'partial' | 'poor'
-    gaps: DataGap[]
-
-─── Recommendation Engine ────────────────────────────────────────────────────
-
-recommendationContext.ts
-  buildRecommendationContext(input: BuildContextInput) → RecommendationContext
-  Combines all computed metrics into one flat context object with ~25 fields:
-    goal, goalLabel,
-    todayIsWorkoutDay (derived from session history: ≥2 times same DOW in 6wks),
-    todayWorkoutDone, todayWorkoutName (next in rotation),
-    exerciseTrend, hasDecliningExercise, hasPlateauExercise, hasImprovingExercise,
-    exerciseDownCount, exerciseUpCount,
-    nutritionStatus, hasTodayNutritionLog,
-    weightTrend, goalKpiNegative, hasTodayWeight,
-    consistencyRatio, hasConsistencyIssue, weeklyTarget, completedThisWeek,
-    lastWeekCompleted, fatigueDetected,
-    progressStatusLevel, dataCompletenessScore,
-    topGapType, topGapSeverity, hasHighGap
-
-recommendationRenderer.ts
-  RecommendationTemplate type:
-    id, type ('daily'|'weekly'|'recovery'), enabled, priority: number,
-    conditions: { requiresWorkoutDay?, requiresGoal?, requiresNutritionStatus?,
-                  requiresWeightTrend?, requiresFatigueDetected?, ... }
-    title, body (with {placeholder} substitution), cta?: { href, label }
-
-  RenderedRecommendation = template with variables substituted.
-  renderRecommendationTemplate(template, variables) → replaces {key} tokens.
-
-recommendationSelector.ts
-  conditionsMatch(conditions, ctx) → boolean (all conditions must pass)
-  selectDailyRecommendation(ctx) → RenderedRecommendation (never null,
-    falls back to DAILY_FALLBACK)
-  selectWeeklyRecommendation(ctx) → RenderedRecommendation (never null,
-    falls back to WEEKLY_FALLBACK)
-  selectRecoveryRecommendation(ctx, overallStatus) → RenderedRecommendation | null
-    Returns null if no gaps. High gaps → high-priority template.
-    Medium gaps + non-complete data → medium template.
-
-recommendationTemplates.daily.ts (13 templates + fallback)
-  Priority ordering (higher = selected first when conditions match):
-    120: daily_workout_day_declining   (today is workout day + declining exercises)
-    115: daily_workout_day_plateau     (today is workout day + plateau)
-    110: daily_workout_day_fatigue     (today is workout day + fatigue detected)
-    105: daily_workout_day_consistency_issue
-    100: daily_rest_day_fatigue
-     95: daily_workout_day_ready       (today is workout day, no issues)
-     90: daily_workout_done_log_nutrition (done workout, missing nutrition)
-     88: daily_rest_day_nutrition_issue
-     85: daily_cut_nutrition_focus / daily_bulk_weight_not_gaining
-     80: daily_workout_done_great
-     75: daily_rest_day_log_weight
-     65: daily_rest_day_recovery
-  Fallback: "המשך לפי התוכנית"
-
-recommendationTemplates.weekly.ts (8 templates + fallback)
-    120: weekly_declining_exercise_focus
-    115: weekly_plateau_break
-    110: weekly_off_track_recovery
-    105: weekly_consistency_goal
-    100: weekly_cut_nutrition_discipline / weekly_bulk_calorie_surplus
-     90: weekly_weight_stabilize
-     70: weekly_improving_keep_momentum
-  Fallback: "מטרת השבוע: המשך כך"
-
-recommendationTemplates.recovery.ts (6 templates)
-  High severity (p100): recovery_high_weight, recovery_high_nutrition,
-                         recovery_high_workout
-  Medium severity (p60): recovery_medium_weight, recovery_medium_nutrition,
-                          recovery_medium_workout
-  Each CTA links to appropriate page with ?recovery= param.
-
-weeklyRecommendationEngine.ts
-  selectStableWeeklyRecommendation({ goal, recommendationContext,
-    progressStatus, nutritionAdherence, goalKpiStatus, workoutConsistency,
-    bodyweightLogs, nutritionLogs, workoutSessions })
-  Uses 14-day decision window to detect performance signals.
-  Produces stable weekly recommendations (avoids day-to-day noise).
-
-weeklyGoalSnapshotService.ts + weeklyGoalSnapshotRepository.ts
-  syncCurrentWeeklyGoalSnapshot(...) — saves or updates weekly snapshot in DB.
-  Each snapshot: { id, userId, weekStart, templateId, title, body, cta,
-                   goal, contextSnapshot }
-  On home page: if DB snapshot for current week exists, displays it (stable).
-  Otherwise uses freshly computed weekly recommendation.
+Relevant files:
+- `app/home/page.tsx`
+- `src/lib/date/getIsraelDateKey.ts`
+- `src/lib/weeklyGoalSnapshotService.ts`
 
 
 ================================================================================
-6. RECOVERY FLOW (cross-page UX)
+5. WEEKLY GOAL SNAPSHOTS
 ================================================================================
 
-Any page can link to another with ?recovery=<type> to trigger a "please fix
-this data" UX:
-  ?recovery=weight      → /home (focuses weight input, shows banner, outline)
-  ?recovery=nutrition   → /nutrition (focuses textarea, shows banner)
-  ?recovery=workout     → /workout (shows banner on hero card, outline)
-  ?recovery=program     → /profile (shows banner on program section, outline)
+Purpose:
+- persist weekly goal history as structured data
+- keep weekly focus stable through the week
+- support future weekly history/monthly summary/week-over-week comparisons
 
-parseRecoveryParam(value) → 'weight'|'nutrition'|'workout'|'program'|null
-RecoveryBanner component: orange warning banner with message text.
-Recovery is "dismissed" (state cleared) once the user successfully saves.
+Persistence model:
+- table: `public.weekly_goal_snapshots`
+- migration: `supabase/migrations/20260405_create_weekly_goal_snapshots.sql`
 
+Snapshot structure includes:
+- `user_id`
+- `week_start_date`
+- `week_end_date`
+- `goal_type`
+- `template_id`
+- `title`
+- `body`
+- `focus_area`
+- `primary_metric`
+- `targets` jsonb
+- `actuals` jsonb
+- `outcomes` jsonb
+- `confidence`
+- `created_at`
+- `updated_at`
+- `finalized_at`
 
-================================================================================
-7. NUTRITION ENGINE — src/engines/
-================================================================================
+Integrity:
+- unique per user/week by `unique(user_id, week_start_date)`
 
-proteinEngine.ts  (shared-engines/proteinEngine path alias)
-  calculateNutritionFromText(text: string) → NutritionCalculationResult
-  Parses free-form Hebrew/English meal text line by line.
-  Handles:
-    - Hebrew units: גרם, קילו, כף, כוס, פרוסה, יחידה, ...
-    - Hebrew quantity words: חצי, שלוש, ארבע, עשר, מאה, ...
-    - Portion sizes embedded in item name
-    - Multiple items on one line
-    - Fallback: unresolved items counted separately
+Flow implemented:
+- create current-week snapshot if missing
+- get current-week snapshot
+- finalize previous snapshots lazily when a new week has started
 
-  NutritionCalculationResult:
-    items: NutritionItem[]   (each with name, macros, status, confidence)
-    totals: { calories, proteinGrams, carbs, fat }
-    unresolvedCount: number
-    hasPartialNutrition: boolean
+Weekly calendar rule:
+- week starts Sunday 00:00
+- week ends Saturday 23:59:59
+- snapshot identification uses that Israeli week model
 
-proteinFoods.ts (food database)
-  Large list of foods with canonical names and aliases.
-  Each entry: { name, aliases[], calories, proteinGrams, carbs, fat }
-  Per 100g OR per unit depending on food.
+Decision stability:
+- weekly display window and decision window are separated
+- weekly recommendation selection uses broader signals
+- weekly snapshot persists the selected weekly focus so it does not jump around
+  mid-week
 
-
-================================================================================
-8. DATABASE SCHEMA (Supabase)
-================================================================================
-
-All tables are per-user (RLS via user_id = auth.uid()).
-
-profiles
-  id (uuid, FK auth.users)
-  age, height (number)
-  gender ('male'|'female')
-  experience ('beginner'|'intermediate'|'advanced')
-  goal ('bulk'|'cut'|'maintain')
-  focus_areas (text[])
-  updated_at
-
-bodyweight_logs
-  user_id, log_date (date) — composite PK
-  weight (numeric)
-
-workout_programs
-  id (uuid), user_id, name, is_active (bool), updated_at
-
-workout_program_days
-  id, program_id, day_order (int), name
-
-workout_program_exercises (rows within a day)
-  id, day_id, exercise_order
-  exercise_name, sets_planned, reps_heavy, weight_heavy
-
-Custom RPC: replace_active_workout_program(p_name, p_days jsonb)
-  Atomically deactivates old program, creates new one with days & exercises.
-
-workout_sessions
-  id, user_id, session_date (date), day_id, day_name
-  started_at, ended_at, duration_seconds
-  energy_level ('low'|'normal'|'high')
-  reorder_count (int)
-
-workout_session_exercises
-  id, session_id, exercise_name
-  planned_sets, planned_reps, planned_weight
-  completed (bool), duration_seconds
-
-workout_session_sets
-  id, exercise_id, set_order (int)
-  weight, reps, difficulty ('easy'|'good'|'hard')
-
-nutrition_logs
-  user_id, log_date (date) — composite PK
-  raw_input_text (text)
-  total_protein_grams, total_calories, total_carbs, total_fat (numeric)
-
-nutrition_log_items
-  id, log_id (FK), item_order (int)
-  original_text, display_name
-  protein_grams, calories, carbs_grams, fat_grams
-  status ('calculated'|'unresolved')
-  reason (text, nullable)
-
-weekly_goal_snapshots
-  id (uuid), user_id
-  week_start (date) — Monday of the ISO week
-  template_id, title, body
-  cta_href, cta_label
-  goal, context_snapshot (jsonb)
-  created_at, updated_at
+Relevant files:
+- `src/lib/weeklyGoalSnapshots.ts`
+- `src/lib/weeklyGoalSnapshotService.ts`
+- `src/lib/repositories/weeklyGoalSnapshotRepository.ts`
+- `src/lib/weeklyRecommendationEngine.ts`
 
 
 ================================================================================
-9. THEMING SYSTEM
+6. WORKOUT FLOW
 ================================================================================
 
-6 built-in themes defined in src/lib/theme.tsx (WEB_THEMES):
-  dark      — #121212 bg, #FF6B00 accent (orange)
-  light     — #F6F7F9 bg, #FF6B00 accent
-  ai        — #050c1f bg, #7af3ff accent (cyan)
-  clean     — #f7f8fb bg, #2e7dff accent (blue)
-  fitness   — #07090f bg, #ff3e3e accent (red)
-  dashboard — #f0f3f6 bg, #00bfa5 accent (teal)
+Route:
+- `app/workout/page.tsx`
 
-CSS variables (globals.css `:root` = default dark):
-  --background, --surface, --surface-2, --border
-  --text, --text-muted, --accent, --accent-2, --accent-gradient
-  --danger, --danger-bg, --success, --success-bg
-  --safe-area-top (env(safe-area-inset-top) for iOS notch)
+Workout page responsibilities:
+- load active program day
+- restore in-progress workout draft
+- run live timer
+- log sets with weight/reps/difficulty
+- save session into workout session tables
 
-ThemeProvider:
-  Reads preference from localStorage on mount.
-  Sets document.documentElement.dataset.theme = preference.
-  CSS only defines overrides for 'light' theme (:root[data-theme='light']).
-  All other themes apply their variables via JS (inline style on <html>).
-  Note: base :root IS the dark theme.
+Draft persistence:
+- `src/lib/workoutDraftStorage.ts`
+- workout state is persisted locally during an active workout
+- timer restoration uses real elapsed time from stored `startedAt`
 
+Current workout session save model:
+- `workout_sessions`
+- `workout_session_exercises`
+- `workout_session_sets`
 
-================================================================================
-10. PWA SETUP
-================================================================================
+Recent live-workout improvements:
 
-manifest.json (public/):
-  name: "Gym Tracker", short_name: "Gym"
-  lang: he, dir: rtl
-  display: standalone
-  background_color: #111111, theme_color: #0db899 (teal)
-  Icons: SVG 192x192, SVG 512x512 (maskable)
+1. Persistent timer across app exit/reopen
+- if the app closes during a workout, reopening restores the draft
+- timer is recomputed from the stored start time
+- timer continues until the user resets or saves
 
-sw.js (public/):
-  Cache-first for /_next/static/* (JS, CSS, fonts)
-  Network-first for pages, API routes, Supabase requests
-  Caches manifest.json + apple-touch-icon on install
+2. Add extra exercise during active workout
+- visible only during active session
+- button label: `הוסף תרגיל`
+- minimal modal form:
+  - exercise name required
+  - planned sets optional
+  - planned reps optional
+  - planned weight optional
+- numeric values must be non-negative
 
-SwRegister.tsx:
-  navigator.serviceWorker.register('/sw.js') on client mount.
+Extra exercise state model:
+- appended into the same `draftExercises` array as regular exercises
+- represented like a normal draft exercise with:
+  - `exerciseId: ''`
+  - `exerciseName`
+  - planned values
+  - `completed: false`
+  - `durationSeconds: 0`
+  - `sets: []`
 
-layout.tsx:
-  appleWebApp: { capable: true, statusBarStyle: 'black-translucent' }
-  apple-touch-icon, viewport cover for iOS.
-  Initial loader (HTML/CSS spinner) injected server-side, removed after
-  React hydration (6-second fallback timeout removes it if React fails).
+Post-insert behavior:
+- can receive sets normally
+- uses the same set editing/difficulty flow
+- persists in workout draft storage
+- is included in normal workout save payload
 
+Why it appears in history:
+- it is saved through the same session tables as regular exercises
+- history pages already render saved session exercises generically
+- no special-case history UI is required
 
-================================================================================
-11. PACKAGE DEPENDENCIES
-================================================================================
-
-Runtime:
-  next: ^15.4.8          App Router, static export, typed routes
-  react: 19.1.0          Latest React (concurrent features)
-  react-dom: 19.1.0
-  @supabase/supabase-js: ^2.100.1   Auth + DB
-  @vercel/speed-insights: ^2.0.0    Performance monitoring
-
-Dev:
-  typescript: ^5.9.2
-  @types/node, @types/react, @types/react-dom
-
-NO external UI libraries (MUI, Tailwind, etc.) — all styles are inline
-CSSProperties or CSS variables.
-NO chart libraries — charts are hand-written SVG.
-NO state management libraries — React useState/useContext only.
-NO form libraries — all forms are controlled components.
+Relevant files:
+- `app/workout/page.tsx`
+- `src/lib/workoutDraftStorage.ts`
+- `src/lib/repositories/workoutSessionRepository.ts`
 
 
 ================================================================================
-12. KEY ARCHITECTURAL DECISIONS & PATTERNS
+7. WORKOUT HISTORY
 ================================================================================
 
-1. ALL STYLES INLINE
-   No CSS modules, no Tailwind. Every style is either inline CSSProperties or
-   a CSS variable reference. This means components are self-contained but
-   cannot be tree-shaken. Pattern: const fooStyle: CSSProperties = { ... }
-   at the bottom of each file.
+Routes:
+- `app/workout-history/page.tsx`
+- `app/workout-history/[id]/edit/page.tsx`
 
-2. REPOSITORY PATTERN
-   Every Supabase call goes through a repository function in src/lib/repositories/.
-   Pages never call Supabase directly.
-   Repositories are thin async functions returning typed objects.
+Behavior:
+- reads saved workout sessions and their exercises/sets
+- renders saved session exercises generically
+- edit flow also works on generic saved session exercises
 
-3. DETERMINISTIC RECOMMENDATION ENGINE
-   No LLM / free-text generation. All recommendation text is pre-written in
-   template files. Templates have conditions (boolean checks against context)
-   and priority scores. The selector picks the highest-priority matching template.
-   Variables ({placeholder}) are substituted at render time.
-
-4. COMPUTED METRICS AS INPUTS
-   Home page computes ~8 derived metrics (progressStatus, nutritionAdherence,
-   trainingLoad, etc.) via useMemo chains before building the recommendation
-   context. This ensures all analytics logic is isolated and testable.
-
-5. DATA CONFIDENCE LEVELS
-   Every computed metric returns a confidence level (low/medium/high) based on
-   how much data is available. Recommendations suppress themselves when confidence
-   is too low, triggering recovery recommendations instead.
-
-6. WEEKLY SNAPSHOT PERSISTENCE
-   Weekly recommendations are computed fresh on every render but ALSO written
-   to a Supabase table (weekly_goal_snapshots). The home page displays the
-   SAVED snapshot for the current week if one exists, ensuring the weekly goal
-   doesn't change mid-week due to fluctuating data.
-
-7. SUSPENSE WRAPPING (Next.js 15 requirement)
-   All pages that use useSearchParams() must be wrapped in <Suspense> for
-   static prerendering. Pattern: rename default export to XxxPageContent(),
-   add new export default XxxPage() { return <Suspense><XxxPageContent/></Suspense> }
-   Affected pages: home, workout, profile, nutrition.
-
-8. RTL HEBREW THROUGHOUT
-   html dir="rtl". All text, labels, and messages are in Hebrew.
-   Flex layout is naturally RTL (start = right, end = left).
-   Food parser handles Hebrew units and number words.
-
-9. RECOVERY UX PATTERN
-   The ?recovery= query param creates a cross-page UX flow. Data gap detected
-   on home → CTA with ?recovery=xxx → target page shows banner + highlight.
-   User completes action → banner dismisses (recoveryDismissed state).
+Effect of the extra-exercise work:
+- ad-hoc workout exercises now appear in workout history automatically
+- ad-hoc workout exercises also appear in workout-history edit flow
 
 
 ================================================================================
-13. CURRENT STATUS & KNOWN STATE
+8. NUTRITION
 ================================================================================
 
-COMPLETED FEATURES:
-  ✓ Auth (sign up / sign in / sign out)
-  ✓ Onboarding (profile + workout program setup)
-  ✓ Home dashboard with all 3 recommendation boxes
-  ✓ Bodyweight logging + chart
-  ✓ Workout session logger (live timer, sets, difficulty)
-  ✓ Nutrition calculator (Hebrew/English text parsing)
-  ✓ Nutrition history (view/edit/delete)
-  ✓ Workout history (view)
-  ✓ Profile editor (personal data + theme + program)
-  ✓ Recommendation template engine (daily + weekly + recovery)
-  ✓ Weekly goal snapshot persistence
-  ✓ Data completeness scoring + gap detection
-  ✓ Recovery flow UX (?recovery= param, banners, highlights)
-  ✓ PWA (manifest, service worker, iOS meta)
-  ✓ 6-theme system (dark/light/AI/clean/fitness/dashboard)
-  ✓ Vercel deployment (repo: LScore1, branch: main)
-  ✓ Suspense boundaries for Next.js 15 build compatibility
-  ✓ Sign-out button on onboarding page (red, below submit)
+Routes:
+- `app/nutrition/page.tsx`
+- `app/nutrition-history/page.tsx`
 
-IN PROGRESS / WIP:
-  ~ home-v2/ directory (experimental new home layout, not linked yet)
+Nutrition features:
+- free-text nutrition parsing
+- nutrition log save and append
+- history browse/edit/delete
 
-NOT YET BUILT:
-  - Test suite for recommendation engine (was requested, never completed)
-  - Reports page (file exists but may be incomplete)
-  - Social / sharing features
-  - Push notifications
-  - Apple Health / Google Fit integration
-  - Exercise video/GIF library
-
-DEPLOYMENT:
-  Platform: Vercel
-  Repo: github.com/Admin199633/LScore1 (main branch)
-  Previous issue: was connected to wrong repo (LScore/master) — fixed.
-  Build requirement: all 4 pages with useSearchParams must have Suspense wrapper.
+Home ties into nutrition logs for:
+- protein today
+- calories today
+- nutrition adherence signals
+- daily recommendation context
+- weekly snapshot actuals/finalization logic
 
 
 ================================================================================
-14. IMPORTANT FILE PATHS QUICK REFERENCE
+9. RECOMMENDATIONS AND ANALYTICS
 ================================================================================
 
-Auth & session:        src/lib/auth.ts, src/lib/session.tsx
-Supabase client:       src/lib/supabase/browser.ts
-Onboarding logic:      src/lib/onboarding.ts
-Goal definitions:      src/lib/goalDefinitions.ts
+Core principle:
+- deterministic recommendations
+- no free-text AI generation
+- fixed templates plus selection logic
 
-Repositories:
-  Profile:             src/lib/repositories/profileRepository.ts
-  Bodyweight:          src/lib/repositories/bodyweightRepository.ts
-  Program:             src/lib/repositories/programRepository.ts
-  Workout sessions:    src/lib/repositories/workoutSessionRepository.ts
-  Nutrition logs:      src/lib/repositories/nutritionLogRepository.ts
-  Weekly snapshots:    src/lib/repositories/weeklyGoalSnapshotRepository.ts
+Main analytics/recommendation modules:
+- `src/lib/recommendationContext.ts`
+- `src/lib/recommendationSelector.ts`
+- `src/lib/recommendationRenderer.ts`
+- `src/lib/recommendationTemplates.daily.ts`
+- `src/lib/recommendationTemplates.weekly.ts`
+- `src/lib/recommendationTemplates.recovery.ts`
+- `src/lib/progressStatus.ts`
+- `src/lib/exerciseProgress.ts`
+- `src/lib/workoutConsistency.ts`
+- `src/lib/nutritionAdherence.ts`
+- `src/lib/dataCompleteness.ts`
+- `src/lib/goalKpiStatus.ts`
 
-Analytics:
-  Progress status:     src/lib/progressStatus.ts
-  Exercise progress:   src/lib/exerciseProgress.ts
-  Consistency:         src/lib/workoutConsistency.ts
-  Nutrition adherence: src/lib/nutritionAdherence.ts
-  Training load:       src/lib/trainingLoad.ts
-  Goal KPI:            src/lib/goalKpiStatus.ts
-  Data completeness:   src/lib/dataCompleteness.ts
+Weekly recommendation engine:
+- uses broader decision logic to avoid noisy weekly switching
+- weekly snapshot persistence keeps weekly presentation stable
 
-Recommendation engine:
-  Context builder:     src/lib/recommendationContext.ts
-  Selector:            src/lib/recommendationSelector.ts
-  Renderer:            src/lib/recommendationRenderer.ts
-  Daily templates:     src/lib/recommendationTemplates.daily.ts
-  Weekly templates:    src/lib/recommendationTemplates.weekly.ts
-  Recovery templates:  src/lib/recommendationTemplates.recovery.ts
-  Weekly engine:       src/lib/weeklyRecommendationEngine.ts
-  Snapshot service:    src/lib/weeklyGoalSnapshotService.ts
 
-Nutrition engine:      src/engines/proteinEngine.ts
-Food database:         src/engines/proteinFoods.ts
+================================================================================
+10. DATABASE OVERVIEW
+================================================================================
 
-Recovery UX:           src/lib/recoveryContext.ts
-Theme:                 src/lib/theme.tsx
+Primary tables in use:
+- `profiles`
+- `bodyweight_logs`
+- `workout_programs`
+- `workout_program_days`
+- `workout_program_exercises`
+- `workout_sessions`
+- `workout_session_exercises`
+- `workout_session_sets`
+- `nutrition_logs`
+- `nutrition_log_items`
+- `weekly_goal_snapshots`
 
-Pages:
-  Root redirect:       app/page.tsx
-  Auth:                app/auth/page.tsx
-  Onboarding:          app/onboarding/page.tsx
-  Home:                app/home/page.tsx
-  Workout:             app/workout/page.tsx
-  Nutrition:           app/nutrition/page.tsx
-  Nutrition history:   app/nutrition-history/page.tsx
-  Workout history:     app/workout-history/page.tsx
-  Profile:             app/profile/page.tsx
-  Reports:             app/reports/page.tsx
+Important DB rules now documented:
+- profile identity is tied to `auth.users.id`
+- duplicate profile rows are actively prevented
+- weekly goal snapshots are unique per user/week
+- workout extra exercises are stored in the same session tables, not in a side
+  table
 
-Components:
-  AppShell:            src/components/AppShell.tsx
-  BottomNavigation:    src/components/BottomNavigation.tsx
-  ProtectedPage:       src/components/ProtectedPage.tsx
-  AuthForm:            src/components/AuthForm.tsx
-  PageSpinner:         src/components/PageSpinner.tsx
-  BodyweightChart:     src/components/BodyweightChart.tsx
-  ExerciseProgressChart: src/components/ExerciseProgressChart.tsx
-  RecoveryBanner:      src/components/RecoveryBanner.tsx
-  SwRegister:          src/components/SwRegister.tsx
+Current migrations present:
+- `20260405_create_weekly_goal_snapshots.sql`
+- `20260405_harden_profiles_identity.sql`
+- `20260405_user_foods.sql`
 
-Config:
-  next.config.mjs, tsconfig.json, public/manifest.json, public/sw.js
-  app/globals.css (CSS variables / base styles)
+
+================================================================================
+11. ARCHITECTURAL PATTERNS
+================================================================================
+
+1. Repository pattern
+- page components do not call Supabase directly
+- data access goes through repository/service modules
+
+2. Deterministic business logic
+- recommendations are selected from fixed templates
+- weekly snapshots store structured fields, not generated prose
+
+3. Local draft persistence for active workout
+- active workout state is persisted locally
+- app can recover in-progress sessions and timer state
+
+4. Timezone-safe daily logic
+- Home "today" logic uses Israel-time helpers, not naive UTC slicing
+
+5. Lazy finalization instead of background jobs
+- weekly snapshot finalization happens when the user enters the app in a new
+  week
+- no cron/background scheduler is required
+
+6. RTL-first product
+- Hebrew UI
+- RTL layout
+- mobile-first screens
+
+
+================================================================================
+12. IMPORTANT FILES QUICK REFERENCE
+================================================================================
+
+Auth/session:
+- `src/lib/auth.ts`
+- `src/lib/session.tsx`
+- `src/components/ProtectedPage.tsx`
+
+Onboarding/profile:
+- `app/onboarding/page.tsx`
+- `src/lib/onboarding.ts`
+- `src/lib/repositories/profileRepository.ts`
+
+Home/date/weekly:
+- `app/home/page.tsx`
+- `src/lib/date/getIsraelDateKey.ts`
+- `src/lib/weeklyGoalSnapshots.ts`
+- `src/lib/weeklyGoalSnapshotService.ts`
+- `src/lib/repositories/weeklyGoalSnapshotRepository.ts`
+- `src/lib/weeklyRecommendationEngine.ts`
+
+Workout:
+- `app/workout/page.tsx`
+- `src/lib/workoutDraftStorage.ts`
+- `src/lib/repositories/workoutSessionRepository.ts`
+
+History:
+- `app/workout-history/page.tsx`
+- `app/workout-history/[id]/edit/page.tsx`
+- `app/nutrition-history/page.tsx`
+
+Nutrition/analytics:
+- `app/nutrition/page.tsx`
+- `src/lib/nutritionAdherence.ts`
+- `src/lib/exerciseProgress.ts`
+- `src/lib/workoutConsistency.ts`
+- `src/lib/dataCompleteness.ts`
+
+Migrations:
+- `supabase/migrations/20260405_create_weekly_goal_snapshots.sql`
+- `supabase/migrations/20260405_harden_profiles_identity.sql`
+
+
+================================================================================
+13. CURRENT STATUS
+================================================================================
+
+Implemented:
+- auth flow
+- onboarding flow
+- onboarding sign-out escape hatch
+- profile persistence hardening
+- Home dashboard
+- Israel-midnight nutrition reset on Home
+- bodyweight logging
+- workout logging with persistent timer
+- ad-hoc extra exercise insertion during active workout
+- workout history and edit flow
+- nutrition parsing and history
+- deterministic recommendation engine
+- stable weekly snapshot persistence/finalization
+- recovery/data completeness UX
+- PWA shell/service worker
+
+Still intentionally out of scope in the current implementation:
+- backend schedulers/cron jobs
+- workout-program auto-sync from ad-hoc exercises
+- exercise autocomplete/library for extra exercises
+- generated free-text recommendation system
 
 ================================================================================
 END OF SUMMARY

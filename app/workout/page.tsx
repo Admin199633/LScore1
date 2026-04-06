@@ -41,6 +41,20 @@ type DraftExercise = {
   sets: Array<{ weight: string; reps: string; difficulty: string }>;
 };
 
+type AddExerciseForm = {
+  exerciseName: string;
+  plannedSets: string;
+  plannedReps: string;
+  plannedWeight: string;
+};
+
+const emptyAddExerciseForm = (): AddExerciseForm => ({
+  exerciseName: '',
+  plannedSets: '',
+  plannedReps: '',
+  plannedWeight: '',
+});
+
 const buildDraftExercises = (
   day: WorkoutProgramDay | null,
   prevSetsLookup: Record<string, Array<{ weight: string; reps: string }>> = {}
@@ -110,6 +124,9 @@ function WorkoutPageContent() {
   const [prevSets, setPrevSets] = useState<Record<string, Array<{ weight: string; reps: string }>>>({});
   const [incompleteWarning, setIncompleteWarning] = useState<string[]>([]);
   const [showOverwriteConfirm, setShowOverwriteConfirm] = useState(false);
+  const [showAddExerciseModal, setShowAddExerciseModal] = useState(false);
+  const [addExerciseForm, setAddExerciseForm] = useState<AddExerciseForm>(emptyAddExerciseForm);
+  const [addExerciseError, setAddExerciseError] = useState('');
   const [exerciseDurations, setExerciseDurations] = useState<Record<string, number>>({});
   const [reorderCount, setReorderCount] = useState(0);
   const exerciseStartTime = useRef<number | null>(null);
@@ -319,6 +336,86 @@ function WorkoutPageContent() {
         };
       })
     );
+  };
+
+  const addSet = (exerciseIndex: number) => {
+    setDraftExercises((current) =>
+      current.map((exercise, currentExerciseIndex) => {
+        if (currentExerciseIndex !== exerciseIndex) {
+          return exercise;
+        }
+
+        const lastSet = exercise.sets[exercise.sets.length - 1];
+        const nextSet = lastSet
+          ? { weight: lastSet.weight, reps: lastSet.reps, difficulty: lastSet.difficulty }
+          : emptySet();
+
+        return {
+          ...exercise,
+          sets: [...exercise.sets, nextSet],
+          completed: false,
+        };
+      })
+    );
+  };
+
+  const handleOpenAddExercise = () => {
+    setAddExerciseForm(emptyAddExerciseForm());
+    setAddExerciseError('');
+    setShowAddExerciseModal(true);
+  };
+
+  const handleCloseAddExercise = () => {
+    setShowAddExerciseModal(false);
+    setAddExerciseError('');
+  };
+
+  const handleAddExercise = () => {
+    const exerciseName = addExerciseForm.exerciseName.trim();
+    if (!exerciseName) {
+      setAddExerciseError('יש להזין שם תרגיל.');
+      return;
+    }
+
+    const numericFields: Array<keyof Omit<AddExerciseForm, 'exerciseName'>> = [
+      'plannedSets',
+      'plannedReps',
+      'plannedWeight',
+    ];
+
+    for (const field of numericFields) {
+      const rawValue = addExerciseForm[field].trim();
+      if (!rawValue) {
+        continue;
+      }
+
+      const numericValue = Number(rawValue);
+      if (!Number.isFinite(numericValue) || numericValue < 0) {
+        setAddExerciseError('ערכים מספריים חייבים להיות אפס או יותר.');
+        return;
+      }
+    }
+
+    const nextExercise: DraftExercise = {
+      exerciseId: '',
+      exerciseName,
+      plannedSets: addExerciseForm.plannedSets.trim(),
+      plannedReps: addExerciseForm.plannedReps.trim(),
+      plannedWeight: addExerciseForm.plannedWeight.trim(),
+      completed: false,
+      durationSeconds: 0,
+      sets: [],
+    };
+
+    const nextExerciseIndex = draftExercises.length;
+    setDraftExercises((current) => [...current, nextExercise]);
+    setCurrentExerciseIndex(nextExerciseIndex);
+    setNotesOpenFor(null);
+    setInstructionModal(null);
+    setMessage('');
+    setError('');
+    handleCloseAddExercise();
+    exerciseStartTime.current = Date.now();
   };
 
   const doSave = async () => {
@@ -676,6 +773,23 @@ function WorkoutPageContent() {
                     </button>
                   );
                 })}
+                {isTimerRunning ? (
+                  <button
+                    type="button"
+                    onClick={handleOpenAddExercise}
+                    style={{
+                      border: '1px dashed var(--border)',
+                      borderRadius: 999,
+                      padding: '10px 14px',
+                      background: 'transparent',
+                      color: 'var(--text)',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                    }}
+                  >
+                    הוסף תרגיל
+                  </button>
+                ) : null}
               </div>
 
             </div>
@@ -837,6 +951,21 @@ function WorkoutPageContent() {
                     </div>
                   </div>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => addSet(currentExerciseIndex)}
+                  style={{
+                    border: '1px dashed var(--border)',
+                    borderRadius: 14,
+                    background: 'transparent',
+                    color: 'var(--text)',
+                    padding: '12px 14px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  הוסף סט
+                </button>
               </div>
             ) : (
               <div
@@ -953,6 +1082,145 @@ function WorkoutPageContent() {
             >
               ביטול
             </button>
+          </div>
+        </div>
+      ) : null}
+      {showAddExerciseModal ? (
+        <div
+          onClick={handleCloseAddExercise}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(4,8,14,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 20,
+            zIndex: 60,
+          }}
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: 420,
+              background: 'var(--surface)',
+              borderRadius: 24,
+              padding: 24,
+              display: 'grid',
+              gap: 14,
+            }}
+          >
+            <div style={{ fontSize: 20, fontWeight: 800 }}>הוסף תרגיל</div>
+            <input
+              autoFocus
+              type="text"
+              placeholder="שם התרגיל"
+              value={addExerciseForm.exerciseName}
+              onChange={(event) =>
+                setAddExerciseForm((current) => ({ ...current, exerciseName: event.target.value }))
+              }
+              style={{
+                width: '100%',
+                borderRadius: 14,
+                border: '1px solid var(--border)',
+                background: '#121212',
+                color: 'var(--text)',
+                padding: 12,
+              }}
+            />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+              <input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                placeholder="סטים"
+                value={addExerciseForm.plannedSets}
+                onChange={(event) =>
+                  setAddExerciseForm((current) => ({ ...current, plannedSets: event.target.value }))
+                }
+                style={{
+                  width: '100%',
+                  borderRadius: 14,
+                  border: '1px solid var(--border)',
+                  background: '#121212',
+                  color: 'var(--text)',
+                  padding: 12,
+                }}
+              />
+              <input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                placeholder="חזרות"
+                value={addExerciseForm.plannedReps}
+                onChange={(event) =>
+                  setAddExerciseForm((current) => ({ ...current, plannedReps: event.target.value }))
+                }
+                style={{
+                  width: '100%',
+                  borderRadius: 14,
+                  border: '1px solid var(--border)',
+                  background: '#121212',
+                  color: 'var(--text)',
+                  padding: 12,
+                }}
+              />
+              <input
+                type="number"
+                min="0"
+                inputMode="decimal"
+                placeholder="משקל"
+                value={addExerciseForm.plannedWeight}
+                onChange={(event) =>
+                  setAddExerciseForm((current) => ({ ...current, plannedWeight: event.target.value }))
+                }
+                style={{
+                  width: '100%',
+                  borderRadius: 14,
+                  border: '1px solid var(--border)',
+                  background: '#121212',
+                  color: 'var(--text)',
+                  padding: 12,
+                }}
+              />
+            </div>
+            {addExerciseError ? (
+              <div style={{ color: 'var(--danger)', fontSize: 14 }}>{addExerciseError}</div>
+            ) : null}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <button
+                type="button"
+                onClick={handleCloseAddExercise}
+                style={{
+                  border: '1px solid var(--border)',
+                  borderRadius: 16,
+                  padding: '14px 16px',
+                  background: 'var(--surface-2)',
+                  color: 'var(--text)',
+                  fontSize: 16,
+                  cursor: 'pointer',
+                }}
+              >
+                ביטול
+              </button>
+              <button
+                type="button"
+                onClick={handleAddExercise}
+                style={{
+                  border: 0,
+                  borderRadius: 16,
+                  padding: '14px 16px',
+                  background: 'var(--accent)',
+                  color: '#fff',
+                  fontSize: 16,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                הוסף
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

@@ -36,8 +36,11 @@ import { RecoveryBanner } from '@/components/RecoveryBanner';
 import { selectStableWeeklyRecommendation } from '@/lib/weeklyRecommendationEngine';
 import type { WeeklyGoalSnapshot } from '@/lib/weeklyGoalSnapshots';
 import { syncCurrentWeeklyGoalSnapshot } from '@/lib/weeklyGoalSnapshotService';
+import {
+  getIsraelDateKey,
+  getMillisecondsUntilNextIsraelMidnight,
+} from '@/lib/date/getIsraelDateKey';
 
-const getTodayDate = () => new Date().toISOString().slice(0, 10);
 const formatDisplayDate = (value: string) => {
   const [year, month, day] = value.split('-');
   return year && month && day ? `${day}.${month}.${year}` : value;
@@ -55,7 +58,8 @@ function HomePageContent() {
   const [fullNutritionLogs, setFullNutritionLogs] = useState<SavedNutritionLog[]>([]);
   const [workoutSessions, setWorkoutSessions] = useState<SavedWorkoutSession[]>([]);
   const [workoutProgram, setWorkoutProgram] = useState<WorkoutProgram>({ id: '', days: [] });
-  const [selectedDate, setSelectedDate] = useState(getTodayDate);
+  const [todayDateKey, setTodayDateKey] = useState(() => getIsraelDateKey());
+  const [selectedDate, setSelectedDate] = useState(() => getIsraelDateKey());
   const [weightInput, setWeightInput] = useState('');
   const [isSavingWeight, setIsSavingWeight] = useState(false);
   const [bodyweightError, setBodyweightError] = useState('');
@@ -121,21 +125,40 @@ function HomePageContent() {
     };
   }, []);
 
+  useEffect(() => {
+    let timeoutId: number | null = null;
+
+    const scheduleNextMidnightRollover = () => {
+      timeoutId = window.setTimeout(() => {
+        setTodayDateKey(getIsraelDateKey());
+        scheduleNextMidnightRollover();
+      }, getMillisecondsUntilNextIsraelMidnight());
+    };
+
+    scheduleNextMidnightRollover();
+
+    return () => {
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, []);
+
   const todayEntry = useMemo(
-    () => bodyweightLogs.find((entry) => entry.date === getTodayDate()) || null,
-    [bodyweightLogs]
+    () => bodyweightLogs.find((entry) => entry.date === todayDateKey) || null,
+    [bodyweightLogs, todayDateKey]
   );
   const selectedDateEntry = useMemo(
     () => bodyweightLogs.find((entry) => entry.date === selectedDate) || null,
     [bodyweightLogs, selectedDate]
   );
   const todayNutritionLog = useMemo(
-    () => nutritionLogs.find((entry) => entry.date === getTodayDate()) || null,
-    [nutritionLogs]
+    () => nutritionLogs.find((entry) => entry.date === todayDateKey) || null,
+    [nutritionLogs, todayDateKey]
   );
   const todayWorkoutDone = useMemo(
-    () => workoutSessions.some((session) => session.date === getTodayDate()),
-    [workoutSessions]
+    () => workoutSessions.some((session) => session.date === todayDateKey),
+    [workoutSessions, todayDateKey]
   );
   const normalizedGoal = useMemo<GoalType>(() => normalizeGoalType(userProfile?.goal), [userProfile]);
 
