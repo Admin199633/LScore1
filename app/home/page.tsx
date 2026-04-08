@@ -14,8 +14,6 @@ import { fetchSavedWorkoutSessions, type SavedWorkoutSession } from '@/lib/repos
 import { fetchActiveWorkoutProgram, type WorkoutProgram } from '@/lib/repositories/programRepository';
 import { useSessionContext } from '@/lib/session';
 import {
-  getDailyCalorieTarget,
-  getDailyProteinTarget,
   buildProgressStatus,
   type ProgressStatusResult,
 } from '@/lib/progressStatus';
@@ -40,6 +38,7 @@ import {
   getIsraelDateKey,
   getMillisecondsUntilNextIsraelMidnight,
 } from '@/lib/date/getIsraelDateKey';
+import { resolveEffectiveNutritionTargets } from '@/lib/nutritionTargets';
 
 const formatDisplayDate = (value: string) => {
   const [year, month, day] = value.split('-');
@@ -65,7 +64,15 @@ function HomePageContent() {
   const [bodyweightError, setBodyweightError] = useState('');
   const [bodyweightMessage, setBodyweightMessage] = useState('');
   const [loadError, setLoadError] = useState('');
-  const [userProfile, setUserProfile] = useState<{ age: number; height: number; gender: string; goal: string } | null>(null);
+  const [userProfile, setUserProfile] = useState<{
+    age: number;
+    height: number;
+    gender: string;
+    goal: string;
+    nutritionTargetMode: 'auto' | 'manual';
+    manualDailyCalories: number | null;
+    manualDailyProtein: number | null;
+  } | null>(null);
   const [weeklySnapshot, setWeeklySnapshot] = useState<WeeklyGoalSnapshot | null>(null);
 
   useEffect(() => {
@@ -105,6 +112,9 @@ function HomePageContent() {
             height: profile.height,
             gender: (profile as any).gender || '',
             goal: profile.goal,
+            nutritionTargetMode: profile.nutritionTargetMode,
+            manualDailyCalories: profile.manualDailyCalories,
+            manualDailyProtein: profile.manualDailyProtein,
           });
         }
       } catch (error) {
@@ -162,18 +172,23 @@ function HomePageContent() {
   );
   const normalizedGoal = useMemo<GoalType>(() => normalizeGoalType(userProfile?.goal), [userProfile]);
 
-  const dailyCalorieTarget = useMemo(() => {
-    return getDailyCalorieTarget(userProfile, bodyweightLogs);
-  }, [userProfile, bodyweightLogs]);
+  const effectiveNutritionTargets = useMemo(
+    () =>
+      resolveEffectiveNutritionTargets({
+        profile: userProfile,
+        bodyweightLogs,
+      }),
+    [userProfile, bodyweightLogs]
+  );
+
+  const dailyCalorieTarget = effectiveNutritionTargets.dailyCaloriesTarget;
 
   const todayCaloriesEaten = useMemo(
     () => todayNutritionLog?.totalCalories ?? null,
     [todayNutritionLog]
   );
 
-  const dailyProteinTarget = useMemo(() => {
-    return getDailyProteinTarget(userProfile, bodyweightLogs);
-  }, [userProfile, bodyweightLogs]);
+  const dailyProteinTarget = effectiveNutritionTargets.dailyProteinTarget;
 
   useEffect(() => {
     setWeightInput(selectedDateEntry ? String(selectedDateEntry.weight) : '');

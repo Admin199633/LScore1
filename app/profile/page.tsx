@@ -30,6 +30,7 @@ import {
   useVibrationSettings,
   VIBRATION_INTERVAL_OPTIONS,
 } from '@/lib/vibrationSettings';
+import { isValidNutritionTargetNumber, type NutritionTargetMode } from '@/lib/nutritionTargets';
 
 const EXPERIENCE_OPTIONS = [
   ['beginner', 'מתחיל'],
@@ -118,6 +119,9 @@ function ProfilePageContent() {
     experience: 'beginner',
     goal: 'bulk',
     focusAreasText: '',
+    nutritionTargetMode: 'auto' as NutritionTargetMode,
+    manualDailyCalories: '',
+    manualDailyProtein: '',
   });
   const [userFoods, setUserFoods] = useState<UserFoodRow[]>([]);
   const [userFoodsLoading, setUserFoodsLoading] = useState(true);
@@ -159,6 +163,9 @@ function ProfilePageContent() {
           experience: profile?.experience || 'beginner',
           goal: profile?.goal || 'bulk',
           focusAreasText: Array.isArray(profile?.focusAreas) ? profile.focusAreas.join(', ') : '',
+          nutritionTargetMode: profile?.nutritionTargetMode || 'auto',
+          manualDailyCalories: profile?.manualDailyCalories ? String(profile.manualDailyCalories) : '',
+          manualDailyProtein: profile?.manualDailyProtein ? String(profile.manualDailyProtein) : '',
         });
 
         setProgramSummary({
@@ -326,9 +333,22 @@ function ProfilePageContent() {
   const handleSave = async () => {
     const age = Number(form.age);
     const height = Number(form.height);
+    const manualDailyCalories =
+      form.manualDailyCalories.trim() === '' ? null : Number(form.manualDailyCalories);
+    const manualDailyProtein =
+      form.manualDailyProtein.trim() === '' ? null : Number(form.manualDailyProtein);
 
     if (!age || age <= 0 || !height || height <= 0) {
       setError('יש למלא גיל וגובה תקינים.');
+      return;
+    }
+
+    if (
+      form.nutritionTargetMode === 'manual' &&
+      (!isValidNutritionTargetNumber(manualDailyCalories) ||
+        !isValidNutritionTargetNumber(manualDailyProtein))
+    ) {
+      setError('יש להזין יעד קלוריות ויעד חלבון גדולים מ-0.');
       return;
     }
 
@@ -344,6 +364,9 @@ function ProfilePageContent() {
         experience: form.experience,
         goal: form.goal,
         focusAreas: parseCommaList(form.focusAreasText),
+        nutritionTargetMode: form.nutritionTargetMode,
+        manualDailyCalories,
+        manualDailyProtein,
       });
       setMessage('הפרופיל נשמר.');
     } catch (saveError) {
@@ -546,6 +569,54 @@ function ProfilePageContent() {
             onChange={(event) => updateField('focusAreasText', event.target.value)}
             style={inputStyle}
           />
+
+          <div style={{ display: 'grid', gap: 10 }}>
+            <div style={{ fontSize: 18, fontWeight: 800 }}>יעדי תזונה</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>
+              אפשר להשתמש ביעדים המחושבים מהפרופיל או להגדיר יעדים יומיים ידניים.
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>מצב יעד</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => updateField('nutritionTargetMode', 'auto')}
+                style={chipStyle(form.nutritionTargetMode === 'auto')}
+              >
+                אוטומטי
+              </button>
+              <button
+                type="button"
+                onClick={() => updateField('nutritionTargetMode', 'manual')}
+                style={chipStyle(form.nutritionTargetMode === 'manual')}
+              >
+                ידני
+              </button>
+            </div>
+            {form.nutritionTargetMode === 'manual' ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputMode="numeric"
+                  placeholder="יעד קלוריות יומי"
+                  value={form.manualDailyCalories}
+                  onChange={(event) => updateField('manualDailyCalories', event.target.value)}
+                  style={inputStyle}
+                />
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  inputMode="numeric"
+                  placeholder="יעד חלבון יומי"
+                  value={form.manualDailyProtein}
+                  onChange={(event) => updateField('manualDailyProtein', event.target.value)}
+                  style={inputStyle}
+                />
+              </div>
+            ) : null}
+          </div>
 
           <button
             type="button"

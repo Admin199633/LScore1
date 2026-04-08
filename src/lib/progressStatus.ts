@@ -2,6 +2,11 @@ import { calculateExerciseProgress, type ExerciseProgressTrend } from '@/lib/exe
 import { getGoalKPIStatus, type GoalKPIStatusResult } from '@/lib/goalKpiStatus';
 import { getGoalDefinition, normalizeGoalType, type GoalType } from '@/lib/goalDefinitions';
 import { diffDaysFromCurrentDate, getLatestDate, type DataReliability } from '@/lib/dataReliability';
+import {
+  getComputedNutritionTargets,
+  resolveEffectiveNutritionTargets,
+  type ProfileWithNutritionTargets,
+} from '@/lib/nutritionTargets';
 import type { SavedNutritionLog } from '@/lib/repositories/nutritionLogRepository';
 import type { SavedWorkoutSession } from '@/lib/repositories/workoutSessionRepository';
 import type { WorkoutConsistencyResult } from '@/lib/workoutConsistency';
@@ -53,48 +58,17 @@ export type ProgressStatusResult = {
 
 type ReliabilityLike = Pick<DataReliability, 'dataStatus' | 'freshness' | 'confidence'>;
 
-export type ProfileForProgress = {
-  age: number;
-  height: number;
-  gender: string;
-  goal: string;
-};
-
-const getLatestBodyweight = (bodyweightLogs: Array<{ date: string; weight: number }>) =>
-  bodyweightLogs.length ? bodyweightLogs[bodyweightLogs.length - 1].weight : 0;
+export type ProfileForProgress = ProfileWithNutritionTargets;
 
 export const getDailyCalorieTarget = (
   profile: ProfileForProgress | null,
   bodyweightLogs: Array<{ date: string; weight: number }>
-) => {
-  if (!profile) return null;
-
-  const latestWeight = getLatestBodyweight(bodyweightLogs);
-  if (!latestWeight || !profile.height || !profile.age) return null;
-  const normalizedGoal = normalizeGoalType(profile.goal);
-
-  const base = 10 * latestWeight + 6.25 * profile.height - 5 * profile.age;
-  const bmr = profile.gender === 'female' ? base - 161 : base + 5;
-  const tdee = bmr * 1.375;
-
-  if (normalizedGoal === 'cut') return Math.round(tdee - 400);
-  if (normalizedGoal === 'bulk') return Math.round(tdee + 300);
-  return Math.round(tdee);
-};
+) => getComputedNutritionTargets(profile, bodyweightLogs).dailyCaloriesTarget;
 
 export const getDailyProteinTarget = (
   profile: ProfileForProgress | null,
   bodyweightLogs: Array<{ date: string; weight: number }>
-) => {
-  if (!profile) return null;
-
-  const latestWeight = getLatestBodyweight(bodyweightLogs);
-  if (!latestWeight) return null;
-  const normalizedGoal = normalizeGoalType(profile.goal);
-
-  const multiplier = normalizedGoal === 'cut' ? 2.2 : normalizedGoal === 'bulk' ? 1.8 : 1.6;
-  return Math.round(latestWeight * multiplier);
-};
+) => getComputedNutritionTargets(profile, bodyweightLogs).dailyProteinTarget;
 
 const getNutritionScore = (actual: number | null, target: number | null, mode: 'protein' | 'calories', goal: GoalType) => {
   if (!actual || !target || target <= 0) {
@@ -283,8 +257,11 @@ export const summarizeNutritionAdherence = ({
     };
   }
 
-  const proteinTarget = getDailyProteinTarget(profile, bodyweightLogs);
-  const calorieTarget = getDailyCalorieTarget(profile, bodyweightLogs);
+  const { dailyProteinTarget: proteinTarget, dailyCaloriesTarget: calorieTarget } =
+    resolveEffectiveNutritionTargets({
+      profile,
+      bodyweightLogs,
+    });
 
   if (!proteinTarget || !calorieTarget) {
     return {

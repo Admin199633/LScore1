@@ -1,11 +1,8 @@
 import { assessNutritionDataQuality, mapQualityToConfidence } from '@/lib/dataQuality';
 import { diffDaysFromCurrentDate, type DataConfidence, type DataFreshness, type DataStatus } from '@/lib/dataReliability';
 import type { GoalType } from '@/lib/goalDefinitions';
-import {
-  getDailyCalorieTarget,
-  getDailyProteinTarget,
-  type ProfileForProgress,
-} from '@/lib/progressStatus';
+import type { ProfileForProgress } from '@/lib/progressStatus';
+import { resolveEffectiveNutritionTargets } from '@/lib/nutritionTargets';
 import type { SavedNutritionLog } from '@/lib/repositories/nutritionLogRepository';
 
 export type NutritionAdherenceStatus = 'good' | 'partial' | 'poor' | 'insufficient_data';
@@ -247,8 +244,11 @@ export const calculateNutritionAdherence = ({
   const totalTrackedDays = recentLogs.length;
   const lastUpdatedAt = totalTrackedDays > 0 ? recentLogs[recentLogs.length - 1].date : null;
   const daysSinceLastLog = diffDaysFromCurrentDate(lastUpdatedAt, currentDate);
-  const calorieTarget = getDailyCalorieTarget(profile, bodyweightLogs);
-  const proteinTarget = getDailyProteinTarget(profile, bodyweightLogs);
+  const { dailyCaloriesTarget: calorieTarget, dailyProteinTarget: proteinTarget } =
+    resolveEffectiveNutritionTargets({
+      profile,
+      bodyweightLogs,
+    });
   const nutritionQuality = assessNutritionDataQuality(recentLogs, currentDate);
   const targets = buildMacroTargets({
     caloriesTarget: calorieTarget,
