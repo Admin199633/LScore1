@@ -10,8 +10,8 @@ import {
 import { proteinFoods, type ProteinFoodEntry } from '@shared-engines/proteinFoods';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { appendNutritionLog, saveNutritionLog } from '@/lib/repositories/nutritionLogRepository';
-import { createUserFood, listUserFoods } from '@/lib/repositories/userFoodRepository';
-import { mapUserFoodToEntry, mapUserFoodsToEntries } from '@/lib/userFoodMapper';
+import { createUserFood, listUserFoods, type UserFoodRow } from '@/lib/repositories/userFoodRepository';
+import { buildNutritionSearchEntries } from '@/lib/nutritionFoodLookup';
 import { parseRecoveryParam } from '@/lib/recoveryContext';
 import { RecoveryBanner } from '@/components/RecoveryBanner';
 
@@ -54,7 +54,7 @@ function NutritionPageContent() {
   const [saveError, setSaveError] = useState('');
   const [detailsExpanded, setDetailsExpanded] = useState(false);
   const [errorsExpanded, setErrorsExpanded] = useState(false);
-  const [userFoodEntries, setUserFoodEntries] = useState<ProteinFoodEntry[]>([]);
+  const [personalFoods, setPersonalFoods] = useState<UserFoodRow[]>([]);
 
   type AddFoodModal = {
     sourceText: string;
@@ -83,13 +83,13 @@ function NutritionPageContent() {
 
   useEffect(() => {
     listUserFoods()
-      .then((rows) => setUserFoodEntries(mapUserFoodsToEntries(rows)))
+      .then((rows) => setPersonalFoods(rows))
       .catch(() => {}); // silent fail — falls back to JSON foods only
   }, []);
 
   const mergedFoods = useMemo<ProteinFoodEntry[]>(
-    () => (userFoodEntries.length > 0 ? [...userFoodEntries, ...proteinFoods] : proteinFoods),
-    [userFoodEntries]
+    () => (personalFoods.length > 0 ? buildNutritionSearchEntries(personalFoods) : proteinFoods),
+    [personalFoods]
   );
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -195,12 +195,11 @@ function NutritionPageContent() {
         source_unresolved_text: addFoodModal.sourceText || null,
       });
 
-      const newEntry = mapUserFoodToEntry(created);
-      const nextUserFoods = [newEntry, ...userFoodEntries];
-      setUserFoodEntries(nextUserFoods);
+      const nextPersonalFoods = [created, ...personalFoods];
+      setPersonalFoods(nextPersonalFoods);
 
       // Re-run calculation immediately with the updated food list
-      const nextMerged = [...nextUserFoods, ...proteinFoods];
+      const nextMerged = buildNutritionSearchEntries(nextPersonalFoods);
       setResults(calculateNutritionFromText(input, nextMerged));
 
       setAddFoodModal(null);
