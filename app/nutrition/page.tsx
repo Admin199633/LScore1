@@ -5,13 +5,19 @@ import { type CSSProperties, FormEvent, Suspense, useEffect, useMemo, useRef, us
 import { useSearchParams } from 'next/navigation';
 import {
   calculateNutritionFromText,
+  parseProteinText,
   type NutritionCalculationResult,
 } from '@shared-engines/proteinEngine';
-import { proteinFoods, type ProteinFoodEntry } from '@shared-engines/proteinFoods';
+import { type ProteinFoodEntry } from '@shared-engines/proteinFoods';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { appendNutritionLog, saveNutritionLog } from '@/lib/repositories/nutritionLogRepository';
 import { createUserFood, listUserFoods, type UserFoodRow } from '@/lib/repositories/userFoodRepository';
-import { buildNutritionSearchEntries } from '@/lib/nutritionFoodLookup';
+import {
+  buildNutritionSearchEntries,
+  buildNutritionSearchFoods,
+  searchNutritionFoods,
+  type NutritionSearchFood,
+} from '@/lib/nutritionFoodLookup';
 import { parseRecoveryParam } from '@/lib/recoveryContext';
 import { RecoveryBanner } from '@/components/RecoveryBanner';
 
@@ -19,6 +25,40 @@ const EXAMPLE_INPUT = [''].join('\n');
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
 const formatMacro = (value?: number | null, suffix = '') =>
   value == null ? '-' : `${value.toFixed(1)}${suffix}`;
+const AUTOCOMPLETE_DEBOUNCE_MS = 275;
+const AUTOCOMPLETE_MIN_QUERY_LENGTH = 2;
+
+const getCurrentLineRange = (value: string, caretPosition: number) => {
+  const safeCaret = Math.max(0, Math.min(caretPosition, value.length));
+  const lineStart = value.lastIndexOf('\n', safeCaret - 1) + 1;
+  const nextNewlineIndex = value.indexOf('\n', safeCaret);
+  const lineEnd = nextNewlineIndex === -1 ? value.length : nextNewlineIndex;
+
+  return {
+    start: lineStart,
+    end: lineEnd,
+    text: value.slice(lineStart, lineEnd),
+  };
+};
+
+const getSearchQueryFromLine = (line: string) => {
+  const parsed = parseProteinText(line)[0];
+  return String(parsed?.cleanedFoodText || line || '').trim();
+};
+
+const replaceLineFoodText = (line: string, selectedFoodName: string) => {
+  const parsed = parseProteinText(line)[0];
+  if (!parsed) {
+    return selectedFoodName;
+  }
+
+  const normalizedLine = parsed.originalText || String(line || '').trim();
+  if (!parsed.cleanedFoodText) {
+    return selectedFoodName;
+  }
+
+  return normalizedLine.replace(parsed.cleanedFoodText, selectedFoodName).trim();
+};
 
 const getResultStatus = (results: NutritionCalculationResult) => {
   if (results.unresolvedCount > 0) {
@@ -46,7 +86,12 @@ function NutritionPageContent() {
   const recoveryType = parseRecoveryParam(searchParams.get('recovery'));
   const [recoveryDismissed, setRecoveryDismissed] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const autocompleteRef = useRef<HTMLDivElement>(null);
+  const skipNextAutocompleteRef = useRef(false);
   const [input, setInput] = useState(EXAMPLE_INPUT);
+  const [caretPosition, setCaretPosition] = useState(0);
+  const [debouncedAutocompleteQuery, setDebouncedAutocompleteQuery] = useState('');
+  const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] = useState(-1);
   const [selectedDate, setSelectedDate] = useState(getTodayDate);
   const [results, setResults] = useState<NutritionCalculationResult | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -74,6 +119,16 @@ function NutritionPageContent() {
   );
   const unresolvedPreview = useMemo(() => unresolvedItems.slice(0, 2), [unresolvedItems]);
   const resultStatus = useMemo(() => (results ? getResultStatus(results) : null), [results]);
+  const activeLine = useMemo(() => getCurrentLineRange(input, caretPosition), [input, caretPosition]);
+  const autocompleteQuery = useMemo(() => getSearchQueryFromLine(activeLine.text), [activeLine.text]);
+  const searchFoods = useMemo(() => buildNutritionSearchFoods(personalFoods), [personalFoods]);
+  const autocompleteSuggestions = useMemo<NutritionSearchFood[]>(
+    () => searchNutritionFoods(searchFoods, debouncedAutocompleteQuery, 8),
+    [searchFoods, debouncedAutocompleteQuery]
+  );
+  const showAutocomplete =
+    debouncedAutocompleteQuery.length >= AUTOCOMPLETE_MIN_QUERY_LENGTH &&
+    autocompleteSuggestions.length > 0;
 
   useEffect(() => {
     if (recoveryType === 'nutrition' && !recoveryDismissed) {
@@ -87,10 +142,110 @@ function NutritionPageContent() {
       .catch(() => {}); // silent fail — falls back to JSON foods only
   }, []);
 
+  useEffect(() => {
+    if (skipNextAutocompleteRef.current) {
+      skipNextAutocompleteRef.current = false;
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      const nextQuery =
+        autocompleteQuery.length >= AUTOCOMPLETE_MIN_QUERY_LENGTH ? autocompleteQuery : '';
+      setDebouncedAutocompleteQuery(nextQuery);
+    }, AUTOCOMPLETE_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [autocompleteQuery]);
+
+  useEffect(() => {
+    setHighlightedSuggestionIndex(autocompleteSuggestions.length > 0 ? 0 : -1);
+  }, [autocompleteSuggestions]);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!autocompleteRef.current?.contains(event.target as Node)) {
+        setDebouncedAutocompleteQuery('');
+        setHighlightedSuggestionIndex(-1);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, []);
+
   const mergedFoods = useMemo<ProteinFoodEntry[]>(
-    () => (personalFoods.length > 0 ? buildNutritionSearchEntries(personalFoods) : proteinFoods),
+    () => buildNutritionSearchEntries(personalFoods),
     [personalFoods]
   );
+
+  const updateCaretPosition = () => {
+    setCaretPosition(textareaRef.current?.selectionStart ?? 0);
+  };
+
+  const closeAutocomplete = () => {
+    setDebouncedAutocompleteQuery('');
+    setHighlightedSuggestionIndex(-1);
+  };
+
+  const applyAutocompleteSuggestion = (suggestion: NutritionSearchFood) => {
+    const nextLine = replaceLineFoodText(activeLine.text, suggestion.entry.name);
+    const nextInput = `${input.slice(0, activeLine.start)}${nextLine}${input.slice(activeLine.end)}`;
+    const nextCaretPosition = activeLine.start + nextLine.length;
+
+    skipNextAutocompleteRef.current = true;
+    setInput(nextInput);
+    setCaretPosition(nextCaretPosition);
+    closeAutocomplete();
+
+    requestAnimationFrame(() => {
+      const textarea = textareaRef.current;
+      if (!textarea) {
+        return;
+      }
+
+      textarea.focus();
+      textarea.setSelectionRange(nextCaretPosition, nextCaretPosition);
+    });
+  };
+
+  const handleTextareaKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!showAutocomplete) {
+      if (event.key === 'Escape') {
+        closeAutocomplete();
+      }
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setHighlightedSuggestionIndex((current) =>
+        current >= autocompleteSuggestions.length - 1 ? 0 : current + 1
+      );
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setHighlightedSuggestionIndex((current) =>
+        current <= 0 ? autocompleteSuggestions.length - 1 : current - 1
+      );
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      const selectedSuggestion = autocompleteSuggestions[highlightedSuggestionIndex];
+      if (selectedSuggestion) {
+        event.preventDefault();
+        applyAutocompleteSuggestion(selectedSuggestion);
+      }
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeAutocomplete();
+    }
+  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -251,27 +406,93 @@ function NutritionPageContent() {
             />
           </div>
 
-          {/* טקסטאריה */}
+          {/* ׳˜׳§׳¡׳˜׳׳¨׳™׳” */}
           <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 10 }}>
-            <textarea
-              ref={textareaRef}
-              id="nutrition-input"
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              placeholder={'לדוגמה:\nסלמון 100 גרם\n2 ביצים\nטונה'}
-              rows={5}
-              style={{
-                width: '100%',
-                resize: 'vertical',
-                borderRadius: 14,
-                border: '1px solid var(--border)',
-                background: 'var(--surface-2)',
-                color: 'var(--text)',
-                padding: 12,
-                lineHeight: 1.7,
-                fontSize: 15,
-              }}
-            />
+            <div ref={autocompleteRef} style={{ position: 'relative' }}>
+              <textarea
+                ref={textareaRef}
+                id="nutrition-input"
+                value={input}
+                onChange={(event) => {
+                  setInput(event.target.value);
+                  setCaretPosition(event.target.selectionStart ?? event.target.value.length);
+                }}
+                onClick={updateCaretPosition}
+                onKeyUp={updateCaretPosition}
+                onSelect={updateCaretPosition}
+                onKeyDown={handleTextareaKeyDown}
+                placeholder={'׳׳“׳•׳’׳׳”:\n׳¡׳׳׳•׳ 100 ׳’׳¨׳\n2 ׳‘׳™׳¦׳™׳\n׳˜׳•׳ ׳”'}
+                rows={5}
+                style={{
+                  width: '100%',
+                  resize: 'vertical',
+                  borderRadius: 14,
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface-2)',
+                  color: 'var(--text)',
+                  padding: 12,
+                  lineHeight: 1.7,
+                  fontSize: 15,
+                }}
+              />
+              {showAutocomplete ? (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 6px)',
+                    insetInlineStart: 0,
+                    insetInlineEnd: 0,
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 14,
+                    boxShadow: '0 10px 24px rgba(0,0,0,0.18)',
+                    overflow: 'hidden',
+                    zIndex: 20,
+                  }}
+                >
+                  {autocompleteSuggestions.map((suggestion, index) => (
+                    <button
+                      key={`${suggestion.source}-${suggestion.normalizedName}`}
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => applyAutocompleteSuggestion(suggestion)}
+                      style={{
+                        width: '100%',
+                        border: 0,
+                        borderTop: index === 0 ? 'none' : '1px solid var(--border)',
+                        background:
+                          index === highlightedSuggestionIndex
+                            ? 'var(--surface-2)'
+                            : 'var(--surface)',
+                        color: 'var(--text)',
+                        padding: '10px 12px',
+                        textAlign: 'right',
+                        cursor: 'pointer',
+                        display: 'grid',
+                        gap: 4,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 8,
+                        }}
+                      >
+                        <span style={{ fontWeight: 700 }}>{suggestion.entry.name}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+                          {suggestion.source === 'personal' ? 'אישי' : 'גלובלי'}
+                        </span>
+                      </div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+                        {formatMacro(suggestion.calories)} קלוריות | {formatMacro(suggestion.protein)}g חלבון
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
             <button
               type="submit"
               style={{

@@ -11,6 +11,9 @@ export type NutritionSearchFood = {
   entry: ProteinFoodEntry;
   source: NutritionFoodSource;
   normalizedName: string;
+  normalizedAliases: string[];
+  calories: number | null;
+  protein: number | null;
 };
 
 export const normalizeFoodLookupName = (value: string | null | undefined) =>
@@ -28,6 +31,9 @@ const buildSearchFood = (
   entry,
   source,
   normalizedName: normalizeFoodLookupName(entry.name),
+  normalizedAliases: (entry.aliases ?? []).map(normalizeFoodLookupName).filter(Boolean),
+  calories: entry.units?.[0]?.nutrition?.calories ?? null,
+  protein: entry.units?.[0]?.nutrition?.protein ?? null,
 });
 
 export const buildNutritionSearchFoods = (
@@ -61,6 +67,58 @@ export const buildNutritionSearchFoods = (
 
 export const buildNutritionSearchEntries = (personalFoods: UserFoodRow[]): ProteinFoodEntry[] =>
   buildNutritionSearchFoods(personalFoods).map((food) => food.entry);
+
+const getSearchPriority = (food: NutritionSearchFood, normalizedQuery: string) => {
+  if (food.normalizedName.startsWith(normalizedQuery)) {
+    return 0;
+  }
+
+  if (food.normalizedName.includes(normalizedQuery)) {
+    return 1;
+  }
+
+  if (food.normalizedAliases.some((alias) => alias.startsWith(normalizedQuery))) {
+    return 2;
+  }
+
+  if (food.normalizedAliases.some((alias) => alias.includes(normalizedQuery))) {
+    return 3;
+  }
+
+  return 99;
+};
+
+export const searchNutritionFoods = (
+  foods: NutritionSearchFood[],
+  query: string,
+  limit = 8
+): NutritionSearchFood[] => {
+  const normalizedQuery = normalizeFoodLookupName(query);
+  if (normalizedQuery.length < 2) {
+    return [];
+  }
+
+  return foods
+    .map((food, index) => ({
+      food,
+      index,
+      priority: getSearchPriority(food, normalizedQuery),
+    }))
+    .filter(({ priority }) => priority < 99)
+    .sort((left, right) => {
+      if (left.priority !== right.priority) {
+        return left.priority - right.priority;
+      }
+
+      if (left.food.source !== right.food.source) {
+        return left.food.source === 'global' ? -1 : 1;
+      }
+
+      return left.index - right.index;
+    })
+    .slice(0, limit)
+    .map(({ food }) => food);
+};
 
 export const loadNutritionSearchFoods = async (): Promise<NutritionSearchFood[]> =>
   buildNutritionSearchFoods(await listUserFoods());
