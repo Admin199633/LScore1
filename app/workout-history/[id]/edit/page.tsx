@@ -29,7 +29,6 @@ type EditForm = {
   sessionDate: string;
   startTime: string;
   endTime: string;
-  totalDurationMinutes: string;
   energyLevel: 'low' | 'normal' | 'high' | '';
   exercises: EditExercise[];
 };
@@ -91,11 +90,11 @@ export default function EditWorkoutSessionPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [dayName, setDayName] = useState('');
+  const [originalDurationSeconds, setOriginalDurationSeconds] = useState(0);
   const [form, setForm] = useState<EditForm>({
     sessionDate: '',
     startTime: '',
     endTime: '',
-    totalDurationMinutes: '',
     energyLevel: '',
     exercises: [],
   });
@@ -124,12 +123,11 @@ export default function EditWorkoutSessionPage() {
         }
 
         setDayName(session.dayName);
+        setOriginalDurationSeconds(session.durationSeconds ?? 0);
         setForm({
           sessionDate: session.date,
           startTime: formatTimeInputValue(session.startedAt),
           endTime: formatTimeInputValue(session.endedAt),
-          totalDurationMinutes:
-            session.durationSeconds > 0 ? String(Math.round(session.durationSeconds / 60)) : '',
           energyLevel: (session.energyLevel as EditForm['energyLevel']) || '',
           exercises: session.exercises.map((ex) => ({
             rowId: ex.rowId,
@@ -237,9 +235,15 @@ export default function EditWorkoutSessionPage() {
     setValidationError('');
     setSaveError('');
 
-    const totalDurationMinutes = Number(form.totalDurationMinutes);
     const startedAt = combineDateAndTime(form.sessionDate, form.startTime);
     const endedAt = combineDateAndTime(form.sessionDate, form.endTime);
+
+    // Compute total duration: derived from start/end if both present, else keep original
+    const computedDurationSeconds =
+      startedAt && endedAt
+        ? Math.round((new Date(endedAt).getTime() - new Date(startedAt).getTime()) / 1000)
+        : null;
+    const durationSeconds = computedDurationSeconds ?? originalDurationSeconds;
 
     if (!form.sessionDate) {
       setValidationError('יש למלא תאריך.');
@@ -247,10 +251,6 @@ export default function EditWorkoutSessionPage() {
     }
     if (!form.energyLevel) {
       setValidationError('יש לבחור רמת אנרגיה.');
-      return;
-    }
-    if (!form.totalDurationMinutes || !Number.isFinite(totalDurationMinutes) || totalDurationMinutes <= 0) {
-      setValidationError('משך האימון חייב להיות גדול מ-0.');
       return;
     }
     if ((form.startTime && !form.endTime) || (!form.startTime && form.endTime)) {
@@ -287,7 +287,7 @@ export default function EditWorkoutSessionPage() {
         energyLevel: form.energyLevel,
         startedAt,
         endedAt,
-        durationSeconds: Math.round(totalDurationMinutes * 60),
+        durationSeconds,
         exercises: form.exercises.map((ex) => ({
           id: ex.rowId,
           completed: ex.completed,
@@ -369,17 +369,23 @@ export default function EditWorkoutSessionPage() {
               </div>
 
               <div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>משך אימון כולל בדקות</div>
-                <input
-                  type="number"
-                  min="1"
-                  value={form.totalDurationMinutes}
-                  onChange={(e) => {
-                    setForm((c) => ({ ...c, totalDurationMinutes: e.target.value }));
-                    setValidationError('');
-                  }}
-                  style={inputStyle}
-                />
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>משך אימון כולל</div>
+                <div style={{ ...inputStyle, color: 'var(--text-muted)', userSelect: 'none' }}>
+                  {(() => {
+                    const startedAt = combineDateAndTime(form.sessionDate, form.startTime);
+                    const endedAt = combineDateAndTime(form.sessionDate, form.endTime);
+                    if (startedAt && endedAt) {
+                      const diffSec = Math.round(
+                        (new Date(endedAt).getTime() - new Date(startedAt).getTime()) / 1000
+                      );
+                      if (diffSec > 0) return `${Math.round(diffSec / 60)} דקות`;
+                    }
+                    if (originalDurationSeconds > 0) {
+                      return `${Math.round(originalDurationSeconds / 60)} דקות`;
+                    }
+                    return '—';
+                  })()}
+                </div>
               </div>
 
               <div>
