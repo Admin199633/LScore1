@@ -280,9 +280,13 @@ export const updateWorkoutSessionById = async (
   input: {
     sessionDate: string;
     energyLevel: string;
+    startedAt: string | null;
+    endedAt: string | null;
+    durationSeconds: number;
     exercises: Array<{
       id: string; // workout_session_exercises row UUID
       completed: boolean;
+      durationSeconds: number;
       sets: Array<{
         id?: string; // DB UUID if existing; absent/undefined for new sets
         setOrder: number;
@@ -306,6 +310,9 @@ export const updateWorkoutSessionById = async (
     .update({
       session_date: input.sessionDate,
       energy_level: input.energyLevel || null,
+      started_at: input.startedAt || null,
+      ended_at: input.endedAt || null,
+      duration_seconds: input.durationSeconds,
     })
     .eq('id', id)
     .eq('user_id', user.id);
@@ -318,7 +325,10 @@ export const updateWorkoutSessionById = async (
       // Update exercise completed flag
       const { error: exError } = await webSupabase
         .from('workout_session_exercises')
-        .update({ completed: exercise.completed })
+        .update({
+          completed: exercise.completed,
+          duration_seconds: exercise.durationSeconds,
+        })
         .eq('id', exercise.id);
 
       if (exError) throw exError;

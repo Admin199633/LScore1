@@ -10,29 +10,29 @@ import {
   updateWorkoutSessionById,
 } from '@/lib/repositories/workoutSessionRepository';
 
-// ─── Local form types ────────────────────────────────────────────────────────
-
 type EditSet = {
-  id: string;         // DB UUID for existing; 'new-{n}' for added sets
+  id: string;
   weight: string;
   reps: string;
   difficulty: 'easy' | 'good' | 'hard';
 };
 
 type EditExercise = {
-  rowId: string;      // workout_session_exercises row UUID
+  rowId: string;
   exerciseName: string;
   completed: boolean;
+  durationSeconds: string;
   sets: EditSet[];
 };
 
 type EditForm = {
   sessionDate: string;
+  startTime: string;
+  endTime: string;
+  totalDurationMinutes: string;
   energyLevel: 'low' | 'normal' | 'high' | '';
   exercises: EditExercise[];
 };
-
-// ─── Constants ───────────────────────────────────────────────────────────────
 
 const ENERGY_OPTIONS: Array<{ value: 'low' | 'normal' | 'high'; label: string }> = [
   { value: 'low', label: 'נמוכה' },
@@ -49,14 +49,39 @@ const DIFFICULTY_OPTIONS: Array<{ value: 'easy' | 'good' | 'hard'; label: string
 let newSetCounter = 0;
 const newSetId = () => `new-${++newSetCounter}`;
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
 const isValidPositive = (value: string) => {
   const n = Number(value);
   return !isNaN(n) && n >= 0;
 };
 
-// ─── Page ────────────────────────────────────────────────────────────────────
+const isValidDurationMinutes = (value: string) => {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0;
+};
+
+const formatTimeInputValue = (value: string | null | undefined) => {
+  if (!value) return '';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+};
+
+const combineDateAndTime = (date: string, time: string) => {
+  if (!date || !time) {
+    return null;
+  }
+
+  const combined = new Date(`${date}T${time}:00`);
+  if (Number.isNaN(combined.getTime())) {
+    return null;
+  }
+
+  return combined.toISOString();
+};
 
 export default function EditWorkoutSessionPage() {
   const params = useParams();
@@ -68,6 +93,9 @@ export default function EditWorkoutSessionPage() {
   const [dayName, setDayName] = useState('');
   const [form, setForm] = useState<EditForm>({
     sessionDate: '',
+    startTime: '',
+    endTime: '',
+    totalDurationMinutes: '',
     energyLevel: '',
     exercises: [],
   });
@@ -75,8 +103,6 @@ export default function EditWorkoutSessionPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [validationError, setValidationError] = useState('');
-
-  // ── Load session ────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!id) {
@@ -100,11 +126,19 @@ export default function EditWorkoutSessionPage() {
         setDayName(session.dayName);
         setForm({
           sessionDate: session.date,
+          startTime: formatTimeInputValue(session.startedAt),
+          endTime: formatTimeInputValue(session.endedAt),
+          totalDurationMinutes:
+            session.durationSeconds > 0 ? String(Math.round(session.durationSeconds / 60)) : '',
           energyLevel: (session.energyLevel as EditForm['energyLevel']) || '',
           exercises: session.exercises.map((ex) => ({
             rowId: ex.rowId,
             exerciseName: ex.exerciseName,
             completed: ex.completed,
+            durationSeconds:
+              ex.durationSeconds != null && ex.durationSeconds >= 0
+                ? String(Math.round(ex.durationSeconds / 60))
+                : '0',
             sets: ex.sets.map((s) => ({
               id: s.id,
               weight: s.weight,
@@ -122,10 +156,10 @@ export default function EditWorkoutSessionPage() {
         if (isMounted) setIsLoading(false);
       });
 
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
-
-  // ── Form mutations ──────────────────────────────────────────────────────────
 
   const updateSet = (
     exIdx: number,
@@ -138,9 +172,7 @@ export default function EditWorkoutSessionPage() {
         if (i !== exIdx) return ex;
         return {
           ...ex,
-          sets: ex.sets.map((s, j) =>
-            j !== setIdx ? s : { ...s, [field]: value }
-          ),
+          sets: ex.sets.map((s, j) => (j !== setIdx ? s : { ...s, [field]: value })),
         };
       });
       return { ...current, exercises };
@@ -190,13 +222,25 @@ export default function EditWorkoutSessionPage() {
     });
   };
 
-  // ── Save ────────────────────────────────────────────────────────────────────
+  const updateExerciseDuration = (exIdx: number, value: string) => {
+    setForm((current) => ({
+      ...current,
+      exercises: current.exercises.map((exercise, index) =>
+        index === exIdx ? { ...exercise, durationSeconds: value } : exercise
+      ),
+    }));
+    setValidationError('');
+    setSaveError('');
+  };
 
   const handleSave = async () => {
     setValidationError('');
     setSaveError('');
 
-    // Validate
+    const totalDurationMinutes = Number(form.totalDurationMinutes);
+    const startedAt = combineDateAndTime(form.sessionDate, form.startTime);
+    const endedAt = combineDateAndTime(form.sessionDate, form.endTime);
+
     if (!form.sessionDate) {
       setValidationError('יש למלא תאריך.');
       return;
@@ -205,7 +249,29 @@ export default function EditWorkoutSessionPage() {
       setValidationError('יש לבחור רמת אנרגיה.');
       return;
     }
+    if (!form.totalDurationMinutes || !Number.isFinite(totalDurationMinutes) || totalDurationMinutes <= 0) {
+      setValidationError('משך האימון חייב להיות גדול מ-0.');
+      return;
+    }
+    if ((form.startTime && !form.endTime) || (!form.startTime && form.endTime)) {
+      setValidationError('כדי לשמור שעות יש למלא גם שעת התחלה וגם שעת סיום.');
+      return;
+    }
+    if ((form.startTime && !startedAt) || (form.endTime && !endedAt)) {
+      setValidationError('שעת ההתחלה או הסיום אינה תקינה.');
+      return;
+    }
+    if (startedAt && endedAt && new Date(endedAt).getTime() <= new Date(startedAt).getTime()) {
+      setValidationError('שעת הסיום חייבת להיות אחרי שעת ההתחלה.');
+      return;
+    }
+
     for (const ex of form.exercises) {
+      if (ex.durationSeconds.trim() === '' || !isValidDurationMinutes(ex.durationSeconds)) {
+        setValidationError(`משך התרגיל אינו תקין בתרגיל "${ex.exerciseName}".`);
+        return;
+      }
+
       for (const s of ex.sets) {
         if (!isValidPositive(s.weight) || !isValidPositive(s.reps)) {
           setValidationError(`ערכי משקל/חזרות לא תקינים בתרגיל "${ex.exerciseName}".`);
@@ -219,9 +285,13 @@ export default function EditWorkoutSessionPage() {
       await updateWorkoutSessionById(id, {
         sessionDate: form.sessionDate,
         energyLevel: form.energyLevel,
+        startedAt,
+        endedAt,
+        durationSeconds: Math.round(totalDurationMinutes * 60),
         exercises: form.exercises.map((ex) => ({
           id: ex.rowId,
           completed: ex.completed,
+          durationSeconds: Math.round(Number(ex.durationSeconds) * 60),
           sets: ex.sets.map((s, idx) => ({
             id: s.id.startsWith('new-') ? undefined : s.id,
             setOrder: idx + 1,
@@ -239,13 +309,9 @@ export default function EditWorkoutSessionPage() {
     }
   };
 
-  // ── Render ──────────────────────────────────────────────────────────────────
-
   return (
     <ProtectedPage>
       <div style={{ display: 'grid', gap: 16 }}>
-
-        {/* Header */}
         <div style={{ background: 'var(--surface)', borderRadius: 20, padding: 20, display: 'grid', gap: 6 }}>
           <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>עריכת אימון</div>
           {isLoading ? (
@@ -259,17 +325,57 @@ export default function EditWorkoutSessionPage() {
 
         {!isLoading && !loadError ? (
           <>
-            {/* Metadata */}
             <div style={{ background: 'var(--surface)', borderRadius: 20, padding: 20, display: 'grid', gap: 12 }}>
               <div style={{ fontSize: 16, fontWeight: 700 }}>פרטי אימון</div>
 
               <div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>תאריך</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>תאריך אימון</div>
                 <input
                   type="date"
                   value={form.sessionDate}
                   onChange={(e) => {
                     setForm((c) => ({ ...c, sessionDate: e.target.value }));
+                    setValidationError('');
+                  }}
+                  style={inputStyle}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div>
+                  <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>שעת התחלה</div>
+                  <input
+                    type="time"
+                    value={form.startTime}
+                    onChange={(e) => {
+                      setForm((c) => ({ ...c, startTime: e.target.value }));
+                      setValidationError('');
+                    }}
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>שעת סיום</div>
+                  <input
+                    type="time"
+                    value={form.endTime}
+                    onChange={(e) => {
+                      setForm((c) => ({ ...c, endTime: e.target.value }));
+                      setValidationError('');
+                    }}
+                    style={inputStyle}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>משך אימון כולל בדקות</div>
+                <input
+                  type="number"
+                  min="1"
+                  value={form.totalDurationMinutes}
+                  onChange={(e) => {
+                    setForm((c) => ({ ...c, totalDurationMinutes: e.target.value }));
                     setValidationError('');
                   }}
                   style={inputStyle}
@@ -296,7 +402,6 @@ export default function EditWorkoutSessionPage() {
               </div>
             </div>
 
-            {/* Exercises */}
             {form.exercises.map((exercise, exIdx) => (
               <div
                 key={exercise.rowId}
@@ -309,11 +414,21 @@ export default function EditWorkoutSessionPage() {
                     onClick={() => toggleCompleted(exIdx)}
                     style={chipStyle(exercise.completed)}
                   >
-                    {exercise.completed ? 'הושלם ✓' : 'לא הושלם'}
+                    {exercise.completed ? 'הושלם' : 'לא הושלם'}
                   </button>
                 </div>
 
-                {/* Set rows */}
+                <div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>משך תרגיל בדקות</div>
+                  <input
+                    type="number"
+                    min="0"
+                    value={exercise.durationSeconds}
+                    onChange={(e) => updateExerciseDuration(exIdx, e.target.value)}
+                    style={inputStyle}
+                  />
+                </div>
+
                 <div style={{ display: 'grid', gap: 10 }}>
                   {exercise.sets.map((setItem, setIdx) => (
                     <div
@@ -377,17 +492,12 @@ export default function EditWorkoutSessionPage() {
                   ))}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => addSet(exIdx)}
-                  style={addSetButtonStyle}
-                >
+                <button type="button" onClick={() => addSet(exIdx)} style={addSetButtonStyle}>
                   + הוסף סט
                 </button>
               </div>
             ))}
 
-            {/* Errors */}
             {validationError ? (
               <div style={{ color: 'var(--danger)', fontSize: 14 }}>{validationError}</div>
             ) : null}
@@ -395,7 +505,6 @@ export default function EditWorkoutSessionPage() {
               <div style={{ color: 'var(--danger)', fontSize: 14 }}>{saveError}</div>
             ) : null}
 
-            {/* Save */}
             <button
               type="button"
               onClick={handleSave}
@@ -424,8 +533,6 @@ export default function EditWorkoutSessionPage() {
     </ProtectedPage>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const inputStyle: CSSProperties = {
   width: '100%',
