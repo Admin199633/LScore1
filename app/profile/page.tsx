@@ -112,16 +112,17 @@ const formatMeasurementValue = (value: number | null) => (value != null ? `${val
 
 const getFilledMeasurementValues = (measurement: BodyMeasurementLog) =>
   [
-    measurement.chestCm != null ? `חזה ${measurement.chestCm} ס"מ` : null,
-    measurement.waistCm != null ? `מותן ${measurement.waistCm} ס"מ` : null,
-    measurement.abdomenCm != null ? `בטן ${measurement.abdomenCm} ס"מ` : null,
-    measurement.hipsCm != null ? `אגן ${measurement.hipsCm} ס"מ` : null,
-    measurement.leftArmCm != null ? `יד שמאל ${measurement.leftArmCm} ס"מ` : null,
-    measurement.rightArmCm != null ? `יד ימין ${measurement.rightArmCm} ס"מ` : null,
-    measurement.leftThighCm != null ? `ירך שמאל ${measurement.leftThighCm} ס"מ` : null,
-    measurement.rightThighCm != null ? `ירך ימין ${measurement.rightThighCm} ס"מ` : null,
+    measurement.chestCm != null ? `חזה (קו פטמות) ${measurement.chestCm} ס"מ` : null,
+    measurement.waistCm != null ? `מותן (האזור הצר ביותר) ${measurement.waistCm} ס"מ` : null,
+    measurement.abdomenCm != null ? `בטן (קו פופיק) ${measurement.abdomenCm} ס"מ` : null,
+    measurement.hipsCm != null ? `אגן (החלק הרחב ביותר) ${measurement.hipsCm} ס"מ` : null,
+    measurement.leftArmCm != null ? `יד שמאל (רפויה כלפי מטה) ${measurement.leftArmCm} ס"מ` : null,
+    measurement.rightArmCm != null ? `יד ימין (רפויה כלפי מטה) ${measurement.rightArmCm} ס"מ` : null,
+    measurement.leftThighCm != null ? `ירך שמאל (האמצע) ${measurement.leftThighCm} ס"מ` : null,
+    measurement.rightThighCm != null ? `ירך ימין (האמצע) ${measurement.rightThighCm} ס"מ` : null,
   ].filter(Boolean) as string[];
-
+  
+  
 const measurementToFormValues = (measurement: BodyMeasurementLog) => ({
   measurementDate: measurement.measurementDate,
   chestCm: measurement.chestCm != null ? String(measurement.chestCm) : '',
@@ -698,7 +699,7 @@ function ProfilePageContent() {
               type="number"
               inputMode="decimal"
               step="0.1"
-              placeholder="חזה"
+placeholder="חזה (קו פטמות)"
               value={measurementForm.chestCm}
               onChange={(event) => updateMeasurementField('chestCm', event.target.value)}
               style={inputStyle}
@@ -707,7 +708,7 @@ function ProfilePageContent() {
               type="number"
               inputMode="decimal"
               step="0.1"
-              placeholder="מותן"
+placeholder="מותן (האזור הצר ביותר)"
               value={measurementForm.waistCm}
               onChange={(event) => updateMeasurementField('waistCm', event.target.value)}
               style={inputStyle}
@@ -716,7 +717,7 @@ function ProfilePageContent() {
               type="number"
               inputMode="decimal"
               step="0.1"
-              placeholder="בטן"
+placeholder="בטן (קו פופיק)"
               value={measurementForm.abdomenCm}
               onChange={(event) => updateMeasurementField('abdomenCm', event.target.value)}
               style={inputStyle}
@@ -725,7 +726,7 @@ function ProfilePageContent() {
               type="number"
               inputMode="decimal"
               step="0.1"
-              placeholder="אגן"
+placeholder="אגן (החלק הרחב ביותר)"
               value={measurementForm.hipsCm}
               onChange={(event) => updateMeasurementField('hipsCm', event.target.value)}
               style={inputStyle}
@@ -734,7 +735,7 @@ function ProfilePageContent() {
               type="number"
               inputMode="decimal"
               step="0.1"
-              placeholder="יד שמאל"
+placeholder="יד שמאל (רפויה כלפי מטה)"
               value={measurementForm.leftArmCm}
               onChange={(event) => updateMeasurementField('leftArmCm', event.target.value)}
               style={inputStyle}
@@ -743,7 +744,7 @@ function ProfilePageContent() {
               type="number"
               inputMode="decimal"
               step="0.1"
-              placeholder="יד ימין"
+placeholder="יד ימין (רפויה כלפי מטה)"
               value={measurementForm.rightArmCm}
               onChange={(event) => updateMeasurementField('rightArmCm', event.target.value)}
               style={inputStyle}
@@ -752,7 +753,7 @@ function ProfilePageContent() {
               type="number"
               inputMode="decimal"
               step="0.1"
-              placeholder="ירך שמאל"
+placeholder="ירך שמאל (האמצע)"
               value={measurementForm.leftThighCm}
               onChange={(event) => updateMeasurementField('leftThighCm', event.target.value)}
               style={inputStyle}
@@ -761,7 +762,7 @@ function ProfilePageContent() {
               type="number"
               inputMode="decimal"
               step="0.1"
-              placeholder="ירך ימין"
+placeholder="ירך ימין (האמצע)"
               value={measurementForm.rightThighCm}
               onChange={(event) => updateMeasurementField('rightThighCm', event.target.value)}
               style={inputStyle}
@@ -817,14 +818,14 @@ function ProfilePageContent() {
                   תאריך: {latestMeasurement.measurementDate}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 14 }}>
-                  <div>חזה: {formatMeasurementValue(latestMeasurement.chestCm)}</div>
-                  <div>מותן: {formatMeasurementValue(latestMeasurement.waistCm)}</div>
-                  <div>בטן: {formatMeasurementValue(latestMeasurement.abdomenCm)}</div>
-                  <div>אגן: {formatMeasurementValue(latestMeasurement.hipsCm)}</div>
-                  <div>יד שמאל: {formatMeasurementValue(latestMeasurement.leftArmCm)}</div>
-                  <div>יד ימין: {formatMeasurementValue(latestMeasurement.rightArmCm)}</div>
-                  <div>ירך שמאל: {formatMeasurementValue(latestMeasurement.leftThighCm)}</div>
-                  <div>ירך ימין: {formatMeasurementValue(latestMeasurement.rightThighCm)}</div>
+<div>חזה (קו פטמות): {formatMeasurementValue(latestMeasurement.chestCm)}</div>
+<div>מותן (האזור הצר ביותר): {formatMeasurementValue(latestMeasurement.waistCm)}</div>
+<div>בטן (קו פופיק): {formatMeasurementValue(latestMeasurement.abdomenCm)}</div>
+<div>אגן (החלק הרחב ביותר): {formatMeasurementValue(latestMeasurement.hipsCm)}</div>
+<div>יד שמאל (רפויה כלפי מטה): {formatMeasurementValue(latestMeasurement.leftArmCm)}</div>
+<div>יד ימין (רפויה כלפי מטה): {formatMeasurementValue(latestMeasurement.rightArmCm)}</div>
+<div>ירך שמאל (האמצע): {formatMeasurementValue(latestMeasurement.leftThighCm)}</div>
+<div>ירך ימין (האמצע): {formatMeasurementValue(latestMeasurement.rightThighCm)}</div>	
                 </div>
                 {latestMeasurement.notes ? (
                   <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
