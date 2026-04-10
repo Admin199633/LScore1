@@ -49,6 +49,7 @@ export const createEmptyMeasurementForm = () => ({
   rightArmCm: '',
   leftThighCm: '',
   rightThighCm: '',
+  neckCm: '',
   notes: '',
 });
 
@@ -64,6 +65,7 @@ export const getFilledMeasurementValues = (measurement: BodyMeasurementLog) =>
     measurement.rightArmCm != null ? `יד ימין (רפויה כלפי מטה) ${measurement.rightArmCm} ס"מ` : null,
     measurement.leftThighCm != null ? `ירך שמאל (האמצע) ${measurement.leftThighCm} ס"מ` : null,
     measurement.rightThighCm != null ? `ירך ימין (האמצע) ${measurement.rightThighCm} ס"מ` : null,
+    measurement.neckCm != null ? `צוואר (מתחת לגרוגרת) ${measurement.neckCm} ס"מ` : null,
   ].filter(Boolean) as string[];
 
 export const measurementToFormValues = (measurement: BodyMeasurementLog) => ({
@@ -76,5 +78,6 @@ export const measurementToFormValues = (measurement: BodyMeasurementLog) => ({
   rightArmCm: measurement.rightArmCm != null ? String(measurement.rightArmCm) : '',
   leftThighCm: measurement.leftThighCm != null ? String(measurement.leftThighCm) : '',
   rightThighCm: measurement.rightThighCm != null ? String(measurement.rightThighCm) : '',
+  neckCm: measurement.neckCm != null ? String(measurement.neckCm) : '',
   notes: measurement.notes || '',
 });

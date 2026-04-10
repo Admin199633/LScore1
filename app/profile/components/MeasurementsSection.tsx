@@ -11,6 +11,7 @@ type MeasurementForm = {
   rightArmCm: string;
   leftThighCm: string;
   rightThighCm: string;
+  neckCm: string;
   notes: string;
 };
 
@@ -83,6 +84,7 @@ export function MeasurementsSection({
         <input type="number" inputMode="decimal" step="0.1" placeholder="יד ימין (רפויה כלפי מטה)" value={measurementForm.rightArmCm} onChange={(event) => updateMeasurementField('rightArmCm', event.target.value)} style={inputStyle} />
         <input type="number" inputMode="decimal" step="0.1" placeholder="ירך שמאל (האמצע)" value={measurementForm.leftThighCm} onChange={(event) => updateMeasurementField('leftThighCm', event.target.value)} style={inputStyle} />
         <input type="number" inputMode="decimal" step="0.1" placeholder="ירך ימין (האמצע)" value={measurementForm.rightThighCm} onChange={(event) => updateMeasurementField('rightThighCm', event.target.value)} style={inputStyle} />
+        <input type="number" inputMode="decimal" step="0.1" placeholder="צוואר (מתחת לגרוגרת)" value={measurementForm.neckCm} onChange={(event) => updateMeasurementField('neckCm', event.target.value)} style={inputStyle} />
       </div>
 
       <textarea
@@ -136,6 +138,7 @@ export function MeasurementsSection({
               <div>יד ימין (רפויה כלפי מטה): {formatMeasurementValue(latestMeasurement.rightArmCm)}</div>
               <div>ירך שמאל (האמצע): {formatMeasurementValue(latestMeasurement.leftThighCm)}</div>
               <div>ירך ימין (האמצע): {formatMeasurementValue(latestMeasurement.rightThighCm)}</div>
+              <div>צוואר (מתחת לגרוגרת): {formatMeasurementValue(latestMeasurement.neckCm)}</div>
             </div>
             {latestMeasurement.notes ? (
               <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>הערות: {latestMeasurement.notes}</div>

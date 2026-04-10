@@ -288,6 +288,7 @@ function ProfilePageContent() {
       measurementForm.rightArmCm,
       measurementForm.leftThighCm,
       measurementForm.rightThighCm,
+      measurementForm.neckCm,
     ];
 
     if (!measurementForm.measurementDate.trim()) {
@@ -328,6 +329,7 @@ function ProfilePageContent() {
         rightArmCm: measurementForm.rightArmCm,
         leftThighCm: measurementForm.leftThighCm,
         rightThighCm: measurementForm.rightThighCm,
+        neckCm: measurementForm.neckCm,
         notes: measurementForm.notes,
       };
 

@@ -12,6 +12,7 @@ type BodyMeasurementLogRow = {
   right_arm_cm: number | string | null;
   left_thigh_cm: number | string | null;
   right_thigh_cm: number | string | null;
+  neck_cm: number | string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -29,6 +30,7 @@ export type BodyMeasurementLog = {
   rightArmCm: number | null;
   leftThighCm: number | null;
   rightThighCm: number | null;
+  neckCm: number | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -44,6 +46,7 @@ type BodyMeasurementLogFieldsInput = {
   rightArmCm?: number | string | null;
   leftThighCm?: number | string | null;
   rightThighCm?: number | string | null;
+  neckCm?: number | string | null;
   notes?: string | null;
 };
 
@@ -93,6 +96,7 @@ const normalizeCreatePayload = (userId: string, input: CreateBodyMeasurementLogI
   right_arm_cm: parseOptionalPositiveDecimal(input.rightArmCm),
   left_thigh_cm: parseOptionalPositiveDecimal(input.leftThighCm),
   right_thigh_cm: parseOptionalPositiveDecimal(input.rightThighCm),
+  neck_cm: parseOptionalPositiveDecimal(input.neckCm),
   notes: input.notes ? String(input.notes).trim() : null,
 });
 
@@ -106,6 +110,7 @@ const normalizeUpdatePayload = (input: UpdateBodyMeasurementLogInput) => ({
   right_arm_cm: parseOptionalPositiveDecimal(input.rightArmCm),
   left_thigh_cm: parseOptionalPositiveDecimal(input.leftThighCm),
   right_thigh_cm: parseOptionalPositiveDecimal(input.rightThighCm),
+  neck_cm: parseOptionalPositiveDecimal(input.neckCm),
   notes: input.notes ? String(input.notes).trim() : null,
 });
 
@@ -125,6 +130,7 @@ const validateBodyMeasurementInput = (input: BodyMeasurementLogFieldsInput) => {
     input.rightArmCm,
     input.leftThighCm,
     input.rightThighCm,
+    input.neckCm,
   ];
 
   if (!values.some((value) => value !== null && value !== undefined && value !== '')) {
@@ -144,6 +150,7 @@ const normalizeBodyMeasurementLog = (row: BodyMeasurementLogRow): BodyMeasuremen
   rightArmCm: row.right_arm_cm != null ? Number(row.right_arm_cm) : null,
   leftThighCm: row.left_thigh_cm != null ? Number(row.left_thigh_cm) : null,
   rightThighCm: row.right_thigh_cm != null ? Number(row.right_thigh_cm) : null,
+  neckCm: row.neck_cm != null ? Number(row.neck_cm) : null,
   notes: row.notes,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
