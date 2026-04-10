@@ -1,0 +1,22 @@
+Revert "edit page profile1"
+
+This reverts commit 94131798fa9a3a46770625aad49e124385715c52.
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch main
+# Your branch is ahead of 'origin/main' by 1 commit.
+#   (use "git push" to publish your local commits)
+#
+# Changes to be committed:
+#	new file:   app/profile/components/EditFoodModal.tsx
+#	new file:   app/profile/components/ProfileSection.tsx
+#	new file:   app/profile/components/SectionHeader.tsx
+#	new file:   app/profile/components/SettingsSection.tsx
+#	new file:   app/profile/components/UserFoodsSection.tsx
+#	new file:   app/profile/components/WorkoutSection.tsx
+#	new file:   app/profile/constants/profileOptions.ts
+#	new file:   app/profile/constants/profileStyles.ts
+#	modified:   app/profile/page.tsx
+#

@@ -44,10 +44,10 @@ export function EditFoodModal({ modal, onClose, onSave, onChange }: EditFoodModa
         }}
         onClick={(event) => event.stopPropagation()}
       >
-        <div style={{ fontSize: 18, fontWeight: 800 }}>׳¢׳¨׳™׳›׳× ׳׳–׳•׳</div>
+        <div style={{ fontSize: 18, fontWeight: 800 }}>עריכת מזון</div>
         <input
           type="text"
-          placeholder="׳©׳"
+          placeholder="שם"
           value={modal.name}
           onChange={(event) => onChange({ name: event.target.value })}
           style={inputStyle}
@@ -55,28 +55,28 @@ export function EditFoodModal({ modal, onClose, onSave, onChange }: EditFoodModa
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <input
             type="number"
-            placeholder="׳§׳׳•׳¨׳™׳•׳×"
+            placeholder="קלוריות"
             value={modal.calories}
             onChange={(event) => onChange({ calories: event.target.value })}
             style={inputStyle}
           />
           <input
             type="number"
-            placeholder="׳—׳׳‘׳•׳"
+            placeholder="חלבון"
             value={modal.protein}
             onChange={(event) => onChange({ protein: event.target.value })}
             style={inputStyle}
           />
           <input
             type="number"
-            placeholder="׳₪׳—׳׳™׳׳•׳×"
+            placeholder="פחמימות"
             value={modal.carbs}
             onChange={(event) => onChange({ carbs: event.target.value })}
             style={inputStyle}
           />
           <input
             type="number"
-            placeholder="׳©׳•׳׳"
+            placeholder="שומן"
             value={modal.fat}
             onChange={(event) => onChange({ fat: event.target.value })}
             style={inputStyle}
@@ -100,7 +100,7 @@ export function EditFoodModal({ modal, onClose, onSave, onChange }: EditFoodModa
             opacity: modal.saving ? 0.7 : 1,
           }}
         >
-          {modal.saving ? '׳©׳•׳׳¨...' : '׳©׳׳•׳¨'}
+          {modal.saving ? 'שומר...' : 'שמור'}
         </button>
         <button
           type="button"
@@ -108,7 +108,7 @@ export function EditFoodModal({ modal, onClose, onSave, onChange }: EditFoodModa
           disabled={modal.saving}
           style={{ ...ghostButtonStyle, textAlign: 'center', padding: '8px 0' }}
         >
-          ׳³ג€˜׳³ג„¢׳³ֻ׳³ג€¢׳³ֲ
+          ׳ג€˜׳ג„¢׳ֻ׳ג€¢׳ֲ
         </button>
       </div>
     </div>

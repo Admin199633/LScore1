@@ -25,14 +25,14 @@ export function UserFoodsSection({
         gap: 12,
       }}
     >
-      <div style={{ fontSize: 18, fontWeight: 800 }}>׳”׳׳–׳•׳ ׳•׳× ׳©׳׳™</div>
+      <div style={{ fontSize: 18, fontWeight: 800 }}>המזונות שלי</div>
       {userFoodsLoading ? (
-        <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>׳˜׳•׳¢׳...</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>טוען...</div>
       ) : userFoodsError ? (
         <div style={{ color: 'var(--danger)', fontSize: 14 }}>{userFoodsError}</div>
       ) : userFoods.length === 0 ? (
         <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-          ׳׳™׳ ׳׳–׳•׳ ׳•׳× ׳׳•׳×׳׳׳™׳ ׳׳™׳©׳™׳× ׳¢׳“׳™׳™׳.
+          אין מזונות מותאמים אישית עדיין.
         </div>
       ) : (
         <div style={{ display: 'grid', gap: 8 }}>
@@ -52,7 +52,7 @@ export function UserFoodsSection({
               <div style={{ display: 'grid', gap: 2 }}>
                 <div style={{ fontWeight: 700 }}>{food.name}</div>
                 <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                  {food.calories} ׳§׳׳•׳¨׳™׳•׳× | {food.protein} ׳—׳׳‘׳•׳
+                  {food.calories} קלוריות | {food.protein} חלבון
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
@@ -69,7 +69,7 @@ export function UserFoodsSection({
                     cursor: 'pointer',
                   }}
                 >
-                  ׳¢׳¨׳•׳
+                  ערוך
                 </button>
                 <button
                   type="button"
@@ -84,7 +84,7 @@ export function UserFoodsSection({
                     cursor: 'pointer',
                   }}
                 >
-                  ׳׳—׳§
+                  מחק
                 </button>
               </div>
             </div>

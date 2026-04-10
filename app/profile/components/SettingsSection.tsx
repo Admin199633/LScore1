@@ -34,14 +34,14 @@ export function SettingsSection({
           gap: 12,
         }}
       >
-        <div style={{ fontSize: 18, fontWeight: 800 }}>׳¢׳¨׳›׳× ׳ ׳•׳©׳</div>
-        <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>׳ ׳•׳›׳—׳™: {themeLabel}</div>
+        <div style={{ fontSize: 18, fontWeight: 800 }}>ערכת נושא</div>
+        <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>נוכחי: {themeLabel}</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button type="button" onClick={() => setThemePreference('light')} style={chipStyle(themePreference === 'light')}>
-            ׳‘׳”׳™׳¨
+            בהיר
           </button>
           <button type="button" onClick={() => setThemePreference('dark')} style={chipStyle(themePreference === 'dark')}>
-            ׳›׳”׳”
+            כהה
           </button>
           <button type="button" onClick={() => setThemePreference('ai')} style={chipStyle(themePreference === 'ai')}>
             AI
@@ -58,7 +58,7 @@ export function SettingsSection({
           gap: 12,
         }}
       >
-        <div style={{ fontSize: 18, fontWeight: 800 }}>׳×׳–׳›׳•׳¨׳•׳× ׳׳™׳׳•׳</div>
+        <div style={{ fontSize: 18, fontWeight: 800 }}>תזכורות אימון</div>
         <div
           style={{
             display: 'flex',
@@ -68,9 +68,9 @@ export function SettingsSection({
           }}
         >
           <div>
-            <div style={{ fontWeight: 700, fontSize: 14 }}>׳×׳–׳›׳•׳¨׳× ׳¨׳˜׳˜ ׳‘׳–׳׳ ׳׳™׳׳•׳</div>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>תזכורת רטט בזמן אימון</div>
             <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-              ׳¨׳˜׳˜ ׳§׳¦׳¨ ׳‘׳›׳ ׳׳¨׳•׳•׳— ׳–׳׳ ׳§׳‘׳•׳¢
+              רטט קצר בכל מרווח זמן קבוע
             </div>
           </div>
           <button
@@ -87,12 +87,12 @@ export function SettingsSection({
               flexShrink: 0,
             }}
           >
-            {vibrationEnabled ? '׳₪׳¢׳™׳' : '׳›׳‘׳•׳™'}
+            {vibrationEnabled ? 'פעיל' : 'כבוי'}
           </button>
         </div>
         {vibrationEnabled ? (
           <div style={{ display: 'grid', gap: 8 }}>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>׳׳¨׳•׳•׳— ׳‘׳™׳ ׳×׳–׳›׳•׳¨׳•׳×</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>מרווח בין תזכורות</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {vibrationOptions.map((seconds) => (
                 <button
@@ -101,7 +101,7 @@ export function SettingsSection({
                   onClick={() => setVibrationInterval(seconds)}
                   style={chipStyle(vibrationInterval === seconds)}
                 >
-                  {seconds >= 60 ? `${seconds / 60} ׳“׳§׳•׳×` : `${seconds} ׳©׳ ׳™׳•׳×`}
+                  {seconds >= 60 ? `${seconds / 60} דקות` : `${seconds} שניות`}
                 </button>
               ))}
             </div>

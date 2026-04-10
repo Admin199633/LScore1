@@ -71,11 +71,11 @@ export function WorkoutSection({
           gap: 10,
         }}
       >
-        <div style={{ fontSize: 18, fontWeight: 800 }}>׳×׳•׳›׳ ׳™׳× ׳ ׳•׳›׳—׳™׳×</div>
+        <div style={{ fontSize: 18, fontWeight: 800 }}>תוכנית נוכחית</div>
         <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
           {programSummary.dayCount > 0
-            ? `${programSummary.dayCount} ׳™׳׳™ ׳׳™׳׳•׳: ${programSummary.names.join(', ')}`
-            : '׳¢׳“׳™׳™׳ ׳׳™׳ ׳×׳•׳›׳ ׳™׳× ׳₪׳¢׳™׳׳”.'}
+            ? `${programSummary.dayCount} ימי אימון: ${programSummary.names.join(', ')}`
+            : 'עדיין אין תוכנית פעילה.'}
         </div>
       </div>
 
@@ -92,12 +92,12 @@ export function WorkoutSection({
         }}
       >
         {recoveryType === 'program' && !recoveryDismissed ? (
-          <RecoveryBanner message="׳›׳“׳׳™ ׳׳”׳’׳“׳™׳¨ ׳×׳•׳›׳ ׳™׳× ׳׳™׳׳•׳ ׳™׳ ׳₪׳¢׳™׳׳” ׳›׳“׳™ ׳©׳ ׳•׳›׳ ׳׳¢׳§׳•׳‘ ׳ ׳›׳•׳ ׳׳—׳¨׳™ ׳”׳”׳×׳§׳“׳׳•׳× ׳©׳׳." />
+          <RecoveryBanner message="כדאי להגדיר תוכנית אימונים פעילה כדי שנוכל לעקוב נכון אחרי ההתקדמות שלך." />
         ) : null}
         <div style={{ display: 'grid', gap: 4 }}>
-          <div style={{ fontSize: 18, fontWeight: 800 }}>׳¢׳¨׳™׳›׳× ׳×׳•׳›׳ ׳™׳× ׳׳™׳׳•׳</div>
+          <div style={{ fontSize: 18, fontWeight: 800 }}>עריכת תוכנית אימון</div>
           <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-            ׳‘׳—׳¨ ׳™׳•׳, ׳¢׳“׳›׳ ׳׳× ׳©׳ ׳”׳™׳•׳ ׳•׳׳× ׳©׳•׳¨׳•׳× ׳”׳×׳¨׳’׳™׳׳™׳, ׳•׳©׳׳•׳¨ ׳׳× ׳”׳×׳•׳›׳ ׳™׳×.
+            בחר יום, עדכן את שם היום ואת שורות התרגילים, ושמור את התוכנית.
           </div>
         </div>
 
@@ -111,7 +111,7 @@ export function WorkoutSection({
                 onClick={() => setSelectedDayIndex(index)}
                 style={chipStyle(isActive)}
               >
-                {day.name || `׳™׳•׳ ${index + 1}`}
+                {day.name || `יום ${index + 1}`}
               </button>
             );
           })}
@@ -119,16 +119,16 @@ export function WorkoutSection({
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button type="button" onClick={addProgramDay} style={secondaryButtonStyle}>
-            ׳”׳•׳¡׳£ ׳™׳•׳ ׳׳™׳׳•׳
+            הוסף יום אימון
           </button>
           <button type="button" onClick={removeProgramDay} style={dangerButtonStyle}>
-            ׳׳—׳§ ׳׳× ׳”׳™׳•׳ ׳”׳ ׳‘׳—׳¨
+            מחק את היום הנבחר
           </button>
         </div>
 
         <input
           type="text"
-          placeholder="׳©׳ ׳”׳™׳•׳"
+          placeholder="שם היום"
           value={selectedProgramDay.name}
           onChange={(event) => updateDayName(event.target.value)}
           style={inputStyle}
@@ -152,14 +152,14 @@ export function WorkoutSection({
                   onClick={() => removeProgramRow(rowIndex)}
                   style={{ ...ghostButtonStyle, color: 'var(--danger)' }}
                 >
-                  ׳׳—׳§ ׳©׳•׳¨׳”
+                  מחק שורה
                 </button>
-                <div style={{ fontWeight: 700 }}>{`׳×׳¨׳’׳™׳ ${rowIndex + 1}`}</div>
+                <div style={{ fontWeight: 700 }}>{`תרגיל ${rowIndex + 1}`}</div>
               </div>
 
               <input
                 type="text"
-                placeholder="׳×׳¨׳’׳™׳"
+                placeholder="תרגיל"
                 value={row.exercise}
                 onChange={(event) => updateProgramRow(rowIndex, 'exercise', event.target.value)}
                 style={inputStyle}
@@ -168,21 +168,21 @@ export function WorkoutSection({
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                 <input
                   type="text"
-                  placeholder="׳¡׳˜׳™׳"
+                  placeholder="סטים"
                   value={row.sets}
                   onChange={(event) => updateProgramRow(rowIndex, 'sets', event.target.value)}
                   style={inputStyle}
                 />
                 <input
                   type="text"
-                  placeholder="׳—׳–׳¨׳•׳×"
+                  placeholder="חזרות"
                   value={row.repsHeavy}
                   onChange={(event) => updateProgramRow(rowIndex, 'repsHeavy', event.target.value)}
                   style={inputStyle}
                 />
                 <input
                   type="text"
-                  placeholder="׳׳©׳§׳"
+                  placeholder="משקל"
                   value={row.weightHeavy}
                   onChange={(event) => updateProgramRow(rowIndex, 'weightHeavy', event.target.value)}
                   style={inputStyle}
@@ -193,7 +193,7 @@ export function WorkoutSection({
         </div>
 
         <button type="button" onClick={addProgramRow} style={secondaryButtonStyle}>
-          ׳”׳•׳¡׳£ ׳©׳•׳¨׳× ׳×׳¨׳’׳™׳
+          הוסף שורת תרגיל
         </button>
 
         <button
@@ -211,7 +211,7 @@ export function WorkoutSection({
             opacity: isSavingProgram ? 0.7 : 1,
           }}
         >
-          {isSavingProgram ? '׳©׳•׳׳¨...' : '׳©׳׳•׳¨ ׳×׳•׳›׳ ׳™׳×'}
+          {isSavingProgram ? 'שומר...' : 'שמור תוכנית'}
         </button>
       </div>
     </>

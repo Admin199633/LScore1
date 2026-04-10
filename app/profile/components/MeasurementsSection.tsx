@@ -56,13 +56,13 @@ export function MeasurementsSection({
       }}
     >
       <div style={{ display: 'grid', gap: 4 }}>
-        <div style={{ fontSize: 18, fontWeight: 800 }}>׳׳“׳™׳“׳•׳× ׳”׳™׳§׳₪׳™׳</div>
+        <div style={{ fontSize: 18, fontWeight: 800 }}>מדידות היקפים</div>
         <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-          ׳©׳׳•׳¨ ׳”׳™׳¡׳˜׳•׳¨׳™׳™׳× ׳׳“׳™׳“׳•׳× ׳’׳•׳£ ׳׳¡׳•׳“׳¨׳× ׳‘׳׳§׳•׳ ׳׳ ׳”׳ ׳׳•׳×׳” ׳‘׳ ׳₪׳¨׳“.
+          שמור היסטוריית מדידות גוף מסודרת במקום לנהל אותה בנפרד.
         </div>
         {editingMeasurementId ? (
           <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-            ׳׳¦׳‘ ׳¢׳¨׳™׳›׳” ׳₪׳¢׳™׳ ׳¢׳‘׳•׳¨ ׳׳“׳™׳“׳” ׳§׳™׳™׳׳×.
+            מצב עריכה פעיל עבור מדידה קיימת.
           </div>
         ) : null}
       </div>
@@ -75,18 +75,18 @@ export function MeasurementsSection({
       />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <input type="number" inputMode="decimal" step="0.1" placeholder="׳—׳–׳” (׳§׳• ׳₪׳˜׳׳•׳×)" value={measurementForm.chestCm} onChange={(event) => updateMeasurementField('chestCm', event.target.value)} style={inputStyle} />
-        <input type="number" inputMode="decimal" step="0.1" placeholder="׳׳•׳×׳ (׳”׳׳–׳•׳¨ ׳”׳¦׳¨ ׳‘׳™׳•׳×׳¨)" value={measurementForm.waistCm} onChange={(event) => updateMeasurementField('waistCm', event.target.value)} style={inputStyle} />
-        <input type="number" inputMode="decimal" step="0.1" placeholder="׳‘׳˜׳ (׳§׳• ׳₪׳•׳₪׳™׳§)" value={measurementForm.abdomenCm} onChange={(event) => updateMeasurementField('abdomenCm', event.target.value)} style={inputStyle} />
-        <input type="number" inputMode="decimal" step="0.1" placeholder="׳׳’׳ (׳”׳—׳׳§ ׳”׳¨׳—׳‘ ׳‘׳™׳•׳×׳¨)" value={measurementForm.hipsCm} onChange={(event) => updateMeasurementField('hipsCm', event.target.value)} style={inputStyle} />
-        <input type="number" inputMode="decimal" step="0.1" placeholder="׳™׳“ ׳©׳׳׳ (׳¨׳₪׳•׳™׳” ׳›׳׳₪׳™ ׳׳˜׳”)" value={measurementForm.leftArmCm} onChange={(event) => updateMeasurementField('leftArmCm', event.target.value)} style={inputStyle} />
-        <input type="number" inputMode="decimal" step="0.1" placeholder="׳™׳“ ׳™׳׳™׳ (׳¨׳₪׳•׳™׳” ׳›׳׳₪׳™ ׳׳˜׳”)" value={measurementForm.rightArmCm} onChange={(event) => updateMeasurementField('rightArmCm', event.target.value)} style={inputStyle} />
-        <input type="number" inputMode="decimal" step="0.1" placeholder="׳™׳¨׳ ׳©׳׳׳ (׳”׳׳׳¦׳¢)" value={measurementForm.leftThighCm} onChange={(event) => updateMeasurementField('leftThighCm', event.target.value)} style={inputStyle} />
-        <input type="number" inputMode="decimal" step="0.1" placeholder="׳™׳¨׳ ׳™׳׳™׳ (׳”׳׳׳¦׳¢)" value={measurementForm.rightThighCm} onChange={(event) => updateMeasurementField('rightThighCm', event.target.value)} style={inputStyle} />
+        <input type="number" inputMode="decimal" step="0.1" placeholder="חזה (קו פטמות)" value={measurementForm.chestCm} onChange={(event) => updateMeasurementField('chestCm', event.target.value)} style={inputStyle} />
+        <input type="number" inputMode="decimal" step="0.1" placeholder="מותן (האזור הצר ביותר)" value={measurementForm.waistCm} onChange={(event) => updateMeasurementField('waistCm', event.target.value)} style={inputStyle} />
+        <input type="number" inputMode="decimal" step="0.1" placeholder="בטן (קו פופיק)" value={measurementForm.abdomenCm} onChange={(event) => updateMeasurementField('abdomenCm', event.target.value)} style={inputStyle} />
+        <input type="number" inputMode="decimal" step="0.1" placeholder="אגן (החלק הרחב ביותר)" value={measurementForm.hipsCm} onChange={(event) => updateMeasurementField('hipsCm', event.target.value)} style={inputStyle} />
+        <input type="number" inputMode="decimal" step="0.1" placeholder="יד שמאל (רפויה כלפי מטה)" value={measurementForm.leftArmCm} onChange={(event) => updateMeasurementField('leftArmCm', event.target.value)} style={inputStyle} />
+        <input type="number" inputMode="decimal" step="0.1" placeholder="יד ימין (רפויה כלפי מטה)" value={measurementForm.rightArmCm} onChange={(event) => updateMeasurementField('rightArmCm', event.target.value)} style={inputStyle} />
+        <input type="number" inputMode="decimal" step="0.1" placeholder="ירך שמאל (האמצע)" value={measurementForm.leftThighCm} onChange={(event) => updateMeasurementField('leftThighCm', event.target.value)} style={inputStyle} />
+        <input type="number" inputMode="decimal" step="0.1" placeholder="ירך ימין (האמצע)" value={measurementForm.rightThighCm} onChange={(event) => updateMeasurementField('rightThighCm', event.target.value)} style={inputStyle} />
       </div>
 
       <textarea
-        placeholder="׳”׳¢׳¨׳•׳×"
+        placeholder="הערות"
         value={measurementForm.notes}
         onChange={(event) => updateMeasurementField('notes', event.target.value)}
         rows={3}
@@ -108,7 +108,7 @@ export function MeasurementsSection({
           opacity: isSavingMeasurement ? 0.7 : 1,
         }}
       >
-        {isSavingMeasurement ? '׳©׳•׳׳¨...' : '׳©׳׳•׳¨ ׳׳“׳™׳“׳”'}
+        {isSavingMeasurement ? 'שומר...' : 'שמור מדידה'}
       </button>
 
       {measurementMessage ? <div style={{ color: 'var(--success)', fontSize: 14 }}>{measurementMessage}</div> : null}
@@ -123,32 +123,32 @@ export function MeasurementsSection({
           gap: 8,
         }}
       >
-        <div style={{ fontWeight: 700 }}>׳”׳׳“׳™׳“׳” ׳”׳׳—׳¨׳•׳ ׳”</div>
+        <div style={{ fontWeight: 700 }}>המדידה האחרונה</div>
         {latestMeasurement ? (
           <>
-            <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>׳×׳׳¨׳™׳: {latestMeasurement.measurementDate}</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>תאריך: {latestMeasurement.measurementDate}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 14 }}>
-              <div>׳—׳–׳” (׳§׳• ׳₪׳˜׳׳•׳×): {formatMeasurementValue(latestMeasurement.chestCm)}</div>
-              <div>׳׳•׳×׳ (׳”׳׳–׳•׳¨ ׳”׳¦׳¨ ׳‘׳™׳•׳×׳¨): {formatMeasurementValue(latestMeasurement.waistCm)}</div>
-              <div>׳‘׳˜׳ (׳§׳• ׳₪׳•׳₪׳™׳§): {formatMeasurementValue(latestMeasurement.abdomenCm)}</div>
-              <div>׳׳’׳ (׳”׳—׳׳§ ׳”׳¨׳—׳‘ ׳‘׳™׳•׳×׳¨): {formatMeasurementValue(latestMeasurement.hipsCm)}</div>
-              <div>׳™׳“ ׳©׳׳׳ (׳¨׳₪׳•׳™׳” ׳›׳׳₪׳™ ׳׳˜׳”): {formatMeasurementValue(latestMeasurement.leftArmCm)}</div>
-              <div>׳™׳“ ׳™׳׳™׳ (׳¨׳₪׳•׳™׳” ׳›׳׳₪׳™ ׳׳˜׳”): {formatMeasurementValue(latestMeasurement.rightArmCm)}</div>
-              <div>׳™׳¨׳ ׳©׳׳׳ (׳”׳׳׳¦׳¢): {formatMeasurementValue(latestMeasurement.leftThighCm)}</div>
-              <div>׳™׳¨׳ ׳™׳׳™׳ (׳”׳׳׳¦׳¢): {formatMeasurementValue(latestMeasurement.rightThighCm)}</div>
+              <div>חזה (קו פטמות): {formatMeasurementValue(latestMeasurement.chestCm)}</div>
+              <div>מותן (האזור הצר ביותר): {formatMeasurementValue(latestMeasurement.waistCm)}</div>
+              <div>בטן (קו פופיק): {formatMeasurementValue(latestMeasurement.abdomenCm)}</div>
+              <div>אגן (החלק הרחב ביותר): {formatMeasurementValue(latestMeasurement.hipsCm)}</div>
+              <div>יד שמאל (רפויה כלפי מטה): {formatMeasurementValue(latestMeasurement.leftArmCm)}</div>
+              <div>יד ימין (רפויה כלפי מטה): {formatMeasurementValue(latestMeasurement.rightArmCm)}</div>
+              <div>ירך שמאל (האמצע): {formatMeasurementValue(latestMeasurement.leftThighCm)}</div>
+              <div>ירך ימין (האמצע): {formatMeasurementValue(latestMeasurement.rightThighCm)}</div>
             </div>
             {latestMeasurement.notes ? (
-              <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>׳”׳¢׳¨׳•׳×: {latestMeasurement.notes}</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>הערות: {latestMeasurement.notes}</div>
             ) : null}
           </>
         ) : (
-          <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>׳¢׳“׳™׳™׳ ׳׳ ׳ ׳©׳׳¨׳• ׳׳“׳™׳“׳•׳×.</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>עדיין לא נשמרו מדידות.</div>
         )}
       </div>
 
       {measurementLogs.length > 0 ? (
         <div style={{ display: 'grid', gap: 8 }}>
-          <div style={{ fontWeight: 700 }}>׳”׳™׳¡׳˜׳•׳¨׳™׳”</div>
+          <div style={{ fontWeight: 700 }}>היסטוריה</div>
           {measurementLogs.slice(0, 5).map((log) => (
             <div
               key={log.id}
@@ -182,7 +182,7 @@ export function MeasurementsSection({
                     cursor: 'pointer',
                   }}
                 >
-                  ׳¢׳¨׳•׳
+                  ערוך
                 </button>
                 <button
                   type="button"
@@ -197,11 +197,11 @@ export function MeasurementsSection({
                     cursor: 'pointer',
                   }}
                 >
-                  ׳׳—׳§
+                  מחק
                 </button>
               </div>
               <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>{getFilledMeasurementValues(log).join(' | ')}</div>
-              {log.notes ? <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>׳”׳¢׳¨׳•׳×: {log.notes}</div> : null}
+              {log.notes ? <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>הערות: {log.notes}</div> : null}
             </div>
           ))}
         </div>
