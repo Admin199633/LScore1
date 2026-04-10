@@ -34,7 +34,7 @@ export type BodyMeasurementLog = {
   updatedAt: string;
 };
 
-export type CreateBodyMeasurementLogInput = {
+type BodyMeasurementLogFieldsInput = {
   measurementDate: string;
   chestCm?: number | string | null;
   waistCm?: number | string | null;
@@ -46,6 +46,10 @@ export type CreateBodyMeasurementLogInput = {
   rightThighCm?: number | string | null;
   notes?: string | null;
 };
+
+export type CreateBodyMeasurementLogInput = BodyMeasurementLogFieldsInput;
+
+export type UpdateBodyMeasurementLogInput = BodyMeasurementLogFieldsInput;
 
 const requireCurrentUserId = async () => {
   const {
@@ -92,7 +96,20 @@ const normalizeCreatePayload = (userId: string, input: CreateBodyMeasurementLogI
   notes: input.notes ? String(input.notes).trim() : null,
 });
 
-const validateCreateInput = (input: CreateBodyMeasurementLogInput) => {
+const normalizeUpdatePayload = (input: UpdateBodyMeasurementLogInput) => ({
+  measurement_date: String(input.measurementDate || '').trim(),
+  chest_cm: parseOptionalPositiveDecimal(input.chestCm),
+  waist_cm: parseOptionalPositiveDecimal(input.waistCm),
+  abdomen_cm: parseOptionalPositiveDecimal(input.abdomenCm),
+  hips_cm: parseOptionalPositiveDecimal(input.hipsCm),
+  left_arm_cm: parseOptionalPositiveDecimal(input.leftArmCm),
+  right_arm_cm: parseOptionalPositiveDecimal(input.rightArmCm),
+  left_thigh_cm: parseOptionalPositiveDecimal(input.leftThighCm),
+  right_thigh_cm: parseOptionalPositiveDecimal(input.rightThighCm),
+  notes: input.notes ? String(input.notes).trim() : null,
+});
+
+const validateBodyMeasurementInput = (input: BodyMeasurementLogFieldsInput) => {
   const measurementDate = String(input.measurementDate || '').trim();
 
   if (!measurementDate) {
@@ -133,12 +150,34 @@ const normalizeBodyMeasurementLog = (row: BodyMeasurementLogRow): BodyMeasuremen
 });
 
 export const createBodyMeasurementLog = async (input: CreateBodyMeasurementLogInput) => {
-  validateCreateInput(input);
+  validateBodyMeasurementInput(input);
 
   const userId = await requireCurrentUserId();
   const { data, error } = await webSupabase
     .from('body_measurement_logs')
     .insert(normalizeCreatePayload(userId, input))
+    .select('*')
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return normalizeBodyMeasurementLog(data as BodyMeasurementLogRow);
+};
+
+export const updateBodyMeasurementLog = async (
+  id: string,
+  input: UpdateBodyMeasurementLogInput
+) => {
+  validateBodyMeasurementInput(input);
+
+  const userId = await requireCurrentUserId();
+  const { data, error } = await webSupabase
+    .from('body_measurement_logs')
+    .update(normalizeUpdatePayload(input))
+    .eq('id', id)
+    .eq('user_id', userId)
     .select('*')
     .single();
 
@@ -181,4 +220,17 @@ export const listBodyMeasurementLogs = async () => {
   }
 
   return (data || []).map((row) => normalizeBodyMeasurementLog(row as BodyMeasurementLogRow));
+};
+
+export const deleteBodyMeasurementLog = async (id: string) => {
+  const userId = await requireCurrentUserId();
+  const { error } = await webSupabase
+    .from('body_measurement_logs')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
+
+  if (error) {
+    throw error;
+  }
 };

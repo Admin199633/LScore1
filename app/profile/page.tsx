@@ -11,8 +11,10 @@ import { PageSpinner } from '@/components/PageSpinner';
 import { fetchLatestBodyweight } from '@/lib/repositories/bodyweightRepository';
 import {
   createBodyMeasurementLog,
+  deleteBodyMeasurementLog,
   getLatestBodyMeasurementLog,
   listBodyMeasurementLogs,
+  updateBodyMeasurementLog,
   type BodyMeasurementLog,
 } from '@/lib/repositories/bodyMeasurementRepository';
 import {
@@ -120,6 +122,19 @@ const getFilledMeasurementValues = (measurement: BodyMeasurementLog) =>
     measurement.rightThighCm != null ? `ירך ימין ${measurement.rightThighCm} ס"מ` : null,
   ].filter(Boolean) as string[];
 
+const measurementToFormValues = (measurement: BodyMeasurementLog) => ({
+  measurementDate: measurement.measurementDate,
+  chestCm: measurement.chestCm != null ? String(measurement.chestCm) : '',
+  waistCm: measurement.waistCm != null ? String(measurement.waistCm) : '',
+  abdomenCm: measurement.abdomenCm != null ? String(measurement.abdomenCm) : '',
+  hipsCm: measurement.hipsCm != null ? String(measurement.hipsCm) : '',
+  leftArmCm: measurement.leftArmCm != null ? String(measurement.leftArmCm) : '',
+  rightArmCm: measurement.rightArmCm != null ? String(measurement.rightArmCm) : '',
+  leftThighCm: measurement.leftThighCm != null ? String(measurement.leftThighCm) : '',
+  rightThighCm: measurement.rightThighCm != null ? String(measurement.rightThighCm) : '',
+  notes: measurement.notes || '',
+});
+
 function ProfilePageContent() {
   const searchParams = useSearchParams();
   const recoveryType = parseRecoveryParam(searchParams.get('recovery'));
@@ -141,6 +156,7 @@ function ProfilePageContent() {
   const [measurementMessage, setMeasurementMessage] = useState('');
   const [latestMeasurement, setLatestMeasurement] = useState<BodyMeasurementLog | null>(null);
   const [measurementLogs, setMeasurementLogs] = useState<BodyMeasurementLog[]>([]);
+  const [editingMeasurementId, setEditingMeasurementId] = useState<string | null>(null);
   const [programSummary, setProgramSummary] = useState<{ dayCount: number; names: string[] }>({
     dayCount: 0,
     names: [],
@@ -316,6 +332,37 @@ function ProfilePageContent() {
     setMeasurementMessage('');
   };
 
+  const handleEditMeasurement = (measurement: BodyMeasurementLog) => {
+    setEditingMeasurementId(measurement.id);
+    setMeasurementForm(measurementToFormValues(measurement));
+    setMeasurementError('');
+    setMeasurementMessage('');
+  };
+
+  const handleDeleteMeasurement = async (id: string) => {
+    setMeasurementError('');
+    setMeasurementMessage('');
+
+    try {
+      await deleteBodyMeasurementLog(id);
+
+      const [latestMeasurementLog, bodyMeasurementHistory] = await Promise.all([
+        getLatestBodyMeasurementLog(),
+        listBodyMeasurementLogs(),
+      ]);
+
+      setLatestMeasurement(latestMeasurementLog);
+      setMeasurementLogs(bodyMeasurementHistory);
+
+      if (editingMeasurementId === id) {
+        setEditingMeasurementId(null);
+        setMeasurementForm(createEmptyMeasurementForm());
+      }
+    } catch (deleteError) {
+      setMeasurementError(deleteError instanceof Error ? deleteError.message : 'מחיקת המדידה נכשלה.');
+    }
+  };
+
   const handleSaveMeasurement = async () => {
     const measurementValues = [
       measurementForm.chestCm,
@@ -356,7 +403,7 @@ function ProfilePageContent() {
     setMeasurementMessage('');
 
     try {
-      const savedMeasurement = await createBodyMeasurementLog({
+      const measurementInput = {
         measurementDate: measurementForm.measurementDate,
         chestCm: measurementForm.chestCm,
         waistCm: measurementForm.waistCm,
@@ -367,29 +414,24 @@ function ProfilePageContent() {
         leftThighCm: measurementForm.leftThighCm,
         rightThighCm: measurementForm.rightThighCm,
         notes: measurementForm.notes,
-      });
+      };
 
-      setLatestMeasurement((current) => {
-        if (!current) {
-          return savedMeasurement;
-        }
+      if (editingMeasurementId) {
+        await updateBodyMeasurementLog(editingMeasurementId, measurementInput);
+      } else {
+        await createBodyMeasurementLog(measurementInput);
+      }
 
-        if (savedMeasurement.measurementDate > current.measurementDate) {
-          return savedMeasurement;
-        }
+      const [latestMeasurementLog, bodyMeasurementHistory] = await Promise.all([
+        getLatestBodyMeasurementLog(),
+        listBodyMeasurementLogs(),
+      ]);
 
-        if (
-          savedMeasurement.measurementDate === current.measurementDate &&
-          savedMeasurement.createdAt > current.createdAt
-        ) {
-          return savedMeasurement;
-        }
-
-        return current;
-      });
-      setMeasurementLogs((current) => [savedMeasurement, ...current]);
+      setLatestMeasurement(latestMeasurementLog);
+      setMeasurementLogs(bodyMeasurementHistory);
+      setEditingMeasurementId(null);
       setMeasurementForm(createEmptyMeasurementForm());
-      setMeasurementMessage('מדידת היקפים נשמרה.');
+      setMeasurementMessage(editingMeasurementId ? 'מדידת היקפים עודכנה.' : 'מדידת היקפים נשמרה.');
     } catch (saveError) {
       setMeasurementError(saveError instanceof Error ? saveError.message : 'שמירת המדידה נכשלה.');
     } finally {
@@ -637,6 +679,11 @@ function ProfilePageContent() {
             <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
               שמור היסטוריית מדידות גוף מסודרת במקום לנהל אותה בנפרד.
             </div>
+            {editingMeasurementId ? (
+              <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                מצב עריכה פעיל עבור מדידה קיימת.
+              </div>
+            ) : null}
           </div>
 
           <input
@@ -804,7 +851,46 @@ function ProfilePageContent() {
                     gap: 4,
                   }}
                 >
-                  <div style={{ fontWeight: 700 }}>{log.measurementDate}</div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ fontWeight: 700 }}>{log.measurementDate}</div>
+                    <button
+                      type="button"
+                      onClick={() => handleEditMeasurement(log)}
+                      style={{
+                        border: 0,
+                        borderRadius: 10,
+                        background: 'var(--surface)',
+                        color: 'var(--text)',
+                        padding: '8px 12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      ערוך
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteMeasurement(log.id)}
+                      style={{
+                        border: 0,
+                        borderRadius: 10,
+                        background: 'var(--danger-bg)',
+                        color: 'var(--danger)',
+                        padding: '8px 12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      מחק
+                    </button>
+                  </div>
                   <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
                     {getFilledMeasurementValues(log).join(' | ')}
                   </div>
