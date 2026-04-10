@@ -1,12 +1,10 @@
 'use client';
 
-import type { CSSProperties } from 'react';
 import Link from 'next/link';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { parseRecoveryParam } from '@/lib/recoveryContext';
-import { RecoveryBanner } from '@/components/RecoveryBanner';
 import { PageSpinner } from '@/components/PageSpinner';
 import { fetchLatestBodyweight } from '@/lib/repositories/bodyweightRepository';
 import {
@@ -24,7 +22,6 @@ import {
 import {
   fetchActiveWorkoutProgram,
   saveActiveWorkoutProgram,
-  type WorkoutProgramDay,
 } from '@/lib/repositories/programRepository';
 import {
   listUserFoods,
@@ -39,102 +36,24 @@ import {
   VIBRATION_INTERVAL_OPTIONS,
 } from '@/lib/vibrationSettings';
 import { isValidNutritionTargetNumber, type NutritionTargetMode } from '@/lib/nutritionTargets';
+import {
+  createEmptyDay,
+  createEmptyRow,
+  createEmptyMeasurementForm,
+  formatMeasurementValue,
+  getFilledMeasurementValues,
+  measurementToFormValues,
+  normalizeEditableProgramDays,
+  parseCommaList,
+} from './utils/profilePage';
+import { EditFoodModal, type EditFoodModalState } from './components/EditFoodModal';
+import { MeasurementsSection } from './components/MeasurementsSection';
+import { ProfileSection } from './components/ProfileSection';
+import { SectionHeader } from './components/SectionHeader';
+import { SettingsSection } from './components/SettingsSection';
+import { UserFoodsSection } from './components/UserFoodsSection';
+import { WorkoutSection } from './components/WorkoutSection';
 
-const EXPERIENCE_OPTIONS = [
-  ['beginner', 'מתחיל'],
-  ['intermediate', 'בינוני'],
-  ['advanced', 'מתקדם'],
-];
-
-const GOAL_OPTIONS = [
-  ['bulk', 'מסה'],
-  ['cut', 'חיטוב'],
-  ['maintain', 'שמירה'],
-];
-
-const GENDER_OPTIONS = [
-  ['male', 'זכר'],
-  ['female', 'נקבה'],
-];
-
-const createEmptyRow = () => ({
-  id: '',
-  exercise: '',
-  sets: '',
-  repsHeavy: '',
-  weightHeavy: '',
-});
-
-const createEmptyDay = () => ({
-  id: '',
-  name: '',
-  rows: [createEmptyRow()],
-});
-
-const normalizeEditableProgramDays = (days: WorkoutProgramDay[] = []) =>
-  Array.isArray(days) && days.length > 0
-    ? days.map((day) => ({
-        id: day.id || '',
-        name: day.name || '',
-        rows:
-          Array.isArray(day.rows) && day.rows.length > 0
-            ? day.rows.map((row) => ({
-                id: row.id || '',
-                exercise: row.exercise || '',
-                sets: row.sets || '',
-                repsHeavy: row.repsHeavy || '',
-                weightHeavy: row.weightHeavy || '',
-              }))
-            : [createEmptyRow()],
-      }))
-    : [createEmptyDay()];
-
-const parseCommaList = (value: string) =>
-  value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-const createEmptyMeasurementForm = () => ({
-  measurementDate: new Date().toISOString().slice(0, 10),
-  chestCm: '',
-  waistCm: '',
-  abdomenCm: '',
-  hipsCm: '',
-  leftArmCm: '',
-  rightArmCm: '',
-  leftThighCm: '',
-  rightThighCm: '',
-  notes: '',
-});
-
-const formatMeasurementValue = (value: number | null) => (value != null ? `${value} ס"מ` : '—');
-
-const getFilledMeasurementValues = (measurement: BodyMeasurementLog) =>
-  [
-    measurement.chestCm != null ? `חזה (קו פטמות) ${measurement.chestCm} ס"מ` : null,
-    measurement.waistCm != null ? `מותן (האזור הצר ביותר) ${measurement.waistCm} ס"מ` : null,
-    measurement.abdomenCm != null ? `בטן (קו פופיק) ${measurement.abdomenCm} ס"מ` : null,
-    measurement.hipsCm != null ? `אגן (החלק הרחב ביותר) ${measurement.hipsCm} ס"מ` : null,
-    measurement.leftArmCm != null ? `יד שמאל (רפויה כלפי מטה) ${measurement.leftArmCm} ס"מ` : null,
-    measurement.rightArmCm != null ? `יד ימין (רפויה כלפי מטה) ${measurement.rightArmCm} ס"מ` : null,
-    measurement.leftThighCm != null ? `ירך שמאל (האמצע) ${measurement.leftThighCm} ס"מ` : null,
-    measurement.rightThighCm != null ? `ירך ימין (האמצע) ${measurement.rightThighCm} ס"מ` : null,
-  ].filter(Boolean) as string[];
-  
-  
-const measurementToFormValues = (measurement: BodyMeasurementLog) => ({
-  measurementDate: measurement.measurementDate,
-  chestCm: measurement.chestCm != null ? String(measurement.chestCm) : '',
-  waistCm: measurement.waistCm != null ? String(measurement.waistCm) : '',
-  abdomenCm: measurement.abdomenCm != null ? String(measurement.abdomenCm) : '',
-  hipsCm: measurement.hipsCm != null ? String(measurement.hipsCm) : '',
-  leftArmCm: measurement.leftArmCm != null ? String(measurement.leftArmCm) : '',
-  rightArmCm: measurement.rightArmCm != null ? String(measurement.rightArmCm) : '',
-  leftThighCm: measurement.leftThighCm != null ? String(measurement.leftThighCm) : '',
-  rightThighCm: measurement.rightThighCm != null ? String(measurement.rightThighCm) : '',
-  notes: measurement.notes || '',
-});
 
 function ProfilePageContent() {
   const searchParams = useSearchParams();
@@ -187,17 +106,7 @@ function ProfilePageContent() {
   const [userFoods, setUserFoods] = useState<UserFoodRow[]>([]);
   const [userFoodsLoading, setUserFoodsLoading] = useState(true);
   const [userFoodsError, setUserFoodsError] = useState('');
-  type EditFoodModal = {
-    id: string;
-    name: string;
-    calories: string;
-    protein: string;
-    carbs: string;
-    fat: string;
-    error: string;
-    saving: boolean;
-  };
-  const [editFoodModal, setEditFoodModal] = useState<EditFoodModal | null>(null);
+  const [editFoodModal, setEditFoodModal] = useState<EditFoodModalState | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -650,710 +559,89 @@ function ProfilePageContent() {
   }
 
   const selectedProgramDay = programDays[selectedDayIndex] || createEmptyDay();
-  const renderSectionHeader = (title: string, isOpen: boolean, onToggle: () => void) => (
-    <button
-      type="button"
-      onClick={onToggle}
-      style={{
-        border: 0,
-        borderRadius: 20,
-        background: 'var(--surface)',
-        color: 'var(--text)',
-        padding: '16px 20px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 12,
-        cursor: 'pointer',
-        fontWeight: 800,
-        fontSize: 18,
-      }}
-    >
-      <span>{title}</span>
-      <span>{isOpen ? '▼' : '▶'}</span>
-    </button>
-  );
 
   return (
     <ProtectedPage>
       <div style={{ display: 'grid', gap: 16 }}>
-        {renderSectionHeader('פרופיל ויעדים', isProfileSectionOpen, () =>
-          setIsProfileSectionOpen((current) => !current)
-        )}
+        <SectionHeader
+          title="פרופיל ויעדים"
+          isOpen={isProfileSectionOpen}
+          onToggle={() => setIsProfileSectionOpen((current) => !current)}
+        />
         {isProfileSectionOpen ? (
-        <div
-          style={{
-            background: 'var(--surface)',
-            borderRadius: 20,
-            padding: 20,
-            display: 'grid',
-            gap: 8,
-          }}
-        >
-          <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>פרופיל</div>
-          <div style={{ fontSize: 26, fontWeight: 800 }}>הגדרות אישיות</div>
-          <div style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
-            עדכון פרטים אישיים, נושא תצוגה, וגישה לפעולות החשבון.
-          </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>{user?.email || ''}</div>
-        </div>
+          <ProfileSection
+            email={user?.email || ''}
+            form={form}
+            updateField={updateField}
+            handleSave={handleSave}
+            isSaving={isSaving}
+          />
         ) : null}
 
-        {renderSectionHeader('מדידות היקפים', isMeasurementsSectionOpen, () =>
-          setIsMeasurementsSectionOpen((current) => !current)
-        )}
+        <SectionHeader
+          title="מדידות היקפים"
+          isOpen={isMeasurementsSectionOpen}
+          onToggle={() => setIsMeasurementsSectionOpen((current) => !current)}
+        />
         {isMeasurementsSectionOpen ? (
-        <div
-          style={{
-            background: 'var(--surface)',
-            borderRadius: 20,
-            padding: 20,
-            display: 'grid',
-            gap: 14,
-          }}
-        >
-          <div style={{ display: 'grid', gap: 4 }}>
-            <div style={{ fontSize: 18, fontWeight: 800 }}>מדידות היקפים</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-              שמור היסטוריית מדידות גוף מסודרת במקום לנהל אותה בנפרד.
-            </div>
-            {editingMeasurementId ? (
-              <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                מצב עריכה פעיל עבור מדידה קיימת.
-              </div>
-            ) : null}
-          </div>
-
-          <input
-            type="date"
-            value={measurementForm.measurementDate}
-            onChange={(event) => updateMeasurementField('measurementDate', event.target.value)}
-            style={inputStyle}
+          <MeasurementsSection
+            editingMeasurementId={editingMeasurementId}
+            measurementForm={measurementForm}
+            updateMeasurementField={updateMeasurementField}
+            handleSaveMeasurement={handleSaveMeasurement}
+            isSavingMeasurement={isSavingMeasurement}
+            measurementMessage={measurementMessage}
+            measurementError={measurementError}
+            latestMeasurement={latestMeasurement}
+            measurementLogs={measurementLogs}
+            formatMeasurementValue={formatMeasurementValue}
+            getFilledMeasurementValues={getFilledMeasurementValues}
+            handleEditMeasurement={handleEditMeasurement}
+            handleDeleteMeasurement={handleDeleteMeasurement}
           />
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-placeholder="חזה (קו פטמות)"
-              value={measurementForm.chestCm}
-              onChange={(event) => updateMeasurementField('chestCm', event.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-placeholder="מותן (האזור הצר ביותר)"
-              value={measurementForm.waistCm}
-              onChange={(event) => updateMeasurementField('waistCm', event.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-placeholder="בטן (קו פופיק)"
-              value={measurementForm.abdomenCm}
-              onChange={(event) => updateMeasurementField('abdomenCm', event.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-placeholder="אגן (החלק הרחב ביותר)"
-              value={measurementForm.hipsCm}
-              onChange={(event) => updateMeasurementField('hipsCm', event.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-placeholder="יד שמאל (רפויה כלפי מטה)"
-              value={measurementForm.leftArmCm}
-              onChange={(event) => updateMeasurementField('leftArmCm', event.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-placeholder="יד ימין (רפויה כלפי מטה)"
-              value={measurementForm.rightArmCm}
-              onChange={(event) => updateMeasurementField('rightArmCm', event.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-placeholder="ירך שמאל (האמצע)"
-              value={measurementForm.leftThighCm}
-              onChange={(event) => updateMeasurementField('leftThighCm', event.target.value)}
-              style={inputStyle}
-            />
-            <input
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-placeholder="ירך ימין (האמצע)"
-              value={measurementForm.rightThighCm}
-              onChange={(event) => updateMeasurementField('rightThighCm', event.target.value)}
-              style={inputStyle}
-            />
-          </div>
-
-          <textarea
-            placeholder="הערות"
-            value={measurementForm.notes}
-            onChange={(event) => updateMeasurementField('notes', event.target.value)}
-            rows={3}
-            style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
-          />
-
-          <button
-            type="button"
-            onClick={handleSaveMeasurement}
-            disabled={isSavingMeasurement}
-            style={{
-              border: 0,
-              borderRadius: 18,
-              background: 'var(--accent)',
-              color: '#fff',
-              padding: '16px 18px',
-              fontWeight: 800,
-              cursor: isSavingMeasurement ? 'default' : 'pointer',
-              opacity: isSavingMeasurement ? 0.7 : 1,
-            }}
-          >
-            {isSavingMeasurement ? 'שומר...' : 'שמור מדידה'}
-          </button>
-
-          {measurementMessage ? (
-            <div style={{ color: 'var(--success)', fontSize: 14 }}>{measurementMessage}</div>
-          ) : null}
-          {measurementError ? (
-            <div style={{ color: 'var(--danger)', fontSize: 14 }}>{measurementError}</div>
-          ) : null}
-
-          <div
-            style={{
-              background: 'var(--surface-2)',
-              borderRadius: 16,
-              padding: 14,
-              display: 'grid',
-              gap: 8,
-            }}
-          >
-            <div style={{ fontWeight: 700 }}>המדידה האחרונה</div>
-            {latestMeasurement ? (
-              <>
-                <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                  תאריך: {latestMeasurement.measurementDate}
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 14 }}>
-<div>חזה (קו פטמות): {formatMeasurementValue(latestMeasurement.chestCm)}</div>
-<div>מותן (האזור הצר ביותר): {formatMeasurementValue(latestMeasurement.waistCm)}</div>
-<div>בטן (קו פופיק): {formatMeasurementValue(latestMeasurement.abdomenCm)}</div>
-<div>אגן (החלק הרחב ביותר): {formatMeasurementValue(latestMeasurement.hipsCm)}</div>
-<div>יד שמאל (רפויה כלפי מטה): {formatMeasurementValue(latestMeasurement.leftArmCm)}</div>
-<div>יד ימין (רפויה כלפי מטה): {formatMeasurementValue(latestMeasurement.rightArmCm)}</div>
-<div>ירך שמאל (האמצע): {formatMeasurementValue(latestMeasurement.leftThighCm)}</div>
-<div>ירך ימין (האמצע): {formatMeasurementValue(latestMeasurement.rightThighCm)}</div>	
-                </div>
-                {latestMeasurement.notes ? (
-                  <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                    הערות: {latestMeasurement.notes}
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>עדיין לא נשמרו מדידות.</div>
-            )}
-          </div>
-
-          {measurementLogs.length > 0 ? (
-            <div style={{ display: 'grid', gap: 8 }}>
-              <div style={{ fontWeight: 700 }}>היסטוריה</div>
-              {measurementLogs.slice(0, 5).map((log) => (
-                <div
-                  key={log.id}
-                  style={{
-                    background: 'var(--surface-2)',
-                    borderRadius: 14,
-                    padding: '12px 14px',
-                    display: 'grid',
-                    gap: 4,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 8,
-                    }}
-                  >
-                    <div style={{ fontWeight: 700 }}>{log.measurementDate}</div>
-                    <button
-                      type="button"
-                      onClick={() => handleEditMeasurement(log)}
-                      style={{
-                        border: 0,
-                        borderRadius: 10,
-                        background: 'var(--surface)',
-                        color: 'var(--text)',
-                        padding: '8px 12px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      ערוך
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteMeasurement(log.id)}
-                      style={{
-                        border: 0,
-                        borderRadius: 10,
-                        background: 'var(--danger-bg)',
-                        color: 'var(--danger)',
-                        padding: '8px 12px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      מחק
-                    </button>
-                  </div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                    {getFilledMeasurementValues(log).join(' | ')}
-                  </div>
-                  {log.notes ? (
-                    <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                      הערות: {log.notes}
-                    </div>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </div>
         ) : null}
 
-        {isProfileSectionOpen ? (
-        <div
-          style={{
-            background: 'var(--surface)',
-            borderRadius: 20,
-            padding: 20,
-            display: 'grid',
-            gap: 12,
-          }}
-        >
-          <input
-            type="number"
-            placeholder="גיל"
-            value={form.age}
-            onChange={(event) => updateField('age', event.target.value)}
-            style={inputStyle}
-          />
-          <input
-            type="number"
-            placeholder="גובה"
-            value={form.height}
-            onChange={(event) => updateField('height', event.target.value)}
-            style={inputStyle}
-          />
-
-          <div style={{ fontSize: 14, fontWeight: 700 }}>מגדר</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {GENDER_OPTIONS.map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => updateField('gender', value)}
-                style={chipStyle(form.gender === value)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ fontSize: 14, fontWeight: 700 }}>ניסיון</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {EXPERIENCE_OPTIONS.map(([value, label]) => {
-              const isActive = form.experience === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => updateField('experience', value)}
-                  style={chipStyle(isActive)}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div style={{ fontSize: 14, fontWeight: 700 }}>מטרה</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {GOAL_OPTIONS.map(([value, label]) => {
-              const isActive = form.goal === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => updateField('goal', value)}
-                  style={chipStyle(isActive)}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-
-          <input
-            type="text"
-            placeholder="אזורי מיקוד, מופרדים בפסיקים"
-            value={form.focusAreasText}
-            onChange={(event) => updateField('focusAreasText', event.target.value)}
-            style={inputStyle}
-          />
-
-          <div style={{ display: 'grid', gap: 10 }}>
-            <div style={{ fontSize: 18, fontWeight: 800 }}>יעדי תזונה</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: 14, lineHeight: 1.6 }}>
-              אפשר להשתמש ביעדים המחושבים מהפרופיל או להגדיר יעדים יומיים ידניים.
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>מצב יעד</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              <button
-                type="button"
-                onClick={() => updateField('nutritionTargetMode', 'auto')}
-                style={chipStyle(form.nutritionTargetMode === 'auto')}
-              >
-                אוטומטי
-              </button>
-              <button
-                type="button"
-                onClick={() => updateField('nutritionTargetMode', 'manual')}
-                style={chipStyle(form.nutritionTargetMode === 'manual')}
-              >
-                ידני
-              </button>
-            </div>
-            {form.nutritionTargetMode === 'manual' ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  inputMode="numeric"
-                  placeholder="יעד קלוריות יומי"
-                  value={form.manualDailyCalories}
-                  onChange={(event) => updateField('manualDailyCalories', event.target.value)}
-                  style={inputStyle}
-                />
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  inputMode="numeric"
-                  placeholder="יעד חלבון יומי"
-                  value={form.manualDailyProtein}
-                  onChange={(event) => updateField('manualDailyProtein', event.target.value)}
-                  style={inputStyle}
-                />
-              </div>
-            ) : null}
-          </div>
-
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isSaving}
-            style={{
-              border: 0,
-              borderRadius: 18,
-              background: 'var(--accent)',
-              color: '#fff',
-              padding: '16px 18px',
-              fontWeight: 800,
-              cursor: isSaving ? 'default' : 'pointer',
-              opacity: isSaving ? 0.7 : 1,
-            }}
-          >
-            {isSaving ? 'שומר...' : 'שמור פרופיל'}
-          </button>
-        </div>
-        ) : null}
-
-        {renderSectionHeader('Settings', isSettingsSectionOpen, () =>
-          setIsSettingsSectionOpen((current) => !current)
-        )}
+        <SectionHeader
+          title="Settings"
+          isOpen={isSettingsSectionOpen}
+          onToggle={() => setIsSettingsSectionOpen((current) => !current)}
+        />
         {isSettingsSectionOpen ? (
-          <>
-        <div
-          style={{
-            background: 'var(--surface)',
-            borderRadius: 20,
-            padding: 20,
-            display: 'grid',
-            gap: 12,
-          }}
-        >
-          <div style={{ fontSize: 18, fontWeight: 800 }}>ערכת נושא</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>נוכחי: {themeLabel}</div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              onClick={() => setThemePreference('light')}
-              style={chipStyle(themePreference === 'light')}
-            >
-              בהיר
-            </button>
-            <button
-              type="button"
-              onClick={() => setThemePreference('dark')}
-              style={chipStyle(themePreference === 'dark')}
-            >
-              כהה
-            </button>
-            <button
-              type="button"
-              onClick={() => setThemePreference('ai')}
-              style={chipStyle(themePreference === 'ai')}
-            >
-              AI
-            </button>
-          </div>
-        </div>
-
-        <div
-          style={{
-            background: 'var(--surface)',
-            borderRadius: 20,
-            padding: 20,
-            display: 'grid',
-            gap: 12,
-          }}
-        >
-          <div style={{ fontSize: 18, fontWeight: 800 }}>תזכורות אימון</div>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 12,
-            }}
-          >
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>תזכורת רטט בזמן אימון</div>
-              <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                רטט קצר בכל מרווח זמן קבוע
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setVibrationEnabled(!vibrationEnabled)}
-              style={{
-                border: 0,
-                borderRadius: 999,
-                padding: '10px 16px',
-                background: vibrationEnabled ? 'var(--accent)' : 'var(--surface-2)',
-                color: '#fff',
-                fontWeight: 700,
-                cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            >
-              {vibrationEnabled ? 'פעיל' : 'כבוי'}
-            </button>
-          </div>
-          {vibrationEnabled ? (
-            <div style={{ display: 'grid', gap: 8 }}>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>מרווח בין תזכורות</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {VIBRATION_INTERVAL_OPTIONS.map((seconds) => (
-                  <button
-                    key={seconds}
-                    type="button"
-                    onClick={() => setVibrationInterval(seconds)}
-                    style={chipStyle(vibrationInterval === seconds)}
-                  >
-                    {seconds >= 60 ? `${seconds / 60} דקות` : `${seconds} שניות`}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </div>
-          </>
+          <SettingsSection
+            themeLabel={themeLabel}
+            themePreference={themePreference}
+            setThemePreference={setThemePreference}
+            vibrationEnabled={vibrationEnabled}
+            setVibrationEnabled={setVibrationEnabled}
+            vibrationInterval={vibrationInterval}
+            setVibrationInterval={setVibrationInterval}
+            vibrationOptions={VIBRATION_INTERVAL_OPTIONS}
+          />
         ) : null}
 
-        {renderSectionHeader('Workout', isWorkoutSectionOpen, () =>
-          setIsWorkoutSectionOpen((current) => !current)
-        )}
+        <SectionHeader
+          title="Workout"
+          isOpen={isWorkoutSectionOpen}
+          onToggle={() => setIsWorkoutSectionOpen((current) => !current)}
+        />
         {isWorkoutSectionOpen ? (
-          <>
-        <div
-          style={{
-            background: 'var(--surface)',
-            borderRadius: 20,
-            padding: 20,
-            display: 'grid',
-            gap: 10,
-          }}
-        >
-          <div style={{ fontSize: 18, fontWeight: 800 }}>תוכנית נוכחית</div>
-          <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-            {programSummary.dayCount > 0
-              ? `${programSummary.dayCount} ימי אימון: ${programSummary.names.join(', ')}`
-              : 'עדיין אין תוכנית פעילה.'}
-          </div>
-        </div>
-
-        <div
-          style={{
-            background: 'var(--surface)',
-            borderRadius: 20,
-            padding: 20,
-            display: 'grid',
-            gap: 14,
-            ...(recoveryType === 'program' && !recoveryDismissed
-              ? { outline: '2px solid var(--accent)', outlineOffset: 2 }
-              : {}),
-          }}
-        >
-          {recoveryType === 'program' && !recoveryDismissed ? (
-            <RecoveryBanner message="כדאי להגדיר תוכנית אימונים פעילה כדי שנוכל לעקוב נכון אחרי ההתקדמות שלך." />
-          ) : null}
-          <div style={{ display: 'grid', gap: 4 }}>
-            <div style={{ fontSize: 18, fontWeight: 800 }}>עריכת תוכנית אימון</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-              בחר יום, עדכן את שם היום ואת שורות התרגילים, ושמור את התוכנית.
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {programDays.map((day, index) => {
-              const isActive = index === selectedDayIndex;
-              return (
-                <button
-                  key={day.id || `program-day-${index}`}
-                  type="button"
-                  onClick={() => setSelectedDayIndex(index)}
-                  style={chipStyle(isActive)}
-                >
-                  {day.name || `יום ${index + 1}`}
-                </button>
-              );
-            })}
-          </div>
-
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button type="button" onClick={addProgramDay} style={secondaryButtonStyle}>
-              הוסף יום אימון
-            </button>
-            <button type="button" onClick={removeProgramDay} style={dangerButtonStyle}>
-              מחק את היום הנבחר
-            </button>
-          </div>
-
-          <input
-            type="text"
-            placeholder="שם היום"
-            value={selectedProgramDay.name}
-            onChange={(event) => updateDayName(event.target.value)}
-            style={inputStyle}
+          <WorkoutSection
+            programSummary={programSummary}
+            recoveryType={recoveryType}
+            recoveryDismissed={recoveryDismissed}
+            programDays={programDays}
+            selectedDayIndex={selectedDayIndex}
+            selectedProgramDay={selectedProgramDay}
+            setSelectedDayIndex={setSelectedDayIndex}
+            addProgramDay={addProgramDay}
+            removeProgramDay={removeProgramDay}
+            updateDayName={updateDayName}
+            removeProgramRow={removeProgramRow}
+            updateProgramRow={updateProgramRow}
+            addProgramRow={addProgramRow}
+            handleSaveProgram={handleSaveProgram}
+            isSavingProgram={isSavingProgram}
           />
-
-          <div style={{ display: 'grid', gap: 12 }}>
-            {selectedProgramDay.rows.map((row, rowIndex) => (
-              <div
-                key={`${selectedDayIndex}-${rowIndex}`}
-                style={{
-                  background: 'var(--surface-2)',
-                  borderRadius: 16,
-                  padding: 14,
-                  display: 'grid',
-                  gap: 10,
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                  <button
-                    type="button"
-                    onClick={() => removeProgramRow(rowIndex)}
-                    style={{ ...ghostButtonStyle, color: 'var(--danger)' }}
-                  >
-                    מחק שורה
-                  </button>
-                  <div style={{ fontWeight: 700 }}>{`תרגיל ${rowIndex + 1}`}</div>
-                </div>
-
-                <input
-                  type="text"
-                  placeholder="תרגיל"
-                  value={row.exercise}
-                  onChange={(event) => updateProgramRow(rowIndex, 'exercise', event.target.value)}
-                  style={inputStyle}
-                />
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                  <input
-                    type="text"
-                    placeholder="סטים"
-                    value={row.sets}
-                    onChange={(event) => updateProgramRow(rowIndex, 'sets', event.target.value)}
-                    style={inputStyle}
-                  />
-                  <input
-                    type="text"
-                    placeholder="חזרות"
-                    value={row.repsHeavy}
-                    onChange={(event) => updateProgramRow(rowIndex, 'repsHeavy', event.target.value)}
-                    style={inputStyle}
-                  />
-                  <input
-                    type="text"
-                    placeholder="משקל"
-                    value={row.weightHeavy}
-                    onChange={(event) => updateProgramRow(rowIndex, 'weightHeavy', event.target.value)}
-                    style={inputStyle}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <button type="button" onClick={addProgramRow} style={secondaryButtonStyle}>
-            הוסף שורת תרגיל
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSaveProgram}
-            disabled={isSavingProgram}
-            style={{
-              border: 0,
-              borderRadius: 18,
-              background: 'var(--accent)',
-              color: '#fff',
-              padding: '16px 18px',
-              fontWeight: 800,
-              cursor: isSavingProgram ? 'default' : 'pointer',
-              opacity: isSavingProgram ? 0.7 : 1,
-            }}
-          >
-            {isSavingProgram ? 'שומר...' : 'שמור תוכנית'}
-          </button>
-        </div>
-          </>
         ) : null}
 
         {message ? <div style={{ color: 'var(--success)' }}>{message}</div> : null}
@@ -1361,84 +649,19 @@ placeholder="ירך ימין (האמצע)"
         {programMessage ? <div style={{ color: 'var(--success)' }}>{programMessage}</div> : null}
         {programError ? <div style={{ color: 'var(--danger)' }}>{programError}</div> : null}
 
-        {renderSectionHeader('המזונות שלי', isUserFoodsSectionOpen, () =>
-          setIsUserFoodsSectionOpen((current) => !current)
-        )}
+        <SectionHeader
+          title="המזונות שלי"
+          isOpen={isUserFoodsSectionOpen}
+          onToggle={() => setIsUserFoodsSectionOpen((current) => !current)}
+        />
         {isUserFoodsSectionOpen ? (
-        <div
-          style={{
-            background: 'var(--surface)',
-            borderRadius: 20,
-            padding: 20,
-            display: 'grid',
-            gap: 12,
-          }}
-        >
-          <div style={{ fontSize: 18, fontWeight: 800 }}>המזונות שלי</div>
-          {userFoodsLoading ? (
-            <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>טוען...</div>
-          ) : userFoodsError ? (
-            <div style={{ color: 'var(--danger)', fontSize: 14 }}>{userFoodsError}</div>
-          ) : userFoods.length === 0 ? (
-            <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>אין מזונות מותאמים אישית עדיין.</div>
-          ) : (
-            <div style={{ display: 'grid', gap: 8 }}>
-              {userFoods.map((food) => (
-                <div
-                  key={food.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    background: 'var(--surface-2)',
-                    borderRadius: 14,
-                    padding: '12px 14px',
-                  }}
-                >
-                  <div style={{ display: 'grid', gap: 2 }}>
-                    <div style={{ fontWeight: 700 }}>{food.name}</div>
-                    <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                      {food.calories} קלוריות | {food.protein} חלבון
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                    <button
-                      type="button"
-                      onClick={() => handleOpenEditFood(food)}
-                      style={{
-                        border: 0,
-                        borderRadius: 10,
-                        background: 'var(--surface)',
-                        color: 'var(--text)',
-                        padding: '8px 12px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      ערוך
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteUserFood(food.id)}
-                      style={{
-                        border: 0,
-                        borderRadius: 10,
-                        background: 'var(--danger-bg)',
-                        color: 'var(--danger)',
-                        padding: '8px 12px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      מחק
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+          <UserFoodsSection
+            userFoodsLoading={userFoodsLoading}
+            userFoodsError={userFoodsError}
+            userFoods={userFoods}
+            onEdit={handleOpenEditFood}
+            onDelete={handleDeleteUserFood}
+          />
         ) : null}
 
         <button
@@ -1462,149 +685,16 @@ placeholder="ירך ימין (האמצע)"
         </Link>
       </div>
       {editFoodModal ? (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'flex-end',
-            zIndex: 100,
-          }}
-          onClick={() => !editFoodModal.saving && setEditFoodModal(null)}
-        >
-          <div
-            style={{
-              background: 'var(--surface)',
-              borderRadius: '20px 20px 0 0',
-              padding: 24,
-              width: '100%',
-              display: 'grid',
-              gap: 12,
-              maxHeight: '90vh',
-              overflowY: 'auto',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ fontSize: 18, fontWeight: 800 }}>עריכת מזון</div>
-            <input
-              type="text"
-              placeholder="שם"
-              value={editFoodModal.name}
-              onChange={(e) => setEditFoodModal((m) => m && ({ ...m, name: e.target.value }))}
-              style={inputStyle}
-            />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <input
-                type="number"
-                placeholder="קלוריות"
-                value={editFoodModal.calories}
-                onChange={(e) => setEditFoodModal((m) => m && ({ ...m, calories: e.target.value }))}
-                style={inputStyle}
-              />
-              <input
-                type="number"
-                placeholder="חלבון"
-                value={editFoodModal.protein}
-                onChange={(e) => setEditFoodModal((m) => m && ({ ...m, protein: e.target.value }))}
-                style={inputStyle}
-              />
-              <input
-                type="number"
-                placeholder="פחמימות"
-                value={editFoodModal.carbs}
-                onChange={(e) => setEditFoodModal((m) => m && ({ ...m, carbs: e.target.value }))}
-                style={inputStyle}
-              />
-              <input
-                type="number"
-                placeholder="שומן"
-                value={editFoodModal.fat}
-                onChange={(e) => setEditFoodModal((m) => m && ({ ...m, fat: e.target.value }))}
-                style={inputStyle}
-              />
-            </div>
-            {editFoodModal.error ? (
-              <div style={{ color: 'var(--danger)', fontSize: 14 }}>{editFoodModal.error}</div>
-            ) : null}
-            <button
-              type="button"
-              onClick={handleEditFoodSave}
-              disabled={editFoodModal.saving}
-              style={{
-                border: 0,
-                borderRadius: 18,
-                background: 'var(--accent)',
-                color: '#fff',
-                padding: '16px 18px',
-                fontWeight: 800,
-                cursor: editFoodModal.saving ? 'default' : 'pointer',
-                opacity: editFoodModal.saving ? 0.7 : 1,
-              }}
-            >
-              {editFoodModal.saving ? 'שומר...' : 'שמור'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditFoodModal(null)}
-              disabled={editFoodModal.saving}
-              style={{ ...ghostButtonStyle, textAlign: 'center', padding: '8px 0' }}
-            >
-              ביטול
-            </button>
-          </div>
-        </div>
+        <EditFoodModal
+          modal={editFoodModal}
+          onClose={() => setEditFoodModal(null)}
+          onSave={handleEditFoodSave}
+          onChange={(patch) => setEditFoodModal((current) => (current ? { ...current, ...patch } : current))}
+        />
       ) : null}
     </ProtectedPage>
   );
 }
-
-const inputStyle: CSSProperties = {
-  width: '100%',
-  borderRadius: 14,
-  border: '1px solid var(--border)',
-  background: 'var(--surface-2)',
-  color: 'var(--text)',
-  padding: 12,
-};
-
-const chipStyle = (active: boolean): CSSProperties => ({
-  border: 0,
-  borderRadius: 999,
-  padding: '10px 14px',
-  background: active ? 'var(--accent)' : 'var(--surface-2)',
-  color: '#fff',
-  cursor: 'pointer',
-});
-
-const secondaryButtonStyle: CSSProperties = {
-  border: 0,
-  borderRadius: 14,
-  padding: '12px 14px',
-  background: 'var(--surface-2)',
-  color: '#fff',
-  cursor: 'pointer',
-  fontWeight: 700,
-};
-
-const dangerButtonStyle: CSSProperties = {
-  border: 0,
-  borderRadius: 14,
-  padding: '12px 14px',
-  background: 'var(--danger-bg)',
-  color: 'var(--danger)',
-  cursor: 'pointer',
-  fontWeight: 700,
-};
-
-const ghostButtonStyle: CSSProperties = {
-  border: 0,
-  background: 'transparent',
-  color: 'var(--text-muted)',
-  cursor: 'pointer',
-  padding: 0,
-};
-
 export default function ProfilePage() {
   return (
     <Suspense fallback={<PageSpinner />}>
