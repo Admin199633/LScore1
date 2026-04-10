@@ -10,6 +10,12 @@ import { RecoveryBanner } from '@/components/RecoveryBanner';
 import { PageSpinner } from '@/components/PageSpinner';
 import { fetchLatestBodyweight } from '@/lib/repositories/bodyweightRepository';
 import {
+  createBodyMeasurementLog,
+  getLatestBodyMeasurementLog,
+  listBodyMeasurementLogs,
+  type BodyMeasurementLog,
+} from '@/lib/repositories/bodyMeasurementRepository';
+import {
   fetchCurrentProfile,
   saveCurrentProfile,
 } from '@/lib/repositories/profileRepository';
@@ -87,6 +93,33 @@ const parseCommaList = (value: string) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
+const createEmptyMeasurementForm = () => ({
+  measurementDate: new Date().toISOString().slice(0, 10),
+  chestCm: '',
+  waistCm: '',
+  abdomenCm: '',
+  hipsCm: '',
+  leftArmCm: '',
+  rightArmCm: '',
+  leftThighCm: '',
+  rightThighCm: '',
+  notes: '',
+});
+
+const formatMeasurementValue = (value: number | null) => (value != null ? `${value} ס"מ` : '—');
+
+const getFilledMeasurementValues = (measurement: BodyMeasurementLog) =>
+  [
+    measurement.chestCm != null ? `חזה ${measurement.chestCm} ס"מ` : null,
+    measurement.waistCm != null ? `מותן ${measurement.waistCm} ס"מ` : null,
+    measurement.abdomenCm != null ? `בטן ${measurement.abdomenCm} ס"מ` : null,
+    measurement.hipsCm != null ? `אגן ${measurement.hipsCm} ס"מ` : null,
+    measurement.leftArmCm != null ? `יד שמאל ${measurement.leftArmCm} ס"מ` : null,
+    measurement.rightArmCm != null ? `יד ימין ${measurement.rightArmCm} ס"מ` : null,
+    measurement.leftThighCm != null ? `ירך שמאל ${measurement.leftThighCm} ס"מ` : null,
+    measurement.rightThighCm != null ? `ירך ימין ${measurement.rightThighCm} ס"מ` : null,
+  ].filter(Boolean) as string[];
+
 function ProfilePageContent() {
   const searchParams = useSearchParams();
   const recoveryType = parseRecoveryParam(searchParams.get('recovery'));
@@ -101,8 +134,13 @@ function ProfilePageContent() {
   } = useVibrationSettings();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingMeasurement, setIsSavingMeasurement] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [measurementError, setMeasurementError] = useState('');
+  const [measurementMessage, setMeasurementMessage] = useState('');
+  const [latestMeasurement, setLatestMeasurement] = useState<BodyMeasurementLog | null>(null);
+  const [measurementLogs, setMeasurementLogs] = useState<BodyMeasurementLog[]>([]);
   const [programSummary, setProgramSummary] = useState<{ dayCount: number; names: string[] }>({
     dayCount: 0,
     names: [],
@@ -123,6 +161,7 @@ function ProfilePageContent() {
     manualDailyCalories: '',
     manualDailyProtein: '',
   });
+  const [measurementForm, setMeasurementForm] = useState(createEmptyMeasurementForm);
   const [userFoods, setUserFoods] = useState<UserFoodRow[]>([]);
   const [userFoodsLoading, setUserFoodsLoading] = useState(true);
   const [userFoodsError, setUserFoodsError] = useState('');
@@ -146,10 +185,12 @@ function ProfilePageContent() {
       setError('');
 
       try {
-        const [latestBodyweight, profile, program] = await Promise.all([
+        const [latestBodyweight, profile, program, latestMeasurementLog, bodyMeasurementHistory] = await Promise.all([
           fetchLatestBodyweight().catch(() => null),
           fetchCurrentProfile(),
           fetchActiveWorkoutProgram().catch(() => ({ id: '', days: [] })),
+          getLatestBodyMeasurementLog().catch(() => null),
+          listBodyMeasurementLogs().catch(() => []),
         ]);
 
         if (!isMounted) {
@@ -174,6 +215,8 @@ function ProfilePageContent() {
         });
         setProgramDays(normalizeEditableProgramDays(program.days || []));
         setSelectedDayIndex(0);
+        setLatestMeasurement(latestMeasurementLog);
+        setMeasurementLogs(bodyMeasurementHistory);
 
         if (latestBodyweight?.weight && !profile?.weight) {
           setMessage(`המשקל האחרון השמור: ${latestBodyweight.weight}`);
@@ -262,6 +305,96 @@ function ProfilePageContent() {
     setForm((current) => ({ ...current, [field]: value }));
     setError('');
     setMessage('');
+  };
+
+  const updateMeasurementField = (
+    field: keyof ReturnType<typeof createEmptyMeasurementForm>,
+    value: string
+  ) => {
+    setMeasurementForm((current) => ({ ...current, [field]: value }));
+    setMeasurementError('');
+    setMeasurementMessage('');
+  };
+
+  const handleSaveMeasurement = async () => {
+    const measurementValues = [
+      measurementForm.chestCm,
+      measurementForm.waistCm,
+      measurementForm.abdomenCm,
+      measurementForm.hipsCm,
+      measurementForm.leftArmCm,
+      measurementForm.rightArmCm,
+      measurementForm.leftThighCm,
+      measurementForm.rightThighCm,
+    ];
+
+    if (!measurementForm.measurementDate.trim()) {
+      setMeasurementError('יש לבחור תאריך מדידה.');
+      return;
+    }
+
+    if (!measurementValues.some((value) => value.trim() !== '')) {
+      setMeasurementError('יש להזין לפחות מדידת היקף אחת.');
+      return;
+    }
+
+    const invalidValue = measurementValues.find((value) => {
+      if (value.trim() === '') {
+        return false;
+      }
+
+      const parsed = Number(value);
+      return !Number.isFinite(parsed) || parsed <= 0;
+    });
+    if (invalidValue !== undefined) {
+      setMeasurementError('ערכי מדידה חייבים להיות מספרים חיוביים.');
+      return;
+    }
+
+    setIsSavingMeasurement(true);
+    setMeasurementError('');
+    setMeasurementMessage('');
+
+    try {
+      const savedMeasurement = await createBodyMeasurementLog({
+        measurementDate: measurementForm.measurementDate,
+        chestCm: measurementForm.chestCm,
+        waistCm: measurementForm.waistCm,
+        abdomenCm: measurementForm.abdomenCm,
+        hipsCm: measurementForm.hipsCm,
+        leftArmCm: measurementForm.leftArmCm,
+        rightArmCm: measurementForm.rightArmCm,
+        leftThighCm: measurementForm.leftThighCm,
+        rightThighCm: measurementForm.rightThighCm,
+        notes: measurementForm.notes,
+      });
+
+      setLatestMeasurement((current) => {
+        if (!current) {
+          return savedMeasurement;
+        }
+
+        if (savedMeasurement.measurementDate > current.measurementDate) {
+          return savedMeasurement;
+        }
+
+        if (
+          savedMeasurement.measurementDate === current.measurementDate &&
+          savedMeasurement.createdAt > current.createdAt
+        ) {
+          return savedMeasurement;
+        }
+
+        return current;
+      });
+      setMeasurementLogs((current) => [savedMeasurement, ...current]);
+      setMeasurementForm(createEmptyMeasurementForm());
+      setMeasurementMessage('מדידת היקפים נשמרה.');
+    } catch (saveError) {
+      setMeasurementError(saveError instanceof Error ? saveError.message : 'שמירת המדידה נכשלה.');
+    } finally {
+      setIsSavingMeasurement(false);
+    }
   };
 
   const replaceProgramDay = (
@@ -488,6 +621,202 @@ function ProfilePageContent() {
             עדכון פרטים אישיים, נושא תצוגה, וגישה לפעולות החשבון.
           </div>
           <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>{user?.email || ''}</div>
+        </div>
+
+        <div
+          style={{
+            background: 'var(--surface)',
+            borderRadius: 20,
+            padding: 20,
+            display: 'grid',
+            gap: 14,
+          }}
+        >
+          <div style={{ display: 'grid', gap: 4 }}>
+            <div style={{ fontSize: 18, fontWeight: 800 }}>מדידות היקפים</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+              שמור היסטוריית מדידות גוף מסודרת במקום לנהל אותה בנפרד.
+            </div>
+          </div>
+
+          <input
+            type="date"
+            value={measurementForm.measurementDate}
+            onChange={(event) => updateMeasurementField('measurementDate', event.target.value)}
+            style={inputStyle}
+          />
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              placeholder="חזה"
+              value={measurementForm.chestCm}
+              onChange={(event) => updateMeasurementField('chestCm', event.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              placeholder="מותן"
+              value={measurementForm.waistCm}
+              onChange={(event) => updateMeasurementField('waistCm', event.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              placeholder="בטן"
+              value={measurementForm.abdomenCm}
+              onChange={(event) => updateMeasurementField('abdomenCm', event.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              placeholder="אגן"
+              value={measurementForm.hipsCm}
+              onChange={(event) => updateMeasurementField('hipsCm', event.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              placeholder="יד שמאל"
+              value={measurementForm.leftArmCm}
+              onChange={(event) => updateMeasurementField('leftArmCm', event.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              placeholder="יד ימין"
+              value={measurementForm.rightArmCm}
+              onChange={(event) => updateMeasurementField('rightArmCm', event.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              placeholder="ירך שמאל"
+              value={measurementForm.leftThighCm}
+              onChange={(event) => updateMeasurementField('leftThighCm', event.target.value)}
+              style={inputStyle}
+            />
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              placeholder="ירך ימין"
+              value={measurementForm.rightThighCm}
+              onChange={(event) => updateMeasurementField('rightThighCm', event.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
+          <textarea
+            placeholder="הערות"
+            value={measurementForm.notes}
+            onChange={(event) => updateMeasurementField('notes', event.target.value)}
+            rows={3}
+            style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
+          />
+
+          <button
+            type="button"
+            onClick={handleSaveMeasurement}
+            disabled={isSavingMeasurement}
+            style={{
+              border: 0,
+              borderRadius: 18,
+              background: 'var(--accent)',
+              color: '#fff',
+              padding: '16px 18px',
+              fontWeight: 800,
+              cursor: isSavingMeasurement ? 'default' : 'pointer',
+              opacity: isSavingMeasurement ? 0.7 : 1,
+            }}
+          >
+            {isSavingMeasurement ? 'שומר...' : 'שמור מדידה'}
+          </button>
+
+          {measurementMessage ? (
+            <div style={{ color: 'var(--success)', fontSize: 14 }}>{measurementMessage}</div>
+          ) : null}
+          {measurementError ? (
+            <div style={{ color: 'var(--danger)', fontSize: 14 }}>{measurementError}</div>
+          ) : null}
+
+          <div
+            style={{
+              background: 'var(--surface-2)',
+              borderRadius: 16,
+              padding: 14,
+              display: 'grid',
+              gap: 8,
+            }}
+          >
+            <div style={{ fontWeight: 700 }}>המדידה האחרונה</div>
+            {latestMeasurement ? (
+              <>
+                <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                  תאריך: {latestMeasurement.measurementDate}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 14 }}>
+                  <div>חזה: {formatMeasurementValue(latestMeasurement.chestCm)}</div>
+                  <div>מותן: {formatMeasurementValue(latestMeasurement.waistCm)}</div>
+                  <div>בטן: {formatMeasurementValue(latestMeasurement.abdomenCm)}</div>
+                  <div>אגן: {formatMeasurementValue(latestMeasurement.hipsCm)}</div>
+                  <div>יד שמאל: {formatMeasurementValue(latestMeasurement.leftArmCm)}</div>
+                  <div>יד ימין: {formatMeasurementValue(latestMeasurement.rightArmCm)}</div>
+                  <div>ירך שמאל: {formatMeasurementValue(latestMeasurement.leftThighCm)}</div>
+                  <div>ירך ימין: {formatMeasurementValue(latestMeasurement.rightThighCm)}</div>
+                </div>
+                {latestMeasurement.notes ? (
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                    הערות: {latestMeasurement.notes}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>עדיין לא נשמרו מדידות.</div>
+            )}
+          </div>
+
+          {measurementLogs.length > 0 ? (
+            <div style={{ display: 'grid', gap: 8 }}>
+              <div style={{ fontWeight: 700 }}>היסטוריה</div>
+              {measurementLogs.slice(0, 5).map((log) => (
+                <div
+                  key={log.id}
+                  style={{
+                    background: 'var(--surface-2)',
+                    borderRadius: 14,
+                    padding: '12px 14px',
+                    display: 'grid',
+                    gap: 4,
+                  }}
+                >
+                  <div style={{ fontWeight: 700 }}>{log.measurementDate}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                    {getFilledMeasurementValues(log).join(' | ')}
+                  </div>
+                  {log.notes ? (
+                    <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                      הערות: {log.notes}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div
