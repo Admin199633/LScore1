@@ -9,6 +9,8 @@ import { PageSpinner } from '@/components/PageSpinner';
 import { BodyweightChart } from '@/components/BodyweightChart';
 import { fetchBodyweightLogs, upsertBodyweightLog } from '@/lib/repositories/bodyweightRepository';
 import { fetchCurrentProfile } from '@/lib/repositories/profileRepository';
+import { getLatestBodyMeasurementLog, type BodyMeasurementLog } from '@/lib/repositories/bodyMeasurementRepository';
+import { estimateBodyFatPercent } from '@/lib/bodyFatEstimation';
 import { fetchNutritionLogs, type SavedNutritionLog } from '@/lib/repositories/nutritionLogRepository';
 import { fetchSavedWorkoutSessions, type SavedWorkoutSession } from '@/lib/repositories/workoutSessionRepository';
 import { fetchActiveWorkoutProgram, type WorkoutProgram } from '@/lib/repositories/programRepository';
@@ -74,6 +76,7 @@ function HomePageContent() {
     manualDailyProtein: number | null;
   } | null>(null);
   const [weeklySnapshot, setWeeklySnapshot] = useState<WeeklyGoalSnapshot | null>(null);
+  const [latestMeasurement, setLatestMeasurement] = useState<BodyMeasurementLog | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -83,12 +86,13 @@ function HomePageContent() {
       setLoadError('');
 
       try {
-        const [nextBodyweightLogs, nextNutritionLogs, nextWorkoutSessions, profile, activeProgram] = await Promise.all([
+        const [nextBodyweightLogs, nextNutritionLogs, nextWorkoutSessions, profile, activeProgram, latestMeasurementLog] = await Promise.all([
           fetchBodyweightLogs(),
           fetchNutritionLogs(),
           fetchSavedWorkoutSessions(),
           fetchCurrentProfile().catch(() => null),
           fetchActiveWorkoutProgram().catch(() => ({ id: '', days: [] })),
+          getLatestBodyMeasurementLog().catch(() => null),
         ]);
 
         if (!isMounted) {
@@ -106,6 +110,7 @@ function HomePageContent() {
         );
         setWorkoutSessions(nextWorkoutSessions);
         setWorkoutProgram(activeProgram);
+        setLatestMeasurement(latestMeasurementLog);
         if (profile) {
           setUserProfile({
             age: profile.age,
@@ -395,6 +400,11 @@ function HomePageContent() {
     [recommendationCtx, dataCompleteness]
   );
 
+  const bodyFatPct = useMemo(
+    () => estimateBodyFatPercent(userProfile, latestMeasurement),
+    [userProfile, latestMeasurement]
+  );
+
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       console.log('[RecommendationEngine]', {
@@ -549,6 +559,9 @@ function HomePageContent() {
           <BodyweightChart logs={bodyweightLogs} />
         </div>
 
+        {/* ── אחוז שומן ────────────────────────────────────────────────── */}
+        <BodyFatCard bodyFatPct={bodyFatPct} measurementDate={latestMeasurement?.measurementDate ?? null} />
+
         {/* ── Box 1: המלצה יומית ראשית ─────────────────────────────────── */}
         <div
           style={{
@@ -653,6 +666,36 @@ const STATUS_COLOR: Record<string, string> = {
   partial:  'var(--accent)',
   poor:     'var(--danger)',
 };
+
+function BodyFatCard({ bodyFatPct, measurementDate }: { bodyFatPct: number | null; measurementDate: string | null }) {
+  return (
+    <div
+      style={{
+        background: 'var(--surface)',
+        borderRadius: 20,
+        padding: 20,
+        display: 'grid',
+        gap: 8,
+      }}
+    >
+      <div style={{ color: 'var(--text-muted)', fontSize: 13, fontWeight: 700 }}>אחוז שומן (הערכה)</div>
+      {bodyFatPct !== null ? (
+        <>
+          <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent)' }}>{bodyFatPct}%</div>
+          {measurementDate ? (
+            <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+              מבוסס על מדידות מתאריך {measurementDate}
+            </div>
+          ) : null}
+        </>
+      ) : (
+        <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+          נדרש: היקף צוואר, היקף בטן, וגובה. לנשים — גם היקף אגן.
+        </div>
+      )}
+    </div>
+  );
+}
 
 function DataCompletenessCard({ completeness }: { completeness: DataCompletenessResult }) {
   const topGaps = completeness.gaps.slice(0, 2);
