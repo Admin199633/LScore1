@@ -1,6 +1,6 @@
 ================================================================================
 GYM TRACKER - PROJECT SUMMARY
-Last updated: 2026-04-06
+Last updated: 2026-04-10
 ================================================================================
 
 This project is a Hebrew RTL mobile-first fitness PWA built with:
@@ -14,6 +14,7 @@ The product tracks:
 - workouts
 - nutrition
 - bodyweight
+- body measurements
 - weekly goal focus
 - recovery/data completeness
 
@@ -42,6 +43,7 @@ Core behavior:
 - Users without completed onboarding are redirected to `/onboarding`
 - Completed users land on `/home`
 - Protected pages use the shared session/onboarding gate
+- `/profile` now includes database-backed body measurement logging and history
 
 
 ================================================================================
@@ -281,6 +283,19 @@ Relevant files:
 - `src/lib/workoutDraftStorage.ts`
 - `src/lib/repositories/workoutSessionRepository.ts`
 
+Recent workout edit improvements:
+
+1. Editable session time boundaries
+- workout edit flow supports editable start time and end time
+- duration is derived from those times instead of being entered manually
+
+2. Per-exercise duration editing
+- each saved exercise duration can be edited in workout edit flow
+
+3. Duration consistency fixes
+- duration calculations are normalized to reduce mismatch between session-level
+  and exercise-level time values
+
 
 ================================================================================
 7. WORKOUT HISTORY
@@ -312,6 +327,9 @@ Nutrition features:
 - free-text nutrition parsing
 - nutrition log save and append
 - history browse/edit/delete
+- manual nutrition targets for calories and protein
+- nutrition search autocomplete
+- nutrition search merges global foods with user foods
 
 Home ties into nutrition logs for:
 - protein today
@@ -319,6 +337,12 @@ Home ties into nutrition logs for:
 - nutrition adherence signals
 - daily recommendation context
 - weekly snapshot actuals/finalization logic
+
+Nutrition targeting behavior:
+- profile supports `auto` and `manual` nutrition target modes
+- manual mode stores calories + protein directly on profile
+- shared nutrition target resolver falls back to BMR-based calculation when
+  manual values are not active
 
 
 ================================================================================
@@ -356,6 +380,7 @@ Weekly recommendation engine:
 Primary tables in use:
 - `profiles`
 - `bodyweight_logs`
+- `body_measurement_logs`
 - `workout_programs`
 - `workout_program_days`
 - `workout_program_exercises`
@@ -369,6 +394,8 @@ Primary tables in use:
 Important DB rules now documented:
 - profile identity is tied to `auth.users.id`
 - duplicate profile rows are actively prevented
+- body measurements are stored historically in `body_measurement_logs`, not on
+  `profiles`
 - weekly goal snapshots are unique per user/week
 - workout extra exercises are stored in the same session tables, not in a side
   table
@@ -377,6 +404,8 @@ Current migrations present:
 - `20260405_create_weekly_goal_snapshots.sql`
 - `20260405_harden_profiles_identity.sql`
 - `20260405_user_foods.sql`
+- `20260409_add_manual_nutrition_targets.sql`
+- `20260410_add_body_measurement_logs.sql`
 
 
 ================================================================================
@@ -420,8 +449,10 @@ Auth/session:
 
 Onboarding/profile:
 - `app/onboarding/page.tsx`
+- `app/profile/page.tsx`
 - `src/lib/onboarding.ts`
 - `src/lib/repositories/profileRepository.ts`
+- `src/lib/repositories/bodyMeasurementRepository.ts`
 
 Home/date/weekly:
 - `app/home/page.tsx`
@@ -433,6 +464,7 @@ Home/date/weekly:
 
 Workout:
 - `app/workout/page.tsx`
+- `app/workout-history/[id]/edit/page.tsx`
 - `src/lib/workoutDraftStorage.ts`
 - `src/lib/repositories/workoutSessionRepository.ts`
 
@@ -443,6 +475,7 @@ History:
 
 Nutrition/analytics:
 - `app/nutrition/page.tsx`
+- `src/lib/nutritionTargets.ts`
 - `src/lib/nutritionAdherence.ts`
 - `src/lib/exerciseProgress.ts`
 - `src/lib/workoutConsistency.ts`
@@ -451,6 +484,8 @@ Nutrition/analytics:
 Migrations:
 - `supabase/migrations/20260405_create_weekly_goal_snapshots.sql`
 - `supabase/migrations/20260405_harden_profiles_identity.sql`
+- `supabase/migrations/20260409_add_manual_nutrition_targets.sql`
+- `supabase/migrations/20260410_add_body_measurement_logs.sql`
 
 
 ================================================================================
@@ -465,10 +500,15 @@ Implemented:
 - Home dashboard
 - Israel-midnight nutrition reset on Home
 - bodyweight logging
+- body measurements logging/history/edit/delete on profile
+- standardized body measurement labels across profile measurement UI
 - workout logging with persistent timer
 - ad-hoc extra exercise insertion during active workout
 - workout history and edit flow
+- workout edit time/duration improvements
 - nutrition parsing and history
+- manual nutrition targets with shared fallback resolver
+- nutrition autocomplete across global foods + user foods
 - deterministic recommendation engine
 - stable weekly snapshot persistence/finalization
 - recovery/data completeness UX

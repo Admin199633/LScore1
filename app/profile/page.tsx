@@ -158,6 +158,11 @@ function ProfilePageContent() {
   const [latestMeasurement, setLatestMeasurement] = useState<BodyMeasurementLog | null>(null);
   const [measurementLogs, setMeasurementLogs] = useState<BodyMeasurementLog[]>([]);
   const [editingMeasurementId, setEditingMeasurementId] = useState<string | null>(null);
+  const [isProfileSectionOpen, setIsProfileSectionOpen] = useState(true);
+  const [isMeasurementsSectionOpen, setIsMeasurementsSectionOpen] = useState(true);
+  const [isWorkoutSectionOpen, setIsWorkoutSectionOpen] = useState(false);
+  const [isUserFoodsSectionOpen, setIsUserFoodsSectionOpen] = useState(false);
+  const [isSettingsSectionOpen, setIsSettingsSectionOpen] = useState(false);
   const [programSummary, setProgramSummary] = useState<{ dayCount: number; names: string[] }>({
     dayCount: 0,
     names: [],
@@ -645,10 +650,37 @@ function ProfilePageContent() {
   }
 
   const selectedProgramDay = programDays[selectedDayIndex] || createEmptyDay();
+  const renderSectionHeader = (title: string, isOpen: boolean, onToggle: () => void) => (
+    <button
+      type="button"
+      onClick={onToggle}
+      style={{
+        border: 0,
+        borderRadius: 20,
+        background: 'var(--surface)',
+        color: 'var(--text)',
+        padding: '16px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12,
+        cursor: 'pointer',
+        fontWeight: 800,
+        fontSize: 18,
+      }}
+    >
+      <span>{title}</span>
+      <span>{isOpen ? '▼' : '▶'}</span>
+    </button>
+  );
 
   return (
     <ProtectedPage>
       <div style={{ display: 'grid', gap: 16 }}>
+        {renderSectionHeader('פרופיל ויעדים', isProfileSectionOpen, () =>
+          setIsProfileSectionOpen((current) => !current)
+        )}
+        {isProfileSectionOpen ? (
         <div
           style={{
             background: 'var(--surface)',
@@ -665,7 +697,12 @@ function ProfilePageContent() {
           </div>
           <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>{user?.email || ''}</div>
         </div>
+        ) : null}
 
+        {renderSectionHeader('מדידות היקפים', isMeasurementsSectionOpen, () =>
+          setIsMeasurementsSectionOpen((current) => !current)
+        )}
+        {isMeasurementsSectionOpen ? (
         <div
           style={{
             background: 'var(--surface)',
@@ -905,7 +942,9 @@ placeholder="ירך ימין (האמצע)"
             </div>
           ) : null}
         </div>
+        ) : null}
 
+        {isProfileSectionOpen ? (
         <div
           style={{
             background: 'var(--surface)',
@@ -1052,7 +1091,13 @@ placeholder="ירך ימין (האמצע)"
             {isSaving ? 'שומר...' : 'שמור פרופיל'}
           </button>
         </div>
+        ) : null}
 
+        {renderSectionHeader('Settings', isSettingsSectionOpen, () =>
+          setIsSettingsSectionOpen((current) => !current)
+        )}
+        {isSettingsSectionOpen ? (
+          <>
         <div
           style={{
             background: 'var(--surface)',
@@ -1148,7 +1193,14 @@ placeholder="ירך ימין (האמצע)"
             </div>
           ) : null}
         </div>
+          </>
+        ) : null}
 
+        {renderSectionHeader('Workout', isWorkoutSectionOpen, () =>
+          setIsWorkoutSectionOpen((current) => !current)
+        )}
+        {isWorkoutSectionOpen ? (
+          <>
         <div
           style={{
             background: 'var(--surface)',
@@ -1301,12 +1353,18 @@ placeholder="ירך ימין (האמצע)"
             {isSavingProgram ? 'שומר...' : 'שמור תוכנית'}
           </button>
         </div>
+          </>
+        ) : null}
 
         {message ? <div style={{ color: 'var(--success)' }}>{message}</div> : null}
         {error ? <div style={{ color: 'var(--danger)' }}>{error}</div> : null}
         {programMessage ? <div style={{ color: 'var(--success)' }}>{programMessage}</div> : null}
         {programError ? <div style={{ color: 'var(--danger)' }}>{programError}</div> : null}
 
+        {renderSectionHeader('המזונות שלי', isUserFoodsSectionOpen, () =>
+          setIsUserFoodsSectionOpen((current) => !current)
+        )}
+        {isUserFoodsSectionOpen ? (
         <div
           style={{
             background: 'var(--surface)',
@@ -1381,6 +1439,7 @@ placeholder="ירך ימין (האמצע)"
             </div>
           )}
         </div>
+        ) : null}
 
         <button
           type="button"
