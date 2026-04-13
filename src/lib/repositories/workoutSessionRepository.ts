@@ -520,10 +520,13 @@ export const fetchSavedWorkoutSessions = async (): Promise<SavedWorkoutSession[]
 };
 
 export const fetchLatestWorkoutSessionForProgramDay = async (
-  workoutProgramDayId: string
+  workoutProgramDayId: string,
+  workoutDayName?: string
 ): Promise<SavedWorkoutSession | null> => {
   const normalizedWorkoutProgramDayId = String(workoutProgramDayId || '').trim();
-  if (!normalizedWorkoutProgramDayId) {
+  const normalizedWorkoutDayName = String(workoutDayName || '').trim();
+
+  if (!normalizedWorkoutProgramDayId && !normalizedWorkoutDayName) {
     return null;
   }
 
@@ -540,49 +543,62 @@ export const fetchLatestWorkoutSessionForProgramDay = async (
     throw new Error('User is not signed in.');
   }
 
-  let sessionRows:
-    | Array<{
-        id: string;
-        session_date: string;
-        day_id?: string | null;
-        workout_program_day_id?: string | null;
-        day_name?: string | null;
-        started_at?: string | null;
-        ended_at?: string | null;
-        duration_seconds?: number | null;
-        energy_level?: string | null;
-        reorder_count?: number | null;
-      }>
-    | null = null;
+  type SessionRow = {
+    id: string;
+    session_date: string;
+    day_id?: string | null;
+    workout_program_day_id?: string | null;
+    day_name?: string | null;
+    started_at?: string | null;
+    ended_at?: string | null;
+    duration_seconds?: number | null;
+    energy_level?: string | null;
+    reorder_count?: number | null;
+  };
 
-  const preferredQuery = await webSupabase
-    .from('workout_sessions')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('workout_program_day_id', normalizedWorkoutProgramDayId)
-    .order('session_date', { ascending: false })
-    .order('created_at', { ascending: false })
-    .limit(1);
+  const queryLatestSessionByField = async (
+    field: 'workout_program_day_id' | 'day_id' | 'day_name',
+    value: string
+  ): Promise<SessionRow[] | null> => {
+    if (!value) {
+      return null;
+    }
 
-  if (preferredQuery.error && isMissingColumnError(preferredQuery.error, 'workout_program_day_id')) {
-    const fallbackQuery = await webSupabase
+    const query = await webSupabase
       .from('workout_sessions')
       .select('*')
       .eq('user_id', user.id)
-      .eq('day_id', normalizedWorkoutProgramDayId)
+      .eq(field, value)
       .order('session_date', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(1);
 
-    if (fallbackQuery.error) {
-      throw fallbackQuery.error;
+    if (query.error && isMissingColumnError(query.error, field)) {
+      return null;
     }
 
-    sessionRows = fallbackQuery.data;
-  } else if (preferredQuery.error) {
-    throw preferredQuery.error;
-  } else {
-    sessionRows = preferredQuery.data;
+    if (query.error) {
+      throw query.error;
+    }
+
+    return query.data || [];
+  };
+
+  let sessionRows: SessionRow[] | null = null;
+
+  if (normalizedWorkoutProgramDayId) {
+    sessionRows = await queryLatestSessionByField(
+      'workout_program_day_id',
+      normalizedWorkoutProgramDayId
+    );
+
+    if (!sessionRows?.length) {
+      sessionRows = await queryLatestSessionByField('day_id', normalizedWorkoutProgramDayId);
+    }
+  }
+
+  if (!sessionRows?.length && normalizedWorkoutDayName) {
+    sessionRows = await queryLatestSessionByField('day_name', normalizedWorkoutDayName);
   }
 
   const sessionRow = sessionRows?.[0];

@@ -212,16 +212,20 @@ function WorkoutPageContent() {
   const dayPrefillRequestId = useRef(0);
 
   const loadPreviousExerciseLookup = async (
-    workoutProgramDayId: string
+    workoutProgramDayId: string,
+    workoutDayName: string
   ): Promise<PreviousExerciseLookup> => {
     const normalizedWorkoutProgramDayId = String(workoutProgramDayId || '').trim();
-    if (!normalizedWorkoutProgramDayId) {
+    const normalizedWorkoutDayName = String(workoutDayName || '').trim();
+
+    if (!normalizedWorkoutProgramDayId && !normalizedWorkoutDayName) {
       return EMPTY_PREVIOUS_EXERCISE_LOOKUP;
     }
 
     try {
       const previousSession = await fetchLatestWorkoutSessionForProgramDay(
-        normalizedWorkoutProgramDayId
+        normalizedWorkoutProgramDayId,
+        normalizedWorkoutDayName
       );
       return buildPreviousExerciseLookup(previousSession);
     } catch {
@@ -262,7 +266,10 @@ function WorkoutPageContent() {
         } else {
           // No active draft — start fresh from program template
           const firstDay = program.days?.[0] || null;
-          const nextPreviousExerciseLookup = await loadPreviousExerciseLookup(firstDay?.id || '');
+          const nextPreviousExerciseLookup = await loadPreviousExerciseLookup(
+            firstDay?.id || '',
+            firstDay?.name || ''
+          );
           if (!isMounted) {
             return;
           }
@@ -310,7 +317,10 @@ function WorkoutPageContent() {
     setError('');
     setCurrentExerciseIndex(0);
 
-    const nextPreviousExerciseLookup = await loadPreviousExerciseLookup(nextDayId);
+    const nextPreviousExerciseLookup = await loadPreviousExerciseLookup(
+      nextDayId,
+      day.name || ''
+    );
     if (dayPrefillRequestId.current !== requestId) {
       return;
     }
