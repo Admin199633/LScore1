@@ -706,7 +706,7 @@ function WorkoutPageContent() {
 
   return (
     <ProtectedPage>
-      <div style={{ display: 'grid', gap: 16 }}>
+      <div style={{ display: 'grid', gap: 16, paddingTop: 'var(--safe-area-top)' }}>
         <div
           style={{
             background: '#13233c',
