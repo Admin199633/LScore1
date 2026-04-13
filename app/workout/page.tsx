@@ -13,10 +13,11 @@ import {
 } from '@/lib/repositories/programRepository';
 import {
   saveFullWorkoutSession,
-  fetchSavedWorkoutSessions,
+  fetchLatestWorkoutSessionForProgramDay,
   deleteWorkoutSession,
   updateExerciseDurations,
   updateReorderCount,
+  type SavedWorkoutSession,
 } from '@/lib/repositories/workoutSessionRepository';
 import { getExerciseInstruction } from '@/lib/exerciseInstructions';
 import { useVibrationSettings } from '@/lib/vibrationSettings';
@@ -48,6 +49,16 @@ type AddExerciseForm = {
   plannedWeight: string;
 };
 
+type PreviousWorkoutSet = {
+  weight: string;
+  reps: string;
+};
+
+type PreviousExerciseLookup = {
+  byExerciseId: Record<string, PreviousWorkoutSet[]>;
+  byExerciseName: Record<string, PreviousWorkoutSet[]>;
+};
+
 const emptyAddExerciseForm = (): AddExerciseForm => ({
   exerciseName: '',
   plannedSets: '',
@@ -55,24 +66,83 @@ const emptyAddExerciseForm = (): AddExerciseForm => ({
   plannedWeight: '',
 });
 
+const EMPTY_PREVIOUS_EXERCISE_LOOKUP: PreviousExerciseLookup = {
+  byExerciseId: {},
+  byExerciseName: {},
+};
+
+const normalizeExerciseMatchKey = (value: string) => String(value || '').trim().toLocaleLowerCase();
+
+const buildPreviousExerciseLookup = (
+  session: SavedWorkoutSession | null
+): PreviousExerciseLookup => {
+  if (!session) {
+    return EMPTY_PREVIOUS_EXERCISE_LOOKUP;
+  }
+
+  const byExerciseId: Record<string, PreviousWorkoutSet[]> = {};
+  const byExerciseName: Record<string, PreviousWorkoutSet[]> = {};
+
+  for (const exercise of session.exercises) {
+    const previousSets = exercise.sets.map((setItem) => ({
+      weight: setItem.weight,
+      reps: setItem.reps,
+    }));
+
+    if (previousSets.length === 0) {
+      continue;
+    }
+
+    if (exercise.exerciseId) {
+      byExerciseId[exercise.exerciseId] = previousSets;
+    }
+
+    const exerciseMatchKey = normalizeExerciseMatchKey(exercise.exerciseName);
+    if (exerciseMatchKey) {
+      byExerciseName[exerciseMatchKey] = previousSets;
+    }
+  }
+
+  return { byExerciseId, byExerciseName };
+};
+
+const getPreviousSetsForExercise = (
+  row: WorkoutProgramDay['rows'][number],
+  previousExerciseLookup: PreviousExerciseLookup
+): PreviousWorkoutSet[] => {
+  if (row.id && previousExerciseLookup.byExerciseId[row.id]) {
+    return previousExerciseLookup.byExerciseId[row.id];
+  }
+
+  const exerciseMatchKey = normalizeExerciseMatchKey(row.exercise);
+  return previousExerciseLookup.byExerciseName[exerciseMatchKey] || [];
+};
+
 const buildDraftExercises = (
   day: WorkoutProgramDay | null,
-  prevSetsLookup: Record<string, Array<{ weight: string; reps: string }>> = {}
+  previousExerciseLookup: PreviousExerciseLookup = EMPTY_PREVIOUS_EXERCISE_LOOKUP
 ): DraftExercise[] =>
   (day?.rows || [])
     .filter((row) => row.exercise)
-    .map((row) => ({
-      exerciseId: row.id || '',
-      exerciseName: row.exercise,
-      plannedSets: row.sets || '',
-      plannedReps: row.repsHeavy || '',
-      plannedWeight: row.weightHeavy || '',
-      completed: false,
-      sets: Array.from({ length: parsePlannedSets(row.sets) }, (_, i) => {
-        const prev = prevSetsLookup[row.exercise]?.[i];
-        return prev ? { weight: prev.weight, reps: prev.reps, difficulty: 'good' } : emptySet();
-      }),
-    }));
+    .map((row) => {
+      const previousSets = getPreviousSetsForExercise(row, previousExerciseLookup);
+      const setCount = Math.max(parsePlannedSets(row.sets), previousSets.length);
+
+      return {
+        exerciseId: row.id || '',
+        exerciseName: row.exercise,
+        plannedSets: row.sets || '',
+        plannedReps: row.repsHeavy || '',
+        plannedWeight: row.weightHeavy || '',
+        completed: false,
+        sets: Array.from({ length: setCount }, (_, i) => {
+          const previousSet = previousSets[i];
+          return previousSet
+            ? { weight: previousSet.weight, reps: previousSet.reps, difficulty: 'good' }
+            : emptySet();
+        }),
+      };
+    });
 
 const formatTimer = (seconds: number) => {
   const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
@@ -121,7 +191,9 @@ function WorkoutPageContent() {
   const [exerciseNotes, setExerciseNotes] = useState<Record<string, string>>({});
   const [notesOpenFor, setNotesOpenFor] = useState<string | null>(null);
   const [instructionModal, setInstructionModal] = useState<string | null>(null);
-  const [prevSets, setPrevSets] = useState<Record<string, Array<{ weight: string; reps: string }>>>({});
+  const [previousExerciseLookup, setPreviousExerciseLookup] = useState<PreviousExerciseLookup>(
+    EMPTY_PREVIOUS_EXERCISE_LOOKUP
+  );
   const [incompleteWarning, setIncompleteWarning] = useState<string[]>([]);
   const [showOverwriteConfirm, setShowOverwriteConfirm] = useState(false);
   const [showAddExerciseModal, setShowAddExerciseModal] = useState(false);
@@ -131,6 +203,25 @@ function WorkoutPageContent() {
   const [reorderCount, setReorderCount] = useState(0);
   const exerciseStartTime = useRef<number | null>(null);
   const workoutStartedAt = useRef<string | null>(null);
+  const dayPrefillRequestId = useRef(0);
+
+  const loadPreviousExerciseLookup = async (
+    workoutProgramDayId: string
+  ): Promise<PreviousExerciseLookup> => {
+    const normalizedWorkoutProgramDayId = String(workoutProgramDayId || '').trim();
+    if (!normalizedWorkoutProgramDayId) {
+      return EMPTY_PREVIOUS_EXERCISE_LOOKUP;
+    }
+
+    try {
+      const previousSession = await fetchLatestWorkoutSessionForProgramDay(
+        normalizedWorkoutProgramDayId
+      );
+      return buildPreviousExerciseLookup(previousSession);
+    } catch {
+      return EMPTY_PREVIOUS_EXERCISE_LOOKUP;
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -159,28 +250,24 @@ function WorkoutPageContent() {
           setEnergyLevel(draft.energyLevel);
           setTimer(calculateElapsedSeconds(draft.startedAt));
           setIsTimerRunning(true);
+          setPreviousExerciseLookup(EMPTY_PREVIOUS_EXERCISE_LOOKUP);
           workoutStartedAt.current = draft.startedAt;
           exerciseStartTime.current = Date.now();
         } else {
           // No active draft — start fresh from program template
           const firstDay = program.days?.[0] || null;
+          const nextPreviousExerciseLookup = await loadPreviousExerciseLookup(firstDay?.id || '');
+          if (!isMounted) {
+            return;
+          }
+
           setSelectedDate(getTodayDate());
           setSelectedDayId(firstDay?.id || '');
-          setDraftExercises(buildDraftExercises(firstDay));
+          setPreviousExerciseLookup(nextPreviousExerciseLookup);
+          setDraftExercises(buildDraftExercises(firstDay, nextPreviousExerciseLookup));
           setCurrentExerciseIndex(0);
           setTimer(0);
           setIsTimerRunning(false);
-
-          fetchSavedWorkoutSessions().then((sessions) => {
-            if (!isMounted || sessions.length === 0) return;
-            const last = sessions[0];
-            const lookup: Record<string, Array<{ weight: string; reps: string }>> = {};
-            for (const ex of last.exercises) {
-              lookup[ex.exerciseName] = ex.sets.map((s) => ({ weight: s.weight, reps: s.reps }));
-            }
-            setPrevSets(lookup);
-            setDraftExercises(buildDraftExercises(firstDay, lookup));
-          }).catch(() => {});
         }
       } catch (loadError) {
         if (isMounted) {
@@ -205,17 +292,30 @@ function WorkoutPageContent() {
     [programDays, selectedDayId]
   );
 
-  const handleSelectDay = (day: WorkoutProgramDay) => {
-    setSelectedDayId(day.id || '');
-    setDraftExercises(buildDraftExercises(day, prevSets));
+  const handleSelectDay = async (day: WorkoutProgramDay) => {
+    if (isTimerRunning) {
+      return;
+    }
+
+    const nextDayId = day.id || '';
+    const requestId = ++dayPrefillRequestId.current;
+    setSelectedDayId(nextDayId);
     setMessage('');
     setError('');
     setCurrentExerciseIndex(0);
+
+    const nextPreviousExerciseLookup = await loadPreviousExerciseLookup(nextDayId);
+    if (dayPrefillRequestId.current !== requestId) {
+      return;
+    }
+
+    setPreviousExerciseLookup(nextPreviousExerciseLookup);
+    setDraftExercises(buildDraftExercises(day, nextPreviousExerciseLookup));
   };
 
   const handleResetWorkout = () => {
     if (selectedDay) {
-      setDraftExercises(buildDraftExercises(selectedDay, prevSets));
+      setDraftExercises(buildDraftExercises(selectedDay, previousExerciseLookup));
     }
     setCurrentExerciseIndex(0);
     setTimer(0);
@@ -464,6 +564,35 @@ function WorkoutPageContent() {
       }
       await updateExerciseDurations(selectedDate, selectedDay.id || '', durationsToSave);
       await updateReorderCount(selectedDate, selectedDay.id || '', reorderCount);
+      setPreviousExerciseLookup(
+        buildPreviousExerciseLookup({
+          id: '',
+          date: selectedDate,
+          dayId: selectedDay.id || '',
+          dayName: selectedDay.name || '',
+          startedAt: workoutStartedAt.current || '',
+          endedAt: new Date().toISOString(),
+          durationSeconds: totalDurationSeconds,
+          energyLevel: energyLevel || '',
+          reorderCount,
+          exercises: exercisesToSave.map((exercise, exerciseIndex) => ({
+            rowId: `draft-${exerciseIndex}`,
+            exerciseId: exercise.exerciseId,
+            exerciseName: exercise.exerciseName,
+            plannedSets: exercise.plannedSets,
+            plannedReps: exercise.plannedReps,
+            plannedWeight: exercise.plannedWeight,
+            completed: exercise.completed,
+            durationSeconds: exercise.durationSeconds ?? null,
+            sets: exercise.sets.map((setItem, setIndex) => ({
+              id: `draft-set-${exerciseIndex}-${setIndex}`,
+              weight: setItem.weight,
+              reps: setItem.reps,
+              difficulty: setItem.difficulty,
+            })),
+          })),
+        })
+      );
 
       setIsTimerRunning(false);
       setTimer(totalDurationSeconds);
@@ -483,10 +612,10 @@ function WorkoutPageContent() {
       } else {
         setError(rawMessage);
       }
-  } finally {
-    setIsSaving(false);
-  }
-};
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleOverwrite = async () => {
     setShowOverwriteConfirm(false);
@@ -894,7 +1023,7 @@ function WorkoutPageContent() {
                       <input
                         type="number"
                         inputMode="decimal"
-                        placeholder={prevSets[currentExercise.exerciseName]?.[setIndex]?.weight || 'משקל'}
+                        placeholder="משקל"
                         value={setItem.weight}
                         onChange={(event) => updateSet(currentExerciseIndex, setIndex, 'weight', event.target.value)}
                         style={{
@@ -909,7 +1038,7 @@ function WorkoutPageContent() {
                       <input
                         type="number"
                         inputMode="numeric"
-                        placeholder={prevSets[currentExercise.exerciseName]?.[setIndex]?.reps || 'חזרות'}
+                        placeholder="חזרות"
                         value={setItem.reps}
                         onChange={(event) => updateSet(currentExerciseIndex, setIndex, 'reps', event.target.value)}
                         style={{

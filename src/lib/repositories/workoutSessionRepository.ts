@@ -47,6 +47,14 @@ const isStableIdSchemaMismatch = (error: { message?: string; details?: string; h
   );
 };
 
+const isMissingColumnError = (
+  error: { message?: string; details?: string; hint?: string },
+  columnName: string
+) => {
+  const combined = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`.toLowerCase();
+  return combined.includes(columnName.toLowerCase()) && combined.includes('column');
+};
+
 const normalizeWorkoutInput = (session: {
   date: string;
   dayId?: string;
@@ -126,6 +134,7 @@ const normalizeWorkout = (
     id: string;
     session_date: string;
     day_id?: string | null;
+    workout_program_day_id?: string | null;
     day_name?: string | null;
     started_at?: string | null;
     ended_at?: string | null;
@@ -155,7 +164,7 @@ const normalizeWorkout = (
 ): SavedWorkoutSession => ({
   id: sessionRow.id,
   date: sessionRow.session_date,
-  dayId: sessionRow.day_id || '',
+  dayId: sessionRow.workout_program_day_id || sessionRow.day_id || '',
   dayName: sessionRow.day_name || '',
   startedAt: sessionRow.started_at || '',
   endedAt: sessionRow.ended_at || '',
@@ -508,6 +517,114 @@ export const fetchSavedWorkoutSessions = async (): Promise<SavedWorkoutSession[]
       setRows
     )
   );
+};
+
+export const fetchLatestWorkoutSessionForProgramDay = async (
+  workoutProgramDayId: string
+): Promise<SavedWorkoutSession | null> => {
+  const normalizedWorkoutProgramDayId = String(workoutProgramDayId || '').trim();
+  if (!normalizedWorkoutProgramDayId) {
+    return null;
+  }
+
+  const {
+    data: { user },
+    error: userError,
+  } = await webSupabase.auth.getUser();
+
+  if (userError) {
+    throw userError;
+  }
+
+  if (!user?.id) {
+    throw new Error('User is not signed in.');
+  }
+
+  let sessionRows:
+    | Array<{
+        id: string;
+        session_date: string;
+        day_id?: string | null;
+        workout_program_day_id?: string | null;
+        day_name?: string | null;
+        started_at?: string | null;
+        ended_at?: string | null;
+        duration_seconds?: number | null;
+        energy_level?: string | null;
+        reorder_count?: number | null;
+      }>
+    | null = null;
+
+  const preferredQuery = await webSupabase
+    .from('workout_sessions')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('workout_program_day_id', normalizedWorkoutProgramDayId)
+    .order('session_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (preferredQuery.error && isMissingColumnError(preferredQuery.error, 'workout_program_day_id')) {
+    const fallbackQuery = await webSupabase
+      .from('workout_sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('day_id', normalizedWorkoutProgramDayId)
+      .order('session_date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (fallbackQuery.error) {
+      throw fallbackQuery.error;
+    }
+
+    sessionRows = fallbackQuery.data;
+  } else if (preferredQuery.error) {
+    throw preferredQuery.error;
+  } else {
+    sessionRows = preferredQuery.data;
+  }
+
+  const sessionRow = sessionRows?.[0];
+  if (!sessionRow) {
+    return null;
+  }
+
+  const { data: exerciseRows, error: exerciseError } = await webSupabase
+    .from('workout_session_exercises')
+    .select('*')
+    .eq('workout_session_id', sessionRow.id)
+    .order('exercise_order', { ascending: true });
+
+  if (exerciseError) {
+    throw exerciseError;
+  }
+
+  const exerciseIds = (exerciseRows || []).map((row) => row.id);
+  let setRows: Array<{
+    id: string;
+    workout_session_exercise_id: string;
+    set_order: number;
+    weight?: number | string;
+    reps?: number | string;
+    difficulty?: string | null;
+  }> = [];
+
+  if (exerciseIds.length > 0) {
+    const { data, error } = await webSupabase
+      .from('workout_session_sets')
+      .select('*')
+      .in('workout_session_exercise_id', exerciseIds)
+      .order('set_order', { ascending: true });
+
+    if (error) {
+      throw error;
+    }
+
+    setRows = data || [];
+  }
+
+  return normalizeWorkout(sessionRow, exerciseRows || [], setRows);
 };
 
 export const saveFullWorkoutSession = async (session: {
