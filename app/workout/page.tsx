@@ -52,6 +52,7 @@ type AddExerciseForm = {
 type PreviousWorkoutSet = {
   weight: string;
   reps: string;
+  difficulty: string;
 };
 
 type PreviousExerciseLookup = {
@@ -87,6 +88,7 @@ const buildPreviousExerciseLookup = (
     const previousSets = exercise.sets.map((setItem) => ({
       weight: setItem.weight,
       reps: setItem.reps,
+      difficulty: setItem.difficulty || 'good',
     }));
 
     if (previousSets.length === 0) {
@@ -138,7 +140,11 @@ const buildDraftExercises = (
         sets: Array.from({ length: setCount }, (_, i) => {
           const previousSet = previousSets[i];
           return previousSet
-            ? { weight: previousSet.weight, reps: previousSet.reps, difficulty: 'good' }
+            ? {
+                weight: previousSet.weight,
+                reps: previousSet.reps,
+                difficulty: previousSet.difficulty || 'good',
+              }
             : emptySet();
         }),
       };

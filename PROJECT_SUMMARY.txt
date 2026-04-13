@@ -521,5 +521,52 @@ Still intentionally out of scope in the current implementation:
 - generated free-text recommendation system
 
 ================================================================================
+14. 2026-04-13 - SAME WORKOUT DAY AUTOFILL INVESTIGATION
+================================================================================
+
+Files inspected:
+- `app/workout/page.tsx`
+- `app/workout-history/page.tsx`
+- `app/workout-history/[id]/edit/page.tsx`
+- `src/lib/repositories/workoutSessionRepository.ts`
+- `src/lib/repositories/programRepository.ts`
+- `src/lib/workoutDraftStorage.ts`
+
+Findings:
+- current workout-day identity comes from `WorkoutProgramDay.id`
+- the active workout screen stores that value in `selectedDayId`
+- workout drafts persist `selectedDayId`
+- saved workout sessions normalize day identity as `dayId = workout_program_day_id || day_id || ''`
+- saved sessions also keep `dayName`
+- save flow sends `p_day_id`, `p_day_name`, and `p_program_id`
+- exercise identity comes from program exercise row `id` and is saved/read as `exerciseId`
+
+Minimal matching rule:
+- same workout day should match by saved `dayId` against current `selectedDayId`
+- if a history row has no `dayId` (legacy compatibility path), fallback to `dayName`
+- exercises should match by `exerciseId` first, then fallback to normalized `exerciseName`
+
+Conclusion:
+- no DB migration is required for a minimal solution using existing workout history data
+- a migration would only be needed if we wanted to backfill older legacy rows that were saved without day/exercise ids
+- for the current feature, use id-first matching with name fallback only for legacy rows
+
+================================================================================
+15. 2026-04-13 - SAME WORKOUT DAY AUTOFILL IMPLEMENTATION
+================================================================================
+
+Implemented:
+- `/workout` keeps existing draft-first behavior unchanged
+- when no draft exists, the page still loads the latest saved session for the same workout day via `fetchLatestWorkoutSessionForProgramDay()`
+- current-day exercises are still built only from the active program day rows, so old ad-hoc exercises are not injected
+- same-day exercise matching remains `exerciseId` first, then normalized `exerciseName` fallback
+- autofill now carries forward previous set `difficulty` in addition to the existing set-count / weight / reps prefill
+
+Scope:
+- no schema change
+- no migration
+- no unrelated UX change
+
+================================================================================
 END OF SUMMARY
 ================================================================================
