@@ -685,5 +685,28 @@ Resolution behavior:
 - both the legacy Hebrew keys and the new English keys live in the same map
 
 ================================================================================
+18. 2026-04-25 - EXERCISE INSTRUCTION MODAL CENTERED
+================================================================================
+
+Goal:
+- the `ℹ️ כיצד לבצע` modal previously rendered as a bottom sheet
+  (`alignItems: 'flex-end'`); reposition it to the center of the viewport
+
+File changed:
+- `app/workout/page.tsx`
+  - overlay `alignItems` changed from `flex-end` to `center` for vertical
+    centering on top of the existing horizontal centering
+  - overlay `zIndex` raised from 100 to 1000 so the card sits above the
+    bottom navigation (which uses `zIndex: 300`)
+  - modal card `maxWidth` reduced from 480 → 420 and `padding` from 24 → 20
+    for a tighter mobile-first card
+  - same content, same close button, same `getExerciseInstruction()` lookup,
+    same fallback text
+
+Scope:
+- presentation-only change
+- no schema, no save logic, no instruction mapping changed
+
+================================================================================
 END OF SUMMARY
 ================================================================================

@@ -1516,9 +1516,9 @@ function WorkoutPageContent() {
               position: 'fixed',
               inset: 0,
               background: 'rgba(0,0,0,0.7)',
-              zIndex: 100,
+              zIndex: 1000,
               display: 'flex',
-              alignItems: 'flex-end',
+              alignItems: 'center',
               justifyContent: 'center',
               padding: 16,
             }}
@@ -1528,9 +1528,9 @@ function WorkoutPageContent() {
               style={{
                 background: 'var(--surface)',
                 borderRadius: 24,
-                padding: 24,
+                padding: 20,
                 width: '100%',
-                maxWidth: 480,
+                maxWidth: 420,
                 display: 'grid',
                 gap: 16,
                 maxHeight: '85vh',
