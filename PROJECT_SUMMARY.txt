@@ -657,5 +657,33 @@ Limitations:
   endpoint, no temporary storage in Supabase Storage
 
 ================================================================================
+17. 2026-04-25 - EXERCISE INSTRUCTION MAPPING UPDATE
+================================================================================
+
+Goal:
+- populate the existing `ℹ️ כיצד לבצע` modal with concrete Hebrew tips for the
+  English-named exercises used in the active program
+
+Scope:
+- only the static instruction mapping was updated
+- no UI change, no schema change, no save/history change
+- existing Hebrew-named entries are preserved
+- fallback behavior (`אין עדיין הוראות לתרגיל זה.`) remains for unmapped names
+
+File changed:
+- `src/lib/exerciseInstructions.ts`
+  - added entries for: Bench Press, Pull Ups, Incline DB Press, Barbell Row,
+    Lateral Raise, Triceps Pushdown, Biceps Curl, Squat, RDL, Leg Press,
+    Leg Curl, Shoulder Press, Abs, Incline Press, Lat Pulldown, Chest Fly,
+    Seated Row, Rear Delt Fly, Machine Chest Press, Row (light)
+  - the new entries provide `tips` only (no images), which the modal already
+    handles by simply omitting the image
+
+Resolution behavior:
+- workout screen passes the exact program-row exercise name to
+  `getExerciseInstruction(name)`, which does an exact-match lookup
+- both the legacy Hebrew keys and the new English keys live in the same map
+
+================================================================================
 END OF SUMMARY
 ================================================================================

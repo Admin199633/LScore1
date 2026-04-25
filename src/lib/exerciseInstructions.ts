@@ -36,6 +36,66 @@ const exerciseInstructions: Record<string, ExerciseInstruction> = {
     image: '/exercises/tricep-extension.jpg',
     tips: 'אחז בפולי גבוה או ברבל. שמור על מרפקים קרובים לראש. יישר את הידיים לחלוטין וחזור לאט. שמור שהמרפקים לא יזוזו.',
   },
+  'Bench Press': {
+    tips: 'שכמות מכווצות, חזה פתוח, רגליים יציבות, הורדה בשליטה ולחיצה ישרה',
+  },
+  'Pull Ups': {
+    tips: 'ירידה מלאה, עלייה עד חזה, בלי תנופה',
+  },
+  'Incline DB Press': {
+    tips: 'זווית ספסל קלה, שליטה בירידה ולחיצה לכיוון מרכז החזה',
+  },
+  'Barbell Row': {
+    tips: 'גב ישר, משיכה לבטן תחתונה, בלי קפיצות',
+  },
+  'Lateral Raise': {
+    tips: 'משקל קל, שליטה מלאה, מרפקים רכים, הרמה לגובה כתף, בלי תנופה',
+  },
+  'Triceps Pushdown': {
+    tips: 'מרפקים צמודים, יישור מלא, שליטה מלאה',
+  },
+  'Biceps Curl': {
+    tips: 'ללא תנופה, שליטה מלאה',
+  },
+  'Squat': {
+    tips: 'גב ישר, ירידה עמוקה, ברכיים החוצה',
+  },
+  'RDL': {
+    tips: 'דחיפת אגן אחורה, מתיחה בהמסטרינג',
+  },
+  'Leg Press': {
+    tips: 'טווח מלא, בלי נעילת ברכיים',
+  },
+  'Leg Curl': {
+    tips: 'שליטה בירידה',
+  },
+  'Shoulder Press': {
+    tips: 'ליבה יציבה, מרפקים לא רחבים מדי',
+  },
+  'Abs': {
+    tips: 'שליטה מלאה בתנועה',
+  },
+  'Incline Press': {
+    tips: 'שליטה בירידה ולחיצה לכיוון מרכז',
+  },
+  'Lat Pulldown': {
+    tips: 'משיכה לחזה, שליטה מלאה',
+  },
+  'Chest Fly': {
+    tips: 'מתיחה מלאה וסגירה איטית',
+  },
+  'Seated Row': {
+    tips: 'חזה פתוח, כיווץ שכמות',
+  },
+  'Rear Delt Fly': {
+    tips: 'טווח קטן, פוקוס על כתף אחורית',
+  },
+  'Machine Chest Press': {
+    tips: 'שליטה מלאה בתנועה',
+  },
+  'Row (light)': {
+    tips: 'פוקוס על כיווץ גב',
+  },
 };
 
 export const getExerciseInstruction = (name: string): ExerciseInstruction | null =>
