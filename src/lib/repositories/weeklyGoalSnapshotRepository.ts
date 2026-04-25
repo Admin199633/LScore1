@@ -82,6 +82,20 @@ const toUpdatePayload = (input: UpdateWeeklyGoalSnapshotInput) => {
   return payload;
 };
 
+export const listWeeklyGoalSnapshotsByUser = async (userId: string) => {
+  const { data, error } = await webSupabase
+    .from('weekly_goal_snapshots')
+    .select('*')
+    .eq('user_id', userId)
+    .order('week_start_date', { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data || []).map((row) => normalizeSnapshot(row as WeeklyGoalSnapshotRow));
+};
+
 export const findWeeklyGoalSnapshotByUserAndWeekStart = async (
   userId: string,
   weekStartDate: string

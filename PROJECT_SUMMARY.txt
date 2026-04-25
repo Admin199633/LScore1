@@ -568,5 +568,94 @@ Scope:
 - no unrelated UX change
 
 ================================================================================
+16. 2026-04-25 - USER FITNESS DATA EXPORT
+================================================================================
+
+Goal:
+- give the user a one-click download of all their data as a Markdown file
+- file is intended to be handed to an external AI fitness coach
+- export must contain only data owned by the current authenticated user
+
+Behavior:
+- new button on `/profile` page labeled `ייצוא כל הנתונים`
+- clicking the button:
+  1. fetches the bundle through repositories (no Supabase calls inside the page)
+  2. resolves effective nutrition targets via `resolveEffectiveNutritionTargets`
+  3. renders structured Markdown via a pure utility
+  4. triggers a browser download of `fitness-export-YYYY-MM-DD.md`
+     where the date key uses Asia/Jerusalem (`getIsraelDateKey`)
+- shows loading state (`מייצא...`) and disables the button during export
+- shows a success message with the file name on completion
+- shows an error message in red on failure
+- Hebrew RTL UI is preserved; the Markdown content itself uses English section
+  headers for AI-agent friendliness
+
+Markdown sections:
+- Header: generatedAt, timezone, exportVersion, userEmail
+- Profile (table): full name, email, auth provider, age, gender, height, goal,
+  experience, focus areas, training days per week, profile created/updated at
+- Nutrition Targets: mode, daily calories target, daily protein target, plus
+  raw manual override values from the profile row when present
+- Bodyweight Log (table): date + weight (kg)
+- Body Measurements (table): per-date chest, waist, abdomen, hips, arms,
+  thighs, neck (cm), and notes
+- Nutrition Logs: per-date heading with totals + raw input + per-item lines
+  including kcal/protein/carbs/fat and reason if any
+- Workout Sessions: per-session heading with date + day name, started/ended,
+  duration, energy level, reorder count, and per-exercise details (planned vs
+  completed, exercise duration, ordered sets with weight/reps/difficulty)
+- Weekly Goal Snapshots: per-week heading with goal type, title, body, focus
+  area, primary metric, confidence, targets/actuals/outcomes (JSON), finalized
+
+Empty sections:
+- each section gracefully shows "_No records found._" instead of an empty table
+
+Files added:
+- `src/lib/repositories/userExportRepository.ts`
+  - `fetchUserExportBundle()` aggregates current-user data using existing
+    repositories where possible (bodyweight, body measurements, nutrition logs,
+    workout sessions, weekly goal snapshots) plus a focused profile read
+- `src/lib/export/userFitnessExportMarkdown.ts`
+  - `renderUserFitnessExportMarkdown(input)` pure function that produces the
+    Markdown text from a typed input bundle
+  - exports `USER_FITNESS_EXPORT_VERSION` (`1.0.0`) and
+    `USER_FITNESS_EXPORT_TIMEZONE` (`Asia/Jerusalem`)
+- `src/lib/export/userFitnessExportService.ts`
+  - `buildUserFitnessExport()` orchestrates fetch + targets + render and
+    returns `{ fileName, markdown, generatedAt }`
+  - `downloadUserFitnessExport()` triggers a browser download via Blob URL
+
+Files changed:
+- `src/lib/repositories/weeklyGoalSnapshotRepository.ts`
+  - added `listWeeklyGoalSnapshotsByUser(userId)` for the export flow
+- `app/profile/page.tsx`
+  - added export button, `handleExportAllData`, `isExporting`/error/message
+    state, and import of `downloadUserFitnessExport`
+- `PROJECT_SUMMARY.txt` updated (this section)
+
+Architectural notes:
+- no DB calls in the page component; all reads go through repository modules
+- ownership is enforced by `user_id = auth.uid()` filters inside each
+  repository (and Supabase RLS already constrains rows to the current user)
+- Markdown generation is a pure function, easy to unit test
+
+Limitations:
+- the current schema does not store `birthdate` or `activity_level` on
+  `profiles`, so the export uses the existing `age` field and notes that those
+  two fields are not stored by the app
+- workout timing in the export uses session-level `started_at`/`ended_at`/
+  `duration_seconds` and per-exercise `duration_seconds`; if a session was
+  saved before timing fields were introduced, those fields render as `-`
+- nutrition log items inherit the existing `calculated`/`unresolved` status
+  from `nutrition_log_items`; unresolved items are still included with their
+  reason text so the AI coach has full context
+- the workout program (`workout_programs` / `workout_program_days` /
+  `workout_program_exercises`) is not duplicated in the export — the export
+  focuses on logged history; users can re-export later if their program
+  changes
+- the export is generated client-side and downloaded directly; no server
+  endpoint, no temporary storage in Supabase Storage
+
+================================================================================
 END OF SUMMARY
 ================================================================================

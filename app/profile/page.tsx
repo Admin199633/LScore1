@@ -29,6 +29,7 @@ import {
   updateUserFood,
   type UserFoodRow,
 } from '@/lib/repositories/userFoodRepository';
+import { downloadUserFitnessExport } from '@/lib/export/userFitnessExportService';
 import { useSessionContext } from '@/lib/session';
 import { useTheme } from '@/lib/theme';
 import {
@@ -107,6 +108,9 @@ function ProfilePageContent() {
   const [userFoodsLoading, setUserFoodsLoading] = useState(true);
   const [userFoodsError, setUserFoodsError] = useState('');
   const [editFoodModal, setEditFoodModal] = useState<EditFoodModalState | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
+  const [exportMessage, setExportMessage] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -543,6 +547,25 @@ function ProfilePageContent() {
     }
   };
 
+  const handleExportAllData = async () => {
+    if (isExporting) return;
+
+    setIsExporting(true);
+    setExportError('');
+    setExportMessage('');
+
+    try {
+      const exportFile = await downloadUserFitnessExport();
+      setExportMessage(`הקובץ ${exportFile.fileName} הורד.`);
+    } catch (downloadError) {
+      setExportError(
+        downloadError instanceof Error ? downloadError.message : 'ייצוא הנתונים נכשל.'
+      );
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const themeLabel = useMemo(() => {
     switch (themePreference) {
       case 'light':
@@ -665,6 +688,26 @@ function ProfilePageContent() {
             onDelete={handleDeleteUserFood}
           />
         ) : null}
+
+        <button
+          type="button"
+          onClick={handleExportAllData}
+          disabled={isExporting}
+          style={{
+            border: '1px solid var(--accent)',
+            borderRadius: 18,
+            background: 'var(--surface)',
+            color: 'var(--accent)',
+            padding: '16px 18px',
+            fontWeight: 800,
+            cursor: isExporting ? 'default' : 'pointer',
+            opacity: isExporting ? 0.7 : 1,
+          }}
+        >
+          {isExporting ? 'מייצא...' : 'ייצוא כל הנתונים'}
+        </button>
+        {exportMessage ? <div style={{ color: 'var(--success)' }}>{exportMessage}</div> : null}
+        {exportError ? <div style={{ color: 'var(--danger)' }}>{exportError}</div> : null}
 
         <button
           type="button"
