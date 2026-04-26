@@ -5,7 +5,20 @@ const nextConfig = {
     "next-auth",
     "@vercel/speed-insights"
   ],
-  basePath: "/green",
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: "/green",
+          destination: "https://greenproject-two.vercel.app/green",
+        },
+        {
+          source: "/green/:path*",
+          destination: "https://greenproject-two.vercel.app/green/:path*",
+        },
+      ],
+    };
+  },
 };
 
 export default nextConfig;
