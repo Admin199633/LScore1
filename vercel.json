@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/green",
-      "destination": "https://GREEN_PROJECT_URL.vercel.app/green"
+      "destination": "https://greenproject-two.vercel.app/green"
     },
     {
       "source": "/green/:path*",
-      "destination": "https://GREEN_PROJECT_URL.vercel.app/green/:path*"
+      "destination": "https://greenproject-two.vercel.app/green/:path*"
     }
   ]
 }
