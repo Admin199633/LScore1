@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/green",
+      "destination": "https://GREEN_PROJECT_URL.vercel.app"
+    },
+    {
+      "source": "/green/:path*",
+      "destination": "https://GREEN_PROJECT_URL.vercel.app/:path*"
+    }
+  ]
+}
