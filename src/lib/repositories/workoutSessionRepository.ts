@@ -55,6 +55,8 @@ const isMissingColumnError = (
   return combined.includes(columnName.toLowerCase()) && combined.includes('column');
 };
 
+const escapePostgrestValue = (value: string) => String(value || '').replace(/\\/g, '\\\\').replace(/,/g, '\\,');
+
 const normalizeWorkoutInput = (session: {
   date: string;
   dayId?: string;
@@ -192,6 +194,7 @@ const normalizeWorkout = (
 export const updateExerciseDurations = async (
   date: string,
   dayId: string,
+  dayName: string,
   durations: Record<string, number>
 ): Promise<void> => {
   if (Object.keys(durations).length === 0) return;
@@ -203,13 +206,27 @@ export const updateExerciseDurations = async (
 
   if (userError || !user?.id) return;
 
-  const { data: sessionRows } = await webSupabase
+  let sessionQuery = webSupabase
     .from('workout_sessions')
     .select('id')
     .eq('user_id', user.id)
     .eq('session_date', date)
-    .eq('day_id', dayId)
     .limit(1);
+
+  if (dayId) {
+    const filters = [
+      `day_id.eq.${escapePostgrestValue(dayId)}`,
+      `workout_program_day_id.eq.${escapePostgrestValue(dayId)}`,
+    ];
+    if (dayName) {
+      filters.push(`day_name.eq.${escapePostgrestValue(dayName)}`);
+    }
+    sessionQuery = sessionQuery.or(filters.join(','));
+  } else if (dayName) {
+    sessionQuery = sessionQuery.eq('day_name', dayName);
+  }
+
+  const { data: sessionRows } = await sessionQuery;
 
   const sessionId = sessionRows?.[0]?.id;
   if (!sessionId) return;
@@ -233,21 +250,42 @@ export const updateExerciseDurations = async (
   );
 };
 
-export const updateReorderCount = async (date: string, dayId: string, count: number): Promise<void> => {
+export const updateReorderCount = async (
+  date: string,
+  dayId: string,
+  dayName: string,
+  count: number
+): Promise<void> => {
   const { data: { user }, error: userError } = await webSupabase.auth.getUser();
   if (userError || !user?.id) return;
 
-  const query = webSupabase
+  let query = webSupabase
     .from('workout_sessions')
     .update({ reorder_count: count })
     .eq('user_id', user.id)
     .eq('session_date', date);
 
-  if (dayId) query.eq('day_id', dayId);
+  if (dayId) {
+    const filters = [
+      `day_id.eq.${escapePostgrestValue(dayId)}`,
+      `workout_program_day_id.eq.${escapePostgrestValue(dayId)}`,
+    ];
+    if (dayName) {
+      filters.push(`day_name.eq.${escapePostgrestValue(dayName)}`);
+    }
+    query = query.or(filters.join(','));
+  } else if (dayName) {
+    query = query.eq('day_name', dayName);
+  }
+
   await query;
 };
 
-export const deleteWorkoutSession = async (date: string, dayId: string): Promise<void> => {
+export const deleteWorkoutSession = async (
+  date: string,
+  dayId: string,
+  dayName: string
+): Promise<void> => {
   const {
     data: { user },
     error: userError,
@@ -255,13 +293,24 @@ export const deleteWorkoutSession = async (date: string, dayId: string): Promise
 
   if (userError || !user?.id) throw userError || new Error('המשתמש לא מחובר.');
 
-  const query = webSupabase
+  let query = webSupabase
     .from('workout_sessions')
     .delete()
     .eq('user_id', user.id)
     .eq('session_date', date);
 
-  if (dayId) query.eq('day_id', dayId);
+  if (dayId) {
+    const filters = [
+      `day_id.eq.${escapePostgrestValue(dayId)}`,
+      `workout_program_day_id.eq.${escapePostgrestValue(dayId)}`,
+    ];
+    if (dayName) {
+      filters.push(`day_name.eq.${escapePostgrestValue(dayName)}`);
+    }
+    query = query.or(filters.join(','));
+  } else if (dayName) {
+    query = query.eq('day_name', dayName);
+  }
 
   const { error } = await query;
   if (error) throw error;

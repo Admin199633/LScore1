@@ -73,6 +73,8 @@ const EMPTY_PREVIOUS_EXERCISE_LOOKUP: PreviousExerciseLookup = {
 };
 
 const normalizeExerciseMatchKey = (value: string) => String(value || '').trim().toLocaleLowerCase();
+const getWorkoutDaySelectionKey = (day: Pick<WorkoutProgramDay, 'id' | 'name'> | null | undefined) =>
+  String(day?.id || '').trim() || `name:${String(day?.name || '').trim()}`;
 
 const buildPreviousExerciseLookup = (
   session: SavedWorkoutSession | null
@@ -275,7 +277,7 @@ function WorkoutPageContent() {
           }
 
           setSelectedDate(getTodayDate());
-          setSelectedDayId(firstDay?.id || '');
+          setSelectedDayId(getWorkoutDaySelectionKey(firstDay));
           setPreviousExerciseLookup(nextPreviousExerciseLookup);
           setDraftExercises(buildDraftExercises(firstDay, nextPreviousExerciseLookup));
           setCurrentExerciseIndex(0);
@@ -301,7 +303,10 @@ function WorkoutPageContent() {
   }, []);
 
   const selectedDay = useMemo(
-    () => programDays.find((day) => day.id === selectedDayId) || programDays[0] || null,
+    () =>
+      programDays.find((day) => getWorkoutDaySelectionKey(day) === selectedDayId) ||
+      programDays[0] ||
+      null,
     [programDays, selectedDayId]
   );
 
@@ -310,7 +315,7 @@ function WorkoutPageContent() {
       return;
     }
 
-    const nextDayId = day.id || '';
+    const nextDayId = getWorkoutDaySelectionKey(day);
     const requestId = ++dayPrefillRequestId.current;
     setSelectedDayId(nextDayId);
     setMessage('');
@@ -318,7 +323,7 @@ function WorkoutPageContent() {
     setCurrentExerciseIndex(0);
 
     const nextPreviousExerciseLookup = await loadPreviousExerciseLookup(
-      nextDayId,
+      day.id || '',
       day.name || ''
     );
     if (dayPrefillRequestId.current !== requestId) {
@@ -578,8 +583,13 @@ function WorkoutPageContent() {
       for (const ex of exercisesToSave) {
         if (ex.durationSeconds) durationsToSave[ex.exerciseName] = ex.durationSeconds;
       }
-      await updateExerciseDurations(selectedDate, selectedDay.id || '', durationsToSave);
-      await updateReorderCount(selectedDate, selectedDay.id || '', reorderCount);
+      await updateExerciseDurations(
+        selectedDate,
+        selectedDay.id || '',
+        selectedDay.name || '',
+        durationsToSave
+      );
+      await updateReorderCount(selectedDate, selectedDay.id || '', selectedDay.name || '', reorderCount);
       setPreviousExerciseLookup(
         buildPreviousExerciseLookup({
           id: '',
@@ -639,7 +649,7 @@ function WorkoutPageContent() {
     setIsSaving(true);
     setError('');
     try {
-      await deleteWorkoutSession(selectedDate, selectedDay.id || '');
+      await deleteWorkoutSession(selectedDate, selectedDay.id || '', selectedDay.name || '');
       await doSave();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'מחיקה נכשלה.');
@@ -873,7 +883,7 @@ function WorkoutPageContent() {
 <div style={{ fontSize: 14, fontWeight: 700 }}>יום אימון</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {programDays.map((day) => {
-                  const isActive = day.id === selectedDayId;
+                    const isActive = getWorkoutDaySelectionKey(day) === selectedDayId;
                   return (
                     <button
                       key={day.id || day.name}

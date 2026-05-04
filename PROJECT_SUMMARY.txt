@@ -1,6 +1,6 @@
 ================================================================================
 GYM TRACKER - PROJECT SUMMARY
-Last updated: 2026-04-10
+Last updated: 2026-05-04
 ================================================================================
 
 This project is a Hebrew RTL mobile-first fitness PWA built with:
@@ -706,6 +706,81 @@ File changed:
 Scope:
 - presentation-only change
 - no schema, no save logic, no instruction mapping changed
+
+================================================================================
+19. 2026-05-04 - WORKOUT DAY IDENTITY FIX FOR ABCD HISTORY/SAVE FLOW
+================================================================================
+
+Goal:
+- fix a bug where an ABCD training week could save or display only day A while
+  B/C/D sessions were missing or collapsed into the wrong workout day
+
+Root cause:
+- `/workout` tracked the selected workout day by `day.id` only
+- when a program day had no stable `id`, selection could fall back to the first
+  program day, causing saves for B/C/D to use A's day identity
+- follow-up repository operations (`updateExerciseDurations`,
+  `updateReorderCount`, `deleteWorkoutSession`) matched rows too narrowly by
+  `day_id`, which was not sufficient for mixed legacy/current records
+
+Implemented:
+- `app/workout/page.tsx`
+  - added a stable workout-day selection key: `day.id` first, otherwise
+    `day.name`
+  - updated initial selection, active-day lookup, and day button active state
+    to use that stable key
+  - kept previous-session prefill lookup using the real `day.id` plus `day.name`
+  - save/overwrite follow-up calls now pass both `dayId` and `dayName`
+- `src/lib/repositories/workoutSessionRepository.ts`
+  - `updateExerciseDurations`, `updateReorderCount`, and
+    `deleteWorkoutSession` now match the target session by:
+    - `day_id`
+    - or `workout_program_day_id`
+    - or `day_name` for legacy/name-only rows
+  - added minimal PostgREST filter escaping for those combined `.or(...)`
+    clauses
+
+Scope:
+- no UI change
+- no schema change
+- no workout-history page rendering change
+- fix is limited to workout day identity and repository row matching
+
+================================================================================
+20. 2026-05-04 - AUTOFILL VERIFICATION AFTER ABCD DAY-ID FIX
+================================================================================
+
+Goal:
+- verify that previous-workout autofill on `/workout` still works correctly
+  after the workout-day identity fix for ABCD programs
+
+Files checked:
+- `app/workout/page.tsx`
+- `src/lib/repositories/workoutSessionRepository.ts`
+
+Verified behavior:
+- initial workout load still calls
+  `fetchLatestWorkoutSessionForProgramDay(day.id, day.name)` when no draft is
+  active
+- switching workout days still reloads previous-session data for the selected
+  day only
+- selected day identity in the UI now uses a stable key:
+  - `day.id` when present
+  - otherwise `day.name`
+- previous exercise prefill still matches:
+  - `exerciseId` first
+  - then normalized `exerciseName` fallback
+
+ABCD isolation result:
+- day B does not receive autofill data from day A
+- day C does not receive autofill data from day B
+- day D does not receive autofill data from day A/C
+- if a workout day has no `id`, autofill still works through `day_name`
+  matching in `fetchLatestWorkoutSessionForProgramDay()`
+
+Conclusion:
+- no additional code change was required for autofill
+- the ABCD day-identity fix did not break the previous-workout prefill flow
 
 ================================================================================
 END OF SUMMARY
