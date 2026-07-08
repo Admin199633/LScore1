@@ -29,7 +29,20 @@ import {
 
 const emptySet = () => ({ weight: '', reps: '', difficulty: 'good' });
 const getTodayDate = () => new Date().toISOString().slice(0, 10);
-const parsePlannedSets = (value: string) => (/^\d+$/.test(String(value || '').trim()) ? Number(value) : 1);
+
+// Number of set rows to generate for a NEW workout. When the plan explicitly
+// configures a set count we ALWAYS respect it, so changing the plan from 6 to 4
+// sets never leaves stale Set 5/6 rows. Previous-session sets only prefill the
+// values of the first N rows (see buildDraftExercises) — they must not expand
+// the row count beyond what the plan asks for. Only when the plan has no explicit
+// count do we fall back to the previous session's structure (or a single set).
+const resolvePlannedSetCount = (plannedSetsValue: string, previousSetsCount: number) => {
+  const trimmed = String(plannedSetsValue || '').trim();
+  if (/^\d+$/.test(trimmed)) {
+    return Math.max(1, Number(trimmed));
+  }
+  return Math.max(1, previousSetsCount);
+};
 
 type DraftExercise = {
   exerciseId: string;
@@ -130,7 +143,7 @@ const buildDraftExercises = (
     .filter((row) => row.exercise)
     .map((row) => {
       const previousSets = getPreviousSetsForExercise(row, previousExerciseLookup);
-      const setCount = Math.max(parsePlannedSets(row.sets), previousSets.length);
+      const setCount = resolvePlannedSetCount(row.sets, previousSets.length);
 
       return {
         exerciseId: row.id || '',
