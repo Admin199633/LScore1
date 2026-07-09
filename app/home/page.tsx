@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { ProtectedPage } from '@/components/ProtectedPage';
 import { PageSpinner } from '@/components/PageSpinner';
 import { BodyweightChart } from '@/components/BodyweightChart';
+import { MuscleHeatmapCard } from '@/components/MuscleHeatmapCard';
 import { fetchBodyweightLogs, upsertBodyweightLog } from '@/lib/repositories/bodyweightRepository';
 import { fetchCurrentProfile } from '@/lib/repositories/profileRepository';
 import { getLatestBodyMeasurementLog, type BodyMeasurementLog } from '@/lib/repositories/bodyMeasurementRepository';
@@ -558,6 +559,9 @@ function HomePageContent() {
           <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>תצוגת התקדמות לפי שקילות שנשמרו.</div>
           <BodyweightChart logs={bodyweightLogs} />
         </div>
+
+        {/* ── מפת שרירים ───────────────────────────────────────────────── */}
+        <MuscleHeatmapCard sessions={workoutSessions} />
 
         {/* ── אחוז שומן ────────────────────────────────────────────────── */}
         <BodyFatCard bodyFatPct={bodyFatPct} measurementDate={latestMeasurement?.measurementDate ?? null} />

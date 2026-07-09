@@ -14,12 +14,14 @@ import {
 import {
   saveFullWorkoutSession,
   fetchLatestWorkoutSessionForProgramDay,
+  fetchSavedWorkoutSessions,
   deleteWorkoutSession,
   updateExerciseDurations,
   updateExerciseNotes,
   updateReorderCount,
   type SavedWorkoutSession,
 } from '@/lib/repositories/workoutSessionRepository';
+import { ExerciseHistoryModal } from '@/components/ExerciseHistoryModal';
 import { getExerciseInstruction } from '@/lib/exerciseInstructions';
 import { useVibrationSettings } from '@/lib/vibrationSettings';
 import {
@@ -261,6 +263,9 @@ function WorkoutPageContent() {
   const [exerciseNotes, setExerciseNotes] = useState<Record<string, string>>({});
   const [notesOpenFor, setNotesOpenFor] = useState<string | null>(null);
   const [instructionModal, setInstructionModal] = useState<string | null>(null);
+  const [historyModalFor, setHistoryModalFor] = useState<string | null>(null);
+  const [historySessions, setHistorySessions] = useState<SavedWorkoutSession[] | null>(null);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [previousExerciseLookup, setPreviousExerciseLookup] = useState<PreviousExerciseLookup>(
     EMPTY_PREVIOUS_EXERCISE_LOOKUP
   );
@@ -556,6 +561,26 @@ function WorkoutPageContent() {
   const handleCloseAddExercise = () => {
     setShowAddExerciseModal(false);
     setAddExerciseError('');
+  };
+
+  const handleOpenHistory = async (exerciseName: string) => {
+    setHistoryModalFor(exerciseName);
+
+    // Lazily fetch the full workout history once, then reuse it for every
+    // exercise's history modal during this session.
+    if (historySessions !== null || isHistoryLoading) {
+      return;
+    }
+
+    setIsHistoryLoading(true);
+    try {
+      const sessions = await fetchSavedWorkoutSessions();
+      setHistorySessions(sessions);
+    } catch {
+      setHistorySessions([]);
+    } finally {
+      setIsHistoryLoading(false);
+    }
   };
 
   const handleAddExercise = () => {
@@ -1052,6 +1077,23 @@ function WorkoutPageContent() {
                       }}
                     >
                       ℹ️ כיצד לבצע
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenHistory(currentExercise.exerciseName)}
+                      style={{
+                        border: '1px solid var(--border)',
+                        borderRadius: 10,
+                        background: 'transparent',
+                        color: 'var(--text-muted)',
+                        padding: '4px 10px',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      📊 היסטוריה
                     </button>
                     <button
                       type="button"
@@ -1683,6 +1725,14 @@ function WorkoutPageContent() {
           </div>
         );
       })()}
+      {historyModalFor ? (
+        <ExerciseHistoryModal
+          exerciseName={historyModalFor}
+          sessions={historySessions || []}
+          isLoading={isHistoryLoading}
+          onClose={() => setHistoryModalFor(null)}
+        />
+      ) : null}
     </ProtectedPage>
   );
 }

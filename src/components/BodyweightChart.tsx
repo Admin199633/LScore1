@@ -1,8 +1,15 @@
 'use client';
 
+import { useState } from 'react';
+
 type BodyweightLog = {
   date: string;
   weight: number;
+};
+
+const formatFullDate = (date: string) => {
+  const [year, month, day] = String(date || '').split('-');
+  return year && month && day ? `${day}/${month}/${year}` : date;
 };
 
 const CHART_HEIGHT = 220;
@@ -56,6 +63,7 @@ const buildLinePath = (points: Array<{ x: number; y: number }>) =>
     .join(' ');
 
 export function BodyweightChart({ logs }: { logs: BodyweightLog[] }) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const { points, width, minWeight, maxWeight } = buildPoints(logs);
 
   if (points.length === 0) {
@@ -105,6 +113,10 @@ export function BodyweightChart({ logs }: { logs: BodyweightLog[] }) {
   const midWeight = (minWeight + maxWeight) / 2;
   const midY = (PADDING_TOP + baselineY) / 2;
 
+  const hitBand =
+    points.length > 1 ? points[1].x - points[0].x : Math.max(48, width - PADDING_LEFT - PADDING_RIGHT);
+  const activePoint = activeIndex !== null ? points[activeIndex] ?? null : null;
+
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', minWidth: 0, overflow: 'hidden' }}>
       {/* Y-axis — lives outside the scroll container so it never moves */}
@@ -140,6 +152,7 @@ export function BodyweightChart({ logs }: { logs: BodyweightLog[] }) {
 
       {/* Scrollable chart area — only this part moves */}
       <div style={{ overflowX: 'auto', flex: 1 }}>
+        <div style={{ position: 'relative', width }} onMouseLeave={() => setActiveIndex(null)}>
         <svg width={width} height={CHART_HEIGHT}>
           {/* Horizontal grid lines */}
           <line
@@ -176,8 +189,14 @@ export function BodyweightChart({ logs }: { logs: BodyweightLog[] }) {
             strokeLinejoin="round"
             strokeLinecap="round"
           />
-          {points.map((point) => (
-            <circle key={point.date} cx={point.x} cy={point.y} r="5" fill="var(--accent)" />
+          {points.map((point, index) => (
+            <circle
+              key={point.date}
+              cx={point.x}
+              cy={point.y}
+              r={index === activeIndex ? 7 : 5}
+              fill="var(--accent)"
+            />
           ))}
 
           {/* X-axis date labels */}
@@ -195,7 +214,49 @@ export function BodyweightChart({ logs }: { logs: BodyweightLog[] }) {
               </text>
             ) : null
           )}
+
+          {/* Transparent per-point hit targets for hover/tap tooltips */}
+          {points.map((point, index) => (
+            <rect
+              key={`${point.date}-hit`}
+              x={point.x - hitBand / 2}
+              y={0}
+              width={hitBand}
+              height={CHART_HEIGHT}
+              fill="transparent"
+              style={{ cursor: 'pointer' }}
+              onMouseEnter={() => setActiveIndex(index)}
+              onClick={() => setActiveIndex((current) => (current === index ? null : index))}
+            />
+          ))}
         </svg>
+
+        {activePoint ? (
+          <div
+            style={{
+              position: 'absolute',
+              left: Math.min(Math.max(activePoint.x, 60), width - 60),
+              top: activePoint.y,
+              transform: 'translate(-50%, calc(-100% - 10px))',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 12,
+              padding: '8px 10px',
+              display: 'grid',
+              gap: 2,
+              pointerEvents: 'none',
+              boxShadow: '0 6px 18px rgba(0,0,0,0.35)',
+              whiteSpace: 'nowrap',
+              zIndex: 2,
+            }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 800 }}>{formatFullDate(activePoint.date)}</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              משקל: {activePoint.weight.toFixed(1)} ק״ג
+            </div>
+          </div>
+        ) : null}
+        </div>
       </div>
     </div>
   );

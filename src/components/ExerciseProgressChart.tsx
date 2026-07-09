@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import type { ExerciseExerciseOccurrence } from '@/lib/exerciseProgress';
 
 type ChartPoint = {
@@ -10,8 +11,14 @@ type ChartPoint = {
   score: number;
   weight: number;
   reps: number;
+  volume: number;
   difficulty: string;
   isLast: boolean;
+};
+
+const formatFullDate = (date: string) => {
+  const [year, month, day] = String(date || '').split('-');
+  return year && month && day ? `${day}/${month}/${year}` : date;
 };
 
 const CHART_HEIGHT = 180;
@@ -102,6 +109,7 @@ const buildPoints = (occurrences: ExerciseExerciseOccurrence[]) => {
       score,
       weight: occurrence.bestSet.weight,
       reps: occurrence.bestSet.reps,
+      volume: occurrence.bestSet.weight * occurrence.bestSet.reps,
       difficulty: occurrence.bestSet.difficulty,
       isLast: index === orderedOccurrences.length - 1,
     };
@@ -115,6 +123,7 @@ export function ExerciseProgressChart({
 }: {
   occurrences: ExerciseExerciseOccurrence[];
 }) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const { points, minScore, maxScore } = buildPoints(occurrences);
 
   if (points.length < 2) {
@@ -138,6 +147,9 @@ export function ExerciseProgressChart({
 
   const path = buildSmoothPath(points);
   const labelStep = Math.max(1, Math.ceil(points.length / 5));
+  const band =
+    points.length > 1 ? points[1].x - points[0].x : 100 - PADDING_LEFT - PADDING_RIGHT;
+  const activePoint = activeIndex !== null ? points[activeIndex] ?? null : null;
 
   return (
     <div
@@ -156,6 +168,7 @@ export function ExerciseProgressChart({
         </div>
       </div>
 
+      <div style={{ position: 'relative' }} onMouseLeave={() => setActiveIndex(null)}>
       <svg viewBox={`0 0 100 ${CHART_HEIGHT}`} width='100%' height={CHART_HEIGHT} preserveAspectRatio='none'>
         <line
           x1={PADDING_LEFT}
@@ -191,19 +204,20 @@ export function ExerciseProgressChart({
           strokeLinejoin='round'
         />
 
-        {points.map((point) => (
-          <circle
-            key={`${point.date}-${point.x}`}
-            cx={point.x}
-            cy={point.y}
-            r={point.isLast ? 2.8 : 1.8}
-            fill={point.isLast ? 'var(--accent-2)' : 'var(--accent)'}
-            stroke='var(--surface-2)'
-            strokeWidth='0.8'
-          >
-            <title>{`${point.weight}kg x ${point.reps} | ${formatDifficulty(point.difficulty)} | ${point.score.toFixed(1)}`}</title>
-          </circle>
-        ))}
+        {points.map((point, index) => {
+          const isActive = index === activeIndex;
+          return (
+            <circle
+              key={`${point.date}-${point.x}`}
+              cx={point.x}
+              cy={point.y}
+              r={isActive ? 3.4 : point.isLast ? 2.8 : 1.8}
+              fill={point.isLast || isActive ? 'var(--accent-2)' : 'var(--accent)'}
+              stroke='var(--surface-2)'
+              strokeWidth='0.8'
+            />
+          );
+        })}
 
         {points.map((point, index) =>
           index % labelStep === 0 || point.isLast ? (
@@ -238,7 +252,54 @@ export function ExerciseProgressChart({
         >
           {minScore.toFixed(1)}
         </text>
+
+        {/* Transparent per-point hit targets for hover/tap tooltips */}
+        {points.map((point, index) => (
+          <rect
+            key={`${point.date}-hit`}
+            x={point.x - band / 2}
+            y={0}
+            width={band}
+            height={CHART_HEIGHT}
+            fill='transparent'
+            style={{ cursor: 'pointer' }}
+            onMouseEnter={() => setActiveIndex(index)}
+            onClick={() => setActiveIndex((current) => (current === index ? null : index))}
+          />
+        ))}
       </svg>
+
+      {activePoint ? (
+        <div
+          style={{
+            position: 'absolute',
+            left: `${activePoint.x}%`,
+            top: activePoint.y,
+            transform: `translate(${activePoint.x > 60 ? '-100%' : activePoint.x < 40 ? '0' : '-50%'}, calc(-100% - 8px))`,
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 12,
+            padding: '8px 10px',
+            display: 'grid',
+            gap: 2,
+            pointerEvents: 'none',
+            boxShadow: '0 6px 18px rgba(0,0,0,0.35)',
+            whiteSpace: 'nowrap',
+            zIndex: 2,
+          }}
+        >
+          <div style={{ fontSize: 12, fontWeight: 800 }}>{formatFullDate(activePoint.date)}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>משקל: {activePoint.weight}kg</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>חזרות: {activePoint.reps}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            נפח: {Math.round(activePoint.volume).toLocaleString('en-US')}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            {formatDifficulty(activePoint.difficulty)} · {activePoint.score.toFixed(1)}
+          </div>
+        </div>
+      ) : null}
+      </div>
     </div>
   );
 }
