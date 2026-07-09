@@ -16,6 +16,7 @@ import {
   fetchLatestWorkoutSessionForProgramDay,
   deleteWorkoutSession,
   updateExerciseDurations,
+  updateExerciseNotes,
   updateReorderCount,
   type SavedWorkoutSession,
 } from '@/lib/repositories/workoutSessionRepository';
@@ -71,6 +72,8 @@ type PreviousWorkoutSet = {
 type PreviousExerciseLookup = {
   byExerciseId: Record<string, PreviousWorkoutSet[]>;
   byExerciseName: Record<string, PreviousWorkoutSet[]>;
+  notesByExerciseId: Record<string, string>;
+  notesByExerciseName: Record<string, string>;
 };
 
 const emptyAddExerciseForm = (): AddExerciseForm => ({
@@ -83,6 +86,8 @@ const emptyAddExerciseForm = (): AddExerciseForm => ({
 const EMPTY_PREVIOUS_EXERCISE_LOOKUP: PreviousExerciseLookup = {
   byExerciseId: {},
   byExerciseName: {},
+  notesByExerciseId: {},
+  notesByExerciseName: {},
 };
 
 const normalizeExerciseMatchKey = (value: string) => String(value || '').trim().toLocaleLowerCase();
@@ -98,6 +103,8 @@ const buildPreviousExerciseLookup = (
 
   const byExerciseId: Record<string, PreviousWorkoutSet[]> = {};
   const byExerciseName: Record<string, PreviousWorkoutSet[]> = {};
+  const notesByExerciseId: Record<string, string> = {};
+  const notesByExerciseName: Record<string, string> = {};
 
   for (const exercise of session.exercises) {
     const previousSets = exercise.sets.map((setItem) => ({
@@ -105,6 +112,17 @@ const buildPreviousExerciseLookup = (
       reps: setItem.reps,
       difficulty: setItem.difficulty || 'good',
     }));
+
+    const exerciseMatchKey = normalizeExerciseMatchKey(exercise.exerciseName);
+    const note = String(exercise.notes || '').trim();
+    if (note) {
+      if (exercise.exerciseId) {
+        notesByExerciseId[exercise.exerciseId] = note;
+      }
+      if (exerciseMatchKey) {
+        notesByExerciseName[exerciseMatchKey] = note;
+      }
+    }
 
     if (previousSets.length === 0) {
       continue;
@@ -114,13 +132,12 @@ const buildPreviousExerciseLookup = (
       byExerciseId[exercise.exerciseId] = previousSets;
     }
 
-    const exerciseMatchKey = normalizeExerciseMatchKey(exercise.exerciseName);
     if (exerciseMatchKey) {
       byExerciseName[exerciseMatchKey] = previousSets;
     }
   }
 
-  return { byExerciseId, byExerciseName };
+  return { byExerciseId, byExerciseName, notesByExerciseId, notesByExerciseName };
 };
 
 const getPreviousSetsForExercise = (
@@ -164,6 +181,38 @@ const buildDraftExercises = (
         }),
       };
     });
+
+const getPreviousNoteForExercise = (
+  row: WorkoutProgramDay['rows'][number],
+  previousExerciseLookup: PreviousExerciseLookup
+): string => {
+  if (row.id && previousExerciseLookup.notesByExerciseId[row.id]) {
+    return previousExerciseLookup.notesByExerciseId[row.id];
+  }
+
+  const exerciseMatchKey = normalizeExerciseMatchKey(row.exercise);
+  return previousExerciseLookup.notesByExerciseName[exerciseMatchKey] || '';
+};
+
+// Rebuild the per-exercise notes map (keyed by exercise name, matching the
+// notes state / the DB exercise_name) from the most recent saved session, so
+// notes are restored when the workout screen is reopened.
+const buildExerciseNotes = (
+  day: WorkoutProgramDay | null,
+  previousExerciseLookup: PreviousExerciseLookup = EMPTY_PREVIOUS_EXERCISE_LOOKUP
+): Record<string, string> => {
+  const notes: Record<string, string> = {};
+  for (const row of day?.rows || []) {
+    if (!row.exercise) {
+      continue;
+    }
+    const note = getPreviousNoteForExercise(row, previousExerciseLookup);
+    if (note) {
+      notes[row.exercise] = note;
+    }
+  }
+  return notes;
+};
 
 const formatTimer = (seconds: number) => {
   const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
@@ -293,6 +342,7 @@ function WorkoutPageContent() {
           setSelectedDayId(getWorkoutDaySelectionKey(firstDay));
           setPreviousExerciseLookup(nextPreviousExerciseLookup);
           setDraftExercises(buildDraftExercises(firstDay, nextPreviousExerciseLookup));
+          setExerciseNotes(buildExerciseNotes(firstDay, nextPreviousExerciseLookup));
           setCurrentExerciseIndex(0);
           setTimer(0);
           setIsTimerRunning(false);
@@ -345,11 +395,15 @@ function WorkoutPageContent() {
 
     setPreviousExerciseLookup(nextPreviousExerciseLookup);
     setDraftExercises(buildDraftExercises(day, nextPreviousExerciseLookup));
+    setExerciseNotes(buildExerciseNotes(day, nextPreviousExerciseLookup));
   };
 
   const handleResetWorkout = () => {
     if (selectedDay) {
       setDraftExercises(buildDraftExercises(selectedDay, previousExerciseLookup));
+      setExerciseNotes(buildExerciseNotes(selectedDay, previousExerciseLookup));
+    } else {
+      setExerciseNotes({});
     }
     setCurrentExerciseIndex(0);
     setTimer(0);
@@ -602,6 +656,12 @@ function WorkoutPageContent() {
         selectedDay.name || '',
         durationsToSave
       );
+      await updateExerciseNotes(
+        selectedDate,
+        selectedDay.id || '',
+        selectedDay.name || '',
+        exerciseNotes
+      );
       await updateReorderCount(selectedDate, selectedDay.id || '', selectedDay.name || '', reorderCount);
       setPreviousExerciseLookup(
         buildPreviousExerciseLookup({
@@ -623,6 +683,7 @@ function WorkoutPageContent() {
             plannedWeight: exercise.plannedWeight,
             completed: exercise.completed,
             durationSeconds: exercise.durationSeconds ?? null,
+            notes: exerciseNotes[exercise.exerciseName] || '',
             sets: exercise.sets.map((setItem, setIndex) => ({
               id: `draft-set-${exerciseIndex}-${setIndex}`,
               weight: setItem.weight,

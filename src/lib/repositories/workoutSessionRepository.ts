@@ -27,6 +27,7 @@ export type SavedWorkoutSession = {
     plannedWeight: string;
     completed: boolean;
     durationSeconds?: number | null;
+    notes: string;
     sets: Array<{
       id: string;       // workout_session_sets row UUID
       weight: string;
@@ -153,6 +154,7 @@ const normalizeWorkout = (
     planned_weight?: string | null;
     completed?: boolean | null;
     duration_seconds?: number | null;
+    notes?: string | null;
     exercise_order: number;
   }> = [],
   setRows: Array<{
@@ -184,6 +186,7 @@ const normalizeWorkout = (
       plannedWeight: exerciseRow.planned_weight || '',
       completed: Boolean(exerciseRow.completed),
       durationSeconds: exerciseRow.duration_seconds ?? null,
+      notes: exerciseRow.notes || '',
       sets: setRows
         .filter((setRow) => setRow.workout_session_exercise_id === exerciseRow.id)
         .sort((left, right) => left.set_order - right.set_order)
@@ -247,6 +250,66 @@ export const updateExerciseDurations = async (
           .update({ duration_seconds: durations[row.exercise_name] })
           .eq('id', row.id)
       )
+  );
+};
+
+export const updateExerciseNotes = async (
+  date: string,
+  dayId: string,
+  dayName: string,
+  notes: Record<string, string>
+): Promise<void> => {
+  if (Object.keys(notes).length === 0) return;
+
+  const {
+    data: { user },
+    error: userError,
+  } = await webSupabase.auth.getUser();
+
+  if (userError || !user?.id) return;
+
+  let sessionQuery = webSupabase
+    .from('workout_sessions')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('session_date', date)
+    .limit(1);
+
+  if (dayId) {
+    const filters = [
+      `day_id.eq.${escapePostgrestValue(dayId)}`,
+      `workout_program_day_id.eq.${escapePostgrestValue(dayId)}`,
+    ];
+    if (dayName) {
+      filters.push(`day_name.eq.${escapePostgrestValue(dayName)}`);
+    }
+    sessionQuery = sessionQuery.or(filters.join(','));
+  } else if (dayName) {
+    sessionQuery = sessionQuery.eq('day_name', dayName);
+  }
+
+  const { data: sessionRows } = await sessionQuery;
+
+  const sessionId = sessionRows?.[0]?.id;
+  if (!sessionId) return;
+
+  const { data: exerciseRows } = await webSupabase
+    .from('workout_session_exercises')
+    .select('id, exercise_name')
+    .eq('workout_session_id', sessionId);
+
+  if (!exerciseRows?.length) return;
+
+  await Promise.all(
+    exerciseRows
+      .filter((row) => notes[row.exercise_name] !== undefined)
+      .map((row) => {
+        const noteValue = String(notes[row.exercise_name] ?? '').trim();
+        return webSupabase
+          .from('workout_session_exercises')
+          .update({ notes: noteValue ? noteValue : null })
+          .eq('id', row.id);
+      })
   );
 };
 
