@@ -48,6 +48,20 @@ const isStableIdSchemaMismatch = (error: { message?: string; details?: string; h
   );
 };
 
+// Detect "the atomic RPC is not deployed yet" so we can fall back to the proven
+// per-call path on databases where the 20260721 migration has not been applied.
+const isMissingRpcError = (error: { message?: string; details?: string; hint?: string; code?: string }) => {
+  const combined = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`.toLowerCase();
+  return (
+    combined.includes('save_workout_session') &&
+    (combined.includes('could not find the function') ||
+      combined.includes('no function matches') ||
+      combined.includes('does not exist') ||
+      error?.code === 'PGRST202' ||
+      error?.code === '42883')
+  );
+};
+
 const isMissingColumnError = (
   error: { message?: string; details?: string; hint?: string },
   columnName: string
@@ -755,24 +769,41 @@ export const fetchLatestWorkoutSessionForProgramDay = async (
   return normalizeWorkout(sessionRow, exerciseRows || [], setRows);
 };
 
-export const saveFullWorkoutSession = async (session: {
-  date: string;
-  dayId?: string;
-  dayName: string;
-  startedAt?: string;
-  endedAt?: string;
-  durationSeconds?: number;
-  energyLevel?: string;
-  exercises: Array<{
-    exerciseId?: string;
-    exerciseName: string;
-    plannedSets?: string;
-    plannedReps?: string;
-    plannedWeight?: string;
-    completed?: boolean;
-    sets: Array<{ weight: string | number; reps: string | number; difficulty?: string }>;
-  }>;
-}) => {
+// Persist a full completed workout (session + exercises + sets).
+//
+// Save strategy (safest first):
+//   1. Prefer the atomic, idempotent RPC `save_workout_session` (migration
+//      20260721). It commits the whole workout in one transaction, dedupes
+//      retries by `p_client_workout_id`, and performs overwrite in-transaction
+//      (delete-then-insert) so an existing workout is never deleted before its
+//      replacement is safely persisted.
+//   2. If that RPC is not deployed (older DB), fall back to the proven
+//      `create_workout_session` RPC. In fallback, overwrite is best-effort
+//      (delete-then-create) because the atomic guarantee lives in the new RPC.
+//
+// Returns the new/existing session id and whether it was an idempotent replay.
+export const saveFullWorkoutSession = async (
+  session: {
+    date: string;
+    dayId?: string;
+    dayName: string;
+    startedAt?: string;
+    endedAt?: string;
+    durationSeconds?: number;
+    energyLevel?: string;
+    exercises: Array<{
+      exerciseId?: string;
+      exerciseName: string;
+      plannedSets?: string;
+      plannedReps?: string;
+      plannedWeight?: string;
+      completed?: boolean;
+      durationSeconds?: number;
+      sets: Array<{ weight: string | number; reps: string | number; difficulty?: string }>;
+    }>;
+  },
+  options: { clientWorkoutId?: string; overwrite?: boolean } = {}
+): Promise<{ sessionId: string | null; alreadyExisted: boolean }> => {
   const normalizedSession = normalizeWorkoutInput(session);
 
   if (!normalizedSession.date || !normalizedSession.dayName) {
@@ -788,7 +819,10 @@ export const saveFullWorkoutSession = async (session: {
     ? 'completed'
     : 'partial';
 
-  const payload = {
+  const clientWorkoutId = String(options.clientWorkoutId || '').trim() || null;
+  const overwrite = Boolean(options.overwrite);
+
+  const basePayload = {
     p_session_date: normalizedSession.date,
     p_day_id: normalizedSession.dayId || null,
     p_day_name: normalizedSession.dayName,
@@ -801,7 +835,35 @@ export const saveFullWorkoutSession = async (session: {
     p_exercises: normalizedSession.exercises,
   };
 
-  const { error } = await webSupabase.rpc('create_workout_session', payload);
+  // 1) Preferred atomic + idempotent path.
+  const { data: atomicData, error: atomicError } = await webSupabase.rpc('save_workout_session', {
+    ...basePayload,
+    p_client_workout_id: clientWorkoutId,
+    p_overwrite: overwrite,
+  });
+
+  if (!atomicError) {
+    return { sessionId: (atomicData as string | null) ?? null, alreadyExisted: false };
+  }
+
+  // Any error other than "RPC not deployed" is a real failure and must surface
+  // (including WORKOUT_SESSION_ALREADY_EXISTS, which the caller handles).
+  if (!isMissingRpcError(atomicError)) {
+    throw atomicError;
+  }
+
+  // 2) Fallback path for databases without the atomic RPC.
+  if (overwrite) {
+    // Best-effort overwrite: remove the existing same-day session first. The
+    // atomic in-transaction guarantee is only available via the new RPC.
+    await deleteWorkoutSession(
+      normalizedSession.date,
+      normalizedSession.dayId,
+      normalizedSession.dayName
+    );
+  }
+
+  const { error } = await webSupabase.rpc('create_workout_session', basePayload);
 
   if (error && isStableIdSchemaMismatch(error)) {
     const legacyPayload = {
@@ -825,5 +887,5 @@ export const saveFullWorkoutSession = async (session: {
     throw error;
   }
 
-  return normalizedSession;
+  return { sessionId: null, alreadyExisted: false };
 };

@@ -783,5 +783,235 @@ Conclusion:
 - the ABCD day-identity fix did not break the previous-workout prefill flow
 
 ================================================================================
+21. 2026-07-21 - WORKOUT SAVE DATA-LOSS INVESTIGATION & HARDENING
+================================================================================
+
+Trigger:
+- A workout completed on 2026-07-21 did not appear in Workout History. The data
+  had been entered and "saved" through the UI. This was investigated as a
+  potential silent data-loss bug in the workout save pipeline.
+
+Files inspected end-to-end:
+- app/workout/page.tsx (UI click handler, validation, state, save flow)
+- app/workout-history/page.tsx (history load + filtering + sorting)
+- src/lib/repositories/workoutSessionRepository.ts (save/overwrite/updates)
+- src/lib/workoutDraftStorage.ts (local draft lifecycle)
+- src/lib/date/getIsraelDateKey.ts (Asia/Jerusalem day bucketing)
+- src/lib/repositories/programRepository.ts (day/exercise identity)
+- supabase/migrations/* (workout schema deltas)
+
+Key structural fact discovered:
+- The base workout tables (workout_sessions, workout_session_exercises,
+  workout_session_sets) and the RPCs `create_workout_session` and
+  `replace_active_workout_program` are NOT defined in the repo. They live only
+  in the remote Supabase database (created out-of-band). Only additive column
+  migrations exist in-repo. This constrains what can be safely changed from the
+  repo alone (see migration notes below).
+
+--------------------------------------------------------------------------------
+ROOT CAUSE (confirmed defect) - timezone date bucketing
+--------------------------------------------------------------------------------
+- app/workout/page.tsx used `getTodayDate = () => new Date().toISOString()
+  .slice(0,10)` to stamp the workout `session_date`. `toISOString()` is UTC.
+- The rest of the app buckets "today" by Asia/Jerusalem via getIsraelDateKey().
+- Israel is UTC+3 (summer)/UTC+2 (winter). For any workout performed between
+  local midnight and ~02:00-03:00, the UTC date is still the PREVIOUS calendar
+  day. So an early-hours 2026-07-21 (Israel) workout was saved with
+  session_date = 2026-07-20.
+- Workout History renders/sorts by `session_date` verbatim, so the workout was
+  filed under the previous day and looked "missing" from 2026-07-21.
+- This is the highest-confidence explanation for a date-specific "disappearance"
+  and is proved by unit tests (see getIsraelDateKey.test.ts).
+
+--------------------------------------------------------------------------------
+ADDITIONAL DEFECTS / PLAUSIBLE FAILURE PATHS (fixed defensively)
+--------------------------------------------------------------------------------
+1. Overwrite = delete-then-save (data loss window). handleOverwrite() called
+   deleteWorkoutSession() and THEN doSave(). If the save failed after the delete
+   (network drop), the existing workout was already gone and the replacement was
+   never persisted -> permanent loss of the prior workout.
+2. No idempotency. If the server committed but the HTTP response was lost, a
+   retry either created a duplicate or tripped the "already exists" prompt.
+3. Double-tap race. The Finish button was disabled via `isSaving` state, but
+   React state is async; a fast double-tap (and the un-guarded "save anyway" /
+   overwrite buttons) could launch two concurrent saves.
+4. Secondary updates swallowed errors. updateExerciseDurations/Notes/Reorder
+   silently returned on auth failure and never checked the update error. These
+   are metadata-only (session/exercises/sets are saved atomically by the RPC),
+   but a thrown secondary error could surface AFTER a real save and confuse the
+   user into retrying.
+5. Success/relationship between draft-clear and confirmation. The draft was only
+   cleared after the RPC succeeded (good), but the flow did not distinguish
+   session persistence from best-effort metadata, and had no explicit retryable
+   error contract.
+
+Not the cause (ruled out): Workout History query has no hidden date/day filter
+(it selects all sessions for user_id and only sorts). Day identity (ABCD) uses a
+stable key already. RLS ownership is by user_id throughout.
+
+--------------------------------------------------------------------------------
+IMPLEMENTATION
+--------------------------------------------------------------------------------
+Files added:
+- src/lib/workout/workoutSaveService.ts
+  Pure, framework-free save orchestrator (no React/Supabase imports) with
+  dependency injection. Owns the data-loss-safe ordering:
+    * session (exercises+sets) is the atomic critical unit;
+    * local draft is cleared ONLY after the session is confirmed persisted;
+    * per-exercise durations, notes and reorder-count are best-effort and never
+      block or revert a confirmed session save (returned as softErrors);
+    * a failed session save returns {status:'failed'} and KEEPS the draft, with
+      a user-facing Hebrew retryable message;
+    * an "already exists" throw returns {status:'exists'} for overwrite confirm.
+  Also exports createClientWorkoutId() (idempotency key), WORKOUT_SAVE_FAILED_
+  MESSAGE, and pure helpers. Emits structured diagnostics via an injected log()
+  (saveAttemptId, clientWorkoutId, userId, programId, dayId, dayName, overwrite,
+  exerciseCount, totalSetCount, startedAt, endedAt, durationSeconds, stage,
+  error message) - no tokens/credentials are logged.
+
+- src/lib/workout/__tests__/workoutSaveService.test.ts
+  18 assertions across the orchestrator (node:test, no new deps): success,
+  session/exercise/set/network failure, already-exists, idempotent replay,
+  retry-after-failure key reuse, secondary-failure still-saved, ABCD day
+  isolation, ad-hoc exercise preservation, overwrite flag forwarding, helpers.
+
+- src/lib/date/__tests__/getIsraelDateKey.test.ts
+  Proves summer/winter early-hours instants bucket to the correct Israel day
+  (and that the old UTC slice produced the wrong day).
+
+- supabase/migrations/20260721_workout_save_atomicity_and_idempotency.sql
+  See "Database changes" below.
+
+Files changed:
+- app/workout/page.tsx
+  * getTodayDate() now uses getIsraelDateKey() (root-cause fix).
+  * Added a clientWorkoutId ref (idempotency key) minted at workout start,
+    persisted in the draft, restored on reload, reused across retries, released
+    only after a confirmed save.
+  * Added a saveInFlight ref (single-flight) so a double-tap cannot launch two
+    saves.
+  * Replaced doSave()/handleOverwrite() with performSave(overwrite) that drives
+    runWorkoutSave() with real deps. Overwrite now passes an overwrite flag to
+    the atomic RPC instead of client delete-then-save. On failure the draft is
+    preserved and a Hebrew retryable error is shown; success is shown only after
+    confirmed persistence. Removed now-unused deleteWorkoutSession import.
+- src/lib/repositories/workoutSessionRepository.ts
+  * saveFullWorkoutSession() now accepts {clientWorkoutId, overwrite} and returns
+    {sessionId, alreadyExisted}. It PREFERS the new atomic RPC
+    `save_workout_session` and FALLS BACK to the existing `create_workout_session`
+    (incl. the legacy-schema fallback) when the new RPC is not deployed, so the
+    client works with or without the migration. Added isMissingRpcError().
+- src/lib/workoutDraftStorage.ts
+  * WorkoutDraft gains optional clientWorkoutId; load/save persist it; the
+    selectedDate default now uses getIsraelDateKey().
+- tsconfig.json
+  * Excluded the `green` git submodule (separate app, own tsconfig) and test
+    files from this app's TS program so build/typecheck reflect CI. (Independent
+    of the workout fix; required to run the production build locally.)
+- package.json
+  * Added `test` script: node --test over src/**/*.test.ts (Node 24 native TS,
+    no new testing dependency).
+
+--------------------------------------------------------------------------------
+DATABASE CHANGES
+--------------------------------------------------------------------------------
+Migration: supabase/migrations/20260721_workout_save_atomicity_and_idempotency.sql
+Additive and backward-compatible; touches no existing user data; does not weaken
+RLS.
+  1. adds nullable column workout_sessions.client_workout_id uuid
+  2. adds UNIQUE partial index workout_sessions_client_workout_id_uidx on
+     (user_id, client_workout_id) WHERE client_workout_id IS NOT NULL
+     -> one client-generated key can never create two sessions for a user.
+  3. adds function public.save_workout_session(...) (SECURITY INVOKER, so RLS is
+     preserved): idempotent + single-transaction. It
+       - returns the existing session id if client_workout_id was already saved
+         (safe no-op on lost-response retries);
+       - performs overwrite as delete-then-insert IN ONE TRANSACTION (so an
+         existing workout is never deleted before its replacement commits);
+       - DELEGATES the actual insert to the proven create_workout_session(...),
+         which means the migration never references columns it cannot see (e.g.
+         the program-id column lives inside that RPC) - this keeps it safe to
+         apply blind;
+       - stamps client_workout_id on the created row.
+Rollback (data-safe; documented in the migration header):
+  drop function public.save_workout_session(...); drop index ...; alter table
+  ... drop column client_workout_id;
+
+--------------------------------------------------------------------------------
+SAVE FLOW - BEFORE vs AFTER
+--------------------------------------------------------------------------------
+Before:
+  click Save -> (incomplete warning) -> doSave:
+    RPC create_workout_session (UTC session_date)
+    -> await updateExerciseDurations/Notes/Reorder (errors could throw here
+       after the session was already saved)
+    -> clearDraft -> "saved".
+  Overwrite: deleteWorkoutSession THEN doSave (delete-before-save loss window).
+  No idempotency; button guarded only by async isSaving state.
+
+After:
+  click Save -> (incomplete warning) -> performSave(false) [single-flight]:
+    runWorkoutSave:
+      saveSession -> save_workout_session RPC (Israel session_date, idempotency
+        key, atomic; fallback to create_workout_session if RPC absent)
+        - throws WORKOUT_SESSION_ALREADY_EXISTS -> status 'exists' -> overwrite
+          confirm -> performSave(true) (atomic delete+insert in the RPC)
+        - other throw -> status 'failed' -> DRAFT KEPT + Hebrew retryable error
+      on success: best-effort durations/notes/reorder (soft, never revert)
+      -> clearDraft -> status 'saved' -> "saved".
+  Retry reuses the same client_workout_id, so the DB dedupes.
+
+--------------------------------------------------------------------------------
+DATA RECOVERY STATUS (missing 2026-07-21 workout)
+--------------------------------------------------------------------------------
+- Could not be queried directly from here (no DB credentials/tooling in this
+  environment); nothing was fabricated or reconstructed.
+- If the confirmed timezone defect is the cause, the workout was NOT lost: it
+  was persisted intact under the adjacent UTC calendar day (likely 2026-07-20).
+  It can be verified/recovered without modifying data by inspecting
+  workout_sessions for the user around that date, e.g.:
+    select id, session_date, day_name, started_at, created_at
+    from public.workout_sessions
+    where user_id = '<uid>' and session_date in ('2026-07-20','2026-07-21')
+    order by created_at desc;
+  If a row exists with the expected exercises/sets, no action is needed beyond
+  optionally correcting session_date to the Israel day. Going forward, new saves
+  use the Israel date, so this misfiling cannot recur.
+- If instead the local draft is still present on the device (a genuine failed
+  save under the OLD code path), it is now retained on failure and can be saved
+  by reopening /workout and pressing Save again.
+
+--------------------------------------------------------------------------------
+VALIDATION PERFORMED
+--------------------------------------------------------------------------------
+- `npx tsc --noEmit`: no errors in this app (the only errors reported are inside
+  the unrelated `green` git submodule, now excluded from this app's tsconfig).
+- `npm test` (node --test): 18/18 pass (getIsraelDateKey + workoutSaveService).
+- `npm run build` (next build): success; type-check ("checking validity of
+  types") passed; all 13 routes built, incl. /workout, /workout-history,
+  /workout-history/[id]/edit.
+- `npm run lint`: ESLint is not configured in this project (next lint prompts to
+  set it up interactively); no lint step exists to run. Not introduced as part
+  of this fix.
+
+--------------------------------------------------------------------------------
+REMAINING RISKS / LIMITATIONS
+--------------------------------------------------------------------------------
+- The atomic RPC's exact insert semantics still depend on the remote
+  create_workout_session (not in-repo). If create_workout_session's real
+  parameter types differ from the wrapper's declared types, save_workout_session
+  may fail to resolve at runtime; the client then falls back to the direct
+  create_workout_session path (no data loss, but without atomic overwrite /
+  idempotency). The migration should be validated in staging against the real
+  function signature.
+- On databases where migration 20260721 is not applied, overwrite remains
+  best-effort delete-then-save (the pre-existing behavior) and there is no
+  server-side idempotency; client single-flight still prevents same-session
+  duplicates.
+- Existing behavior preserved and unchanged: workout-day autofill, ABCD day
+  isolation, ad-hoc exercise support, timer/duration behavior, and the
+  workout-history edit flow (updateWorkoutSessionById path was not modified).
+
+================================================================================
 END OF SUMMARY
 ================================================================================

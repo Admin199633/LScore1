@@ -15,7 +15,6 @@ import {
   saveFullWorkoutSession,
   fetchLatestWorkoutSessionForProgramDay,
   fetchSavedWorkoutSessions,
-  deleteWorkoutSession,
   updateExerciseDurations,
   updateExerciseNotes,
   updateReorderCount,
@@ -29,9 +28,23 @@ import {
   saveWorkoutDraft,
   clearWorkoutDraft,
 } from '@/lib/workoutDraftStorage';
+import { getIsraelDateKey } from '@/lib/date/getIsraelDateKey';
+import {
+  runWorkoutSave,
+  createClientWorkoutId,
+  WORKOUT_SAVE_FAILED_MESSAGE,
+  type WorkoutSaveInput,
+  type WorkoutSaveDeps,
+} from '@/lib/workout/workoutSaveService';
+import { fetchActiveProgramRecord } from '@/lib/repositories/programRepository';
+import { webSupabase } from '@/lib/supabase/browser';
 
 const emptySet = () => ({ weight: '', reps: '', difficulty: 'good' });
-const getTodayDate = () => new Date().toISOString().slice(0, 10);
+// The workout date must bucket by Israel time (Asia/Jerusalem), consistent with
+// the rest of the app (Home/history "today" all use getIsraelDateKey). Using UTC
+// here previously mis-filed early-morning Israel workouts under the previous
+// calendar day, making them look "missing" from that day's history.
+const getTodayDate = () => getIsraelDateKey();
 
 // Number of set rows to generate for a NEW workout. When the plan explicitly
 // configures a set count we ALWAYS respect it, so changing the plan from 6 to 4
@@ -279,6 +292,13 @@ function WorkoutPageContent() {
   const exerciseStartTime = useRef<number | null>(null);
   const workoutStartedAt = useRef<string | null>(null);
   const dayPrefillRequestId = useRef(0);
+  // Stable idempotency key for the current workout. Reused across save retries
+  // so a retry after a lost-response commit does not create a duplicate.
+  const clientWorkoutId = useRef<string>('');
+  // Single-flight guard: prevents a double-tap on Finish (or the confirm
+  // dialogs) from launching two concurrent save requests. Uses a ref because
+  // React state updates are async and cannot block a synchronous re-entry.
+  const saveInFlight = useRef(false);
 
   const loadPreviousExerciseLookup = async (
     workoutProgramDayId: string,
@@ -332,6 +352,9 @@ function WorkoutPageContent() {
           setPreviousExerciseLookup(EMPTY_PREVIOUS_EXERCISE_LOOKUP);
           workoutStartedAt.current = draft.startedAt;
           exerciseStartTime.current = Date.now();
+          // Reuse the draft's idempotency key; older drafts predate the field,
+          // so mint one now (the autosave effect will persist it).
+          clientWorkoutId.current = draft.clientWorkoutId || createClientWorkoutId();
         } else {
           // No active draft — start fresh from program template
           const firstDay = program.days?.[0] || null;
@@ -461,6 +484,8 @@ function WorkoutPageContent() {
     setIsTimerRunning(true);
     exerciseStartTime.current = Date.now();
     workoutStartedAt.current = startedAt;
+    // Mint a fresh idempotency key for this workout run.
+    clientWorkoutId.current = createClientWorkoutId();
     // Save full draft immediately so startedAt is captured even if user leaves right away
     saveWorkoutDraft({
       startedAt,
@@ -471,6 +496,7 @@ function WorkoutPageContent() {
       currentExerciseIndex,
       exerciseNotes,
       reorderCount,
+      clientWorkoutId: clientWorkoutId.current,
     });
   };
 
@@ -631,21 +657,64 @@ function WorkoutPageContent() {
     exerciseStartTime.current = Date.now();
   };
 
-  const doSave = async () => {
+  // Wire the pure save orchestrator to the real repository + Supabase calls.
+  // The orchestrator owns the data-loss-safe ordering (draft is cleared only
+  // after the session is confirmed persisted; secondary metadata is best-effort;
+  // failures keep the draft and return a retryable error).
+  const buildSaveDeps = (): WorkoutSaveDeps => ({
+    saveSession: (inp) =>
+      saveFullWorkoutSession(
+        {
+          date: inp.date,
+          dayId: inp.dayId,
+          dayName: inp.dayName,
+          energyLevel: inp.energyLevel ?? undefined,
+          startedAt: inp.startedAt,
+          endedAt: inp.endedAt,
+          durationSeconds: inp.durationSeconds,
+          exercises: inp.exercises,
+        },
+        { clientWorkoutId: inp.clientWorkoutId, overwrite: inp.overwrite }
+      ),
+    updateDurations: (inp, durations) =>
+      updateExerciseDurations(inp.date, inp.dayId, inp.dayName, durations),
+    updateNotes: (inp) => updateExerciseNotes(inp.date, inp.dayId, inp.dayName, inp.exerciseNotes),
+    updateReorder: (inp) => updateReorderCount(inp.date, inp.dayId, inp.dayName, inp.reorderCount),
+    clearDraft: () => clearWorkoutDraft(),
+    getUserId: async () => {
+      const { data } = await webSupabase.auth.getUser();
+      return data.user?.id ?? null;
+    },
+    log: (event, detail) => {
+      // Structured diagnostics — never includes tokens/credentials.
+      console.info(`[workout-save] ${event}`, detail);
+    },
+  });
+
+  const performSave = async (overwrite: boolean) => {
     if (!selectedDay) {
       setError('יש לבחור יום אימון.');
       return;
     }
 
-    // Record duration for the last (current) exercise before saving
+    // Single-flight guard — a double-tap cannot launch two saves.
+    if (saveInFlight.current) {
+      return;
+    }
+    saveInFlight.current = true;
+
+    // Ensure an idempotency key exists (covers legacy drafts / edge starts).
+    if (!clientWorkoutId.current) {
+      clientWorkoutId.current = createClientWorkoutId();
+    }
+
+    // Record duration for the last (current) exercise before saving.
     let exercisesToSave = draftExercises;
     if (currentExercise && exerciseStartTime.current !== null) {
       const elapsed = Math.round((Date.now() - exerciseStartTime.current) / 1000);
       setExerciseDurations((prev) => ({ ...prev, [currentExercise.exerciseName]: elapsed }));
       exercisesToSave = draftExercises.map((ex) =>
-        ex.exerciseName === currentExercise.exerciseName
-          ? { ...ex, durationSeconds: elapsed }
-          : ex
+        ex.exerciseName === currentExercise.exerciseName ? { ...ex, durationSeconds: elapsed } : ex
       );
       setDraftExercises(exercisesToSave);
       exerciseStartTime.current = null;
@@ -655,105 +724,100 @@ function WorkoutPageContent() {
     setMessage('');
     setError('');
 
+    const endedAt = new Date().toISOString();
+    const totalDurationSeconds = workoutStartedAt.current
+      ? calculateElapsedSeconds(workoutStartedAt.current)
+      : timer;
+
+    let programId: string | null = null;
     try {
-      const totalDurationSeconds = workoutStartedAt.current
-        ? calculateElapsedSeconds(workoutStartedAt.current)
-        : timer;
+      programId = (await fetchActiveProgramRecord())?.id ?? null;
+    } catch {
+      programId = null;
+    }
 
-      await saveFullWorkoutSession({
-        date: selectedDate,
-        dayId: selectedDay.id || '',
-        dayName: selectedDay.name || '',
-        energyLevel: energyLevel ?? undefined,
-        startedAt: workoutStartedAt.current || '',
-        endedAt: new Date().toISOString(),
-        durationSeconds: totalDurationSeconds,
-        exercises: exercisesToSave,
-      });
+    const input: WorkoutSaveInput = {
+      clientWorkoutId: clientWorkoutId.current,
+      overwrite,
+      date: selectedDate,
+      dayId: selectedDay.id || '',
+      dayName: selectedDay.name || '',
+      programId,
+      energyLevel,
+      startedAt: workoutStartedAt.current || '',
+      endedAt,
+      durationSeconds: totalDurationSeconds,
+      reorderCount,
+      exerciseNotes,
+      exercises: exercisesToSave,
+    };
 
-      const durationsToSave: Record<string, number> = {};
-      for (const ex of exercisesToSave) {
-        if (ex.durationSeconds) durationsToSave[ex.exerciseName] = ex.durationSeconds;
-      }
-      await updateExerciseDurations(
-        selectedDate,
-        selectedDay.id || '',
-        selectedDay.name || '',
-        durationsToSave
-      );
-      await updateExerciseNotes(
-        selectedDate,
-        selectedDay.id || '',
-        selectedDay.name || '',
-        exerciseNotes
-      );
-      await updateReorderCount(selectedDate, selectedDay.id || '', selectedDay.name || '', reorderCount);
-      setPreviousExerciseLookup(
-        buildPreviousExerciseLookup({
-          id: '',
-          date: selectedDate,
-          dayId: selectedDay.id || '',
-          dayName: selectedDay.name || '',
-          startedAt: workoutStartedAt.current || '',
-          endedAt: new Date().toISOString(),
-          durationSeconds: totalDurationSeconds,
-          energyLevel: energyLevel || '',
-          reorderCount,
-          exercises: exercisesToSave.map((exercise, exerciseIndex) => ({
-            rowId: `draft-${exerciseIndex}`,
-            exerciseId: exercise.exerciseId,
-            exerciseName: exercise.exerciseName,
-            plannedSets: exercise.plannedSets,
-            plannedReps: exercise.plannedReps,
-            plannedWeight: exercise.plannedWeight,
-            completed: exercise.completed,
-            durationSeconds: exercise.durationSeconds ?? null,
-            notes: exerciseNotes[exercise.exerciseName] || '',
-            sets: exercise.sets.map((setItem, setIndex) => ({
-              id: `draft-set-${exerciseIndex}-${setIndex}`,
-              weight: setItem.weight,
-              reps: setItem.reps,
-              difficulty: setItem.difficulty,
+    try {
+      const result = await runWorkoutSave(buildSaveDeps(), input);
+
+      if (result.status === 'saved') {
+        // Refresh the same-day prefill lookup from what we just saved.
+        setPreviousExerciseLookup(
+          buildPreviousExerciseLookup({
+            id: result.sessionId || '',
+            date: selectedDate,
+            dayId: selectedDay.id || '',
+            dayName: selectedDay.name || '',
+            startedAt: workoutStartedAt.current || '',
+            endedAt,
+            durationSeconds: totalDurationSeconds,
+            energyLevel: energyLevel || '',
+            reorderCount,
+            exercises: exercisesToSave.map((exercise, exerciseIndex) => ({
+              rowId: `draft-${exerciseIndex}`,
+              exerciseId: exercise.exerciseId,
+              exerciseName: exercise.exerciseName,
+              plannedSets: exercise.plannedSets,
+              plannedReps: exercise.plannedReps,
+              plannedWeight: exercise.plannedWeight,
+              completed: exercise.completed,
+              durationSeconds: exercise.durationSeconds ?? null,
+              notes: exerciseNotes[exercise.exerciseName] || '',
+              sets: exercise.sets.map((setItem, setIndex) => ({
+                id: `draft-set-${exerciseIndex}-${setIndex}`,
+                weight: setItem.weight,
+                reps: setItem.reps,
+                difficulty: setItem.difficulty,
+              })),
             })),
-          })),
-        })
-      );
+          })
+        );
 
-      setIsTimerRunning(false);
-      setTimer(totalDurationSeconds);
-      workoutStartedAt.current = null;
-      clearWorkoutDraft();
-      setMessage('האימון נשמר.');
-      setRecoveryDismissed(true);
-    } catch (saveError) {
-      console.error('SAVE ERROR:', saveError);
-      const rawMessage =
-        saveError instanceof Error
-          ? saveError.message
-          : (saveError as any)?.message || JSON.stringify(saveError) || 'שמירת האימון נכשלה.';
-
-      if (rawMessage.includes('WORKOUT_SESSION_ALREADY_EXISTS')) {
+        setIsTimerRunning(false);
+        setTimer(totalDurationSeconds);
+        workoutStartedAt.current = null;
+        // Release the idempotency key so the next workout mints a fresh one.
+        clientWorkoutId.current = '';
+        setMessage('האימון נשמר.');
+        setRecoveryDismissed(true);
+      } else if (result.status === 'exists') {
+        // Same-day workout already saved — ask before overwriting.
         setShowOverwriteConfirm(true);
       } else {
-        setError(rawMessage);
+        // Failed: the local draft is intentionally preserved for retry.
+        console.error('SAVE ERROR:', result.stage, result.error);
+        setError(result.userMessage || WORKOUT_SAVE_FAILED_MESSAGE);
       }
     } finally {
       setIsSaving(false);
+      saveInFlight.current = false;
     }
   };
 
-  const handleOverwrite = async () => {
+  const doSave = () => performSave(false);
+
+  const handleOverwrite = () => {
     setShowOverwriteConfirm(false);
-    if (!selectedDay) return;
-    setIsSaving(true);
-    setError('');
-    try {
-      await deleteWorkoutSession(selectedDate, selectedDay.id || '', selectedDay.name || '');
-      await doSave();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'מחיקה נכשלה.');
-      setIsSaving(false);
-    }
+    // Atomic overwrite: the RPC deletes the existing same-day session and
+    // inserts the replacement in one transaction (best-effort delete-then-save
+    // on older DBs without the atomic RPC). The idempotency key is retained so
+    // a retry is deduped.
+    performSave(true);
   };
 
   const handleSave = () => {
@@ -808,6 +872,7 @@ function WorkoutPageContent() {
       currentExerciseIndex,
       exerciseNotes,
       reorderCount,
+      clientWorkoutId: clientWorkoutId.current || undefined,
     });
   }, [isTimerRunning, draftExercises, currentExerciseIndex, exerciseNotes, reorderCount, energyLevel, selectedDate, selectedDayId]);
 

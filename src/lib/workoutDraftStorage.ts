@@ -1,3 +1,5 @@
+import { getIsraelDateKey } from '@/lib/date/getIsraelDateKey';
+
 const DRAFT_KEY = 'gym-active-workout-draft';
 const MAX_DRAFT_AGE_MS = 16 * 60 * 60 * 1000; // 16 hours — anything older is stale
 
@@ -27,6 +29,11 @@ export type WorkoutDraft = {
   currentExerciseIndex: number;
   exerciseNotes: Record<string, string>;
   reorderCount: number;
+  // Stable idempotency key for persisting THIS workout. Generated once when the
+  // workout starts and reused across save retries so the DB can dedupe a commit
+  // whose response was lost. Optional for backward compatibility with drafts
+  // saved before this field existed.
+  clientWorkoutId?: string;
 };
 
 export function loadWorkoutDraft(): WorkoutDraft | null {
@@ -57,7 +64,7 @@ export function loadWorkoutDraft(): WorkoutDraft | null {
 
     return {
       startedAt: parsed.startedAt,
-      selectedDate: typeof parsed.selectedDate === 'string' ? parsed.selectedDate : new Date().toISOString().slice(0, 10),
+      selectedDate: typeof parsed.selectedDate === 'string' ? parsed.selectedDate : getIsraelDateKey(),
       selectedDayId: parsed.selectedDayId,
       energyLevel: parsed.energyLevel ?? null,
       draftExercises: parsed.draftExercises,
@@ -66,6 +73,7 @@ export function loadWorkoutDraft(): WorkoutDraft | null {
         ? (parsed.exerciseNotes as Record<string, string>)
         : {},
       reorderCount: typeof parsed.reorderCount === 'number' ? parsed.reorderCount : 0,
+      clientWorkoutId: typeof parsed.clientWorkoutId === 'string' ? parsed.clientWorkoutId : undefined,
     };
   } catch {
     window.localStorage.removeItem(DRAFT_KEY);
