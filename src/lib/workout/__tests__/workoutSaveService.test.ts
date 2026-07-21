@@ -7,9 +7,19 @@ import {
   createClientWorkoutId,
   WORKOUT_SESSION_ALREADY_EXISTS,
   WORKOUT_SAVE_FAILED_MESSAGE,
+  WORKOUT_SAVE_UNVERIFIED_MESSAGE,
   type WorkoutSaveDeps,
   type WorkoutSaveInput,
+  type WorkoutVerifyResult,
 } from '../workoutSaveService.ts';
+
+const foundVerify = (sessionId: string | null = 'session-1'): WorkoutVerifyResult => ({
+  found: true,
+  sessionId,
+  userIdMatches: true,
+  exerciseCount: 2,
+  setCount: 3,
+});
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -281,4 +291,84 @@ test('createClientWorkoutId returns a non-empty unique-ish string', () => {
   const b = createClientWorkoutId();
   assert.ok(a.length > 0);
   assert.notEqual(a, b);
+});
+
+// ---------------------------------------------------------------------------
+// Read-after-write verification — the false-success regression guard
+// ---------------------------------------------------------------------------
+
+test('save that returns no error but is NOT found -> failed(verify), draft kept', async () => {
+  const rec = makeDeps();
+  const deps: WorkoutSaveDeps = {
+    ...rec.deps,
+    verifySaved: async () => ({
+      found: false,
+      sessionId: null,
+      userIdMatches: false,
+      exerciseCount: 0,
+      setCount: 0,
+    }),
+  };
+  const result = await runWorkoutSave(deps, makeInput());
+  assert.equal(result.status, 'failed');
+  if (result.status === 'failed') {
+    assert.equal(result.stage, 'verify');
+    assert.equal(result.userMessage, WORKOUT_SAVE_UNVERIFIED_MESSAGE);
+  }
+  assert.equal(rec.cleared, 0, 'draft preserved when persistence is not confirmed');
+});
+
+test('persisted row owned by another user -> failed(verify), draft kept', async () => {
+  const rec = makeDeps();
+  const deps: WorkoutSaveDeps = {
+    ...rec.deps,
+    verifySaved: async () => ({
+      found: true,
+      sessionId: 'session-x',
+      userIdMatches: false,
+      exerciseCount: 2,
+      setCount: 3,
+    }),
+  };
+  const result = await runWorkoutSave(deps, makeInput());
+  assert.equal(result.status, 'failed');
+  assert.equal(rec.cleared, 0);
+});
+
+test('verifySaved throwing -> failed(verify), draft kept', async () => {
+  const rec = makeDeps();
+  const deps: WorkoutSaveDeps = {
+    ...rec.deps,
+    verifySaved: async () => {
+      throw new Error('verify query failed');
+    },
+  };
+  const result = await runWorkoutSave(deps, makeInput());
+  assert.equal(result.status, 'failed');
+  if (result.status === 'failed') assert.equal(result.stage, 'verify');
+  assert.equal(rec.cleared, 0);
+});
+
+test('null RPC id but verification finds the row by identity -> saved', async () => {
+  const rec = makeDeps({
+    saveSession: async () => ({ sessionId: null, alreadyExisted: false, rpcPath: 'create_workout_session' }),
+  });
+  const deps: WorkoutSaveDeps = {
+    ...rec.deps,
+    verifySaved: async () => foundVerify('resolved-session-id'),
+  };
+  const result = await runWorkoutSave(deps, makeInput());
+  assert.equal(result.status, 'saved');
+  if (result.status === 'saved') {
+    assert.equal(result.sessionId, 'resolved-session-id', 'adopts verified id');
+  }
+  assert.equal(rec.cleared, 1, 'confirmed persistence clears the draft');
+});
+
+test('verification passing keeps the full happy-path saved result', async () => {
+  const rec = makeDeps();
+  const deps: WorkoutSaveDeps = { ...rec.deps, verifySaved: async () => foundVerify() };
+  const result = await runWorkoutSave(deps, makeInput());
+  assert.equal(result.status, 'saved');
+  assert.equal(rec.cleared, 1);
 });

@@ -13,6 +13,7 @@ import {
 } from '@/lib/repositories/programRepository';
 import {
   saveFullWorkoutSession,
+  verifyWorkoutSessionPersisted,
   fetchLatestWorkoutSessionForProgramDay,
   fetchSavedWorkoutSessions,
   updateExerciseDurations,
@@ -38,6 +39,8 @@ import {
 } from '@/lib/workout/workoutSaveService';
 import { fetchActiveProgramRecord } from '@/lib/repositories/programRepository';
 import { webSupabase } from '@/lib/supabase/browser';
+import { webEnv } from '@/lib/env';
+import { registerWorkoutDraftDiagnostics } from '@/lib/workout/workoutDraftDiagnostics';
 
 const emptySet = () => ({ weight: '', reps: '', difficulty: 'good' });
 // The workout date must bucket by Israel time (Asia/Jerusalem), consistent with
@@ -321,6 +324,11 @@ function WorkoutPageContent() {
       return EMPTY_PREVIOUS_EXERCISE_LOOKUP;
     }
   };
+
+  // Dev-only, non-destructive draft recovery helpers on window.
+  useEffect(() => {
+    registerWorkoutDraftDiagnostics();
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -676,6 +684,22 @@ function WorkoutPageContent() {
         },
         { clientWorkoutId: inp.clientWorkoutId, overwrite: inp.overwrite }
       ),
+    // Read-after-write: the save is only reported successful once this confirms
+    // a row exists for the current user. Prevents the false-success regression.
+    verifySaved: (inp, sessionId) =>
+      verifyWorkoutSessionPersisted({
+        sessionId,
+        date: inp.date,
+        dayId: inp.dayId,
+        dayName: inp.dayName,
+      }),
+    supabaseHost: (() => {
+      try {
+        return new URL(webEnv.supabaseUrl).host;
+      } catch {
+        return webEnv.supabaseUrl || '';
+      }
+    })(),
     updateDurations: (inp, durations) =>
       updateExerciseDurations(inp.date, inp.dayId, inp.dayName, durations),
     updateNotes: (inp) => updateExerciseNotes(inp.date, inp.dayId, inp.dayName, inp.exerciseNotes),

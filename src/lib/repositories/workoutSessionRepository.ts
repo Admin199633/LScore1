@@ -803,7 +803,7 @@ export const saveFullWorkoutSession = async (
     }>;
   },
   options: { clientWorkoutId?: string; overwrite?: boolean } = {}
-): Promise<{ sessionId: string | null; alreadyExisted: boolean }> => {
+): Promise<{ sessionId: string | null; alreadyExisted: boolean; rpcPath: string }> => {
   const normalizedSession = normalizeWorkoutInput(session);
 
   if (!normalizedSession.date || !normalizedSession.dayName) {
@@ -843,7 +843,11 @@ export const saveFullWorkoutSession = async (
   });
 
   if (!atomicError) {
-    return { sessionId: (atomicData as string | null) ?? null, alreadyExisted: false };
+    return {
+      sessionId: (atomicData as string | null) ?? null,
+      alreadyExisted: false,
+      rpcPath: 'save_workout_session',
+    };
   }
 
   // Any error other than "RPC not deployed" is a real failure and must surface
@@ -883,9 +887,109 @@ export const saveFullWorkoutSession = async (
     if (legacyError) {
       throw legacyError;
     }
+    return { sessionId: null, alreadyExisted: false, rpcPath: 'create_workout_session_legacy' };
   } else if (error) {
     throw error;
   }
 
-  return { sessionId: null, alreadyExisted: false };
+  return { sessionId: null, alreadyExisted: false, rpcPath: 'create_workout_session' };
+};
+
+// Read-after-write confirmation used by the save flow. A workout must never be
+// reported as saved unless a row actually exists in workout_sessions for the
+// current authenticated user. Prefers a lookup by the returned session id;
+// otherwise matches by (user, date, day identity). Also counts child rows so a
+// session that persisted with zero exercises can be surfaced as suspicious.
+export const verifyWorkoutSessionPersisted = async (
+  params: {
+    sessionId: string | null;
+    date: string;
+    dayId: string;
+    dayName: string;
+  }
+): Promise<{
+  found: boolean;
+  sessionId: string | null;
+  userIdMatches: boolean;
+  exerciseCount: number;
+  setCount: number;
+}> => {
+  const {
+    data: { user },
+    error: userError,
+  } = await webSupabase.auth.getUser();
+
+  if (userError || !user?.id) {
+    return { found: false, sessionId: null, userIdMatches: false, exerciseCount: 0, setCount: 0 };
+  }
+
+  let sessionRow: { id: string; user_id: string } | null = null;
+
+  if (params.sessionId) {
+    const { data } = await webSupabase
+      .from('workout_sessions')
+      .select('id, user_id')
+      .eq('id', params.sessionId)
+      .maybeSingle();
+    sessionRow = (data as { id: string; user_id: string } | null) ?? null;
+  }
+
+  if (!sessionRow) {
+    // Fall back to identity match (also covers RPC paths that return no id).
+    let query = webSupabase
+      .from('workout_sessions')
+      .select('id, user_id')
+      .eq('user_id', user.id)
+      .eq('session_date', params.date)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    const dayId = String(params.dayId || '').trim();
+    const dayName = String(params.dayName || '').trim();
+    if (dayId) {
+      const filters = [
+        `day_id.eq.${escapePostgrestValue(dayId)}`,
+        `workout_program_day_id.eq.${escapePostgrestValue(dayId)}`,
+      ];
+      if (dayName) {
+        filters.push(`day_name.eq.${escapePostgrestValue(dayName)}`);
+      }
+      query = query.or(filters.join(','));
+    } else if (dayName) {
+      query = query.eq('day_name', dayName);
+    }
+
+    const { data } = await query;
+    sessionRow = ((data as Array<{ id: string; user_id: string }> | null) ?? [])[0] ?? null;
+  }
+
+  if (!sessionRow) {
+    return { found: false, sessionId: null, userIdMatches: false, exerciseCount: 0, setCount: 0 };
+  }
+
+  const userIdMatches = sessionRow.user_id === user.id;
+
+  const { data: exerciseRows } = await webSupabase
+    .from('workout_session_exercises')
+    .select('id')
+    .eq('workout_session_id', sessionRow.id);
+
+  const exerciseIds = ((exerciseRows as Array<{ id: string }> | null) ?? []).map((row) => row.id);
+
+  let setCount = 0;
+  if (exerciseIds.length > 0) {
+    const { count } = await webSupabase
+      .from('workout_session_sets')
+      .select('id', { count: 'exact', head: true })
+      .in('workout_session_exercise_id', exerciseIds);
+    setCount = count ?? 0;
+  }
+
+  return {
+    found: true,
+    sessionId: sessionRow.id,
+    userIdMatches,
+    exerciseCount: exerciseIds.length,
+    setCount,
+  };
 };

@@ -1013,5 +1013,171 @@ REMAINING RISKS / LIMITATIONS
   workout-history edit flow (updateWorkoutSessionById path was not modified).
 
 ================================================================================
+22. 2026-07-21 - WORKOUT SAVE REGRESSION (persistence stopped after 07-14)
+================================================================================
+
+New evidence from production DB:
+- workout_sessions is NOT empty; the latest persisted session for the primary
+  user (d37dbe56-128b-4aa0-8c4e-0b4179ba81a3) is session_date 2026-07-14
+  (created_at 2026-07-14 14:35:16Z). No rows exist for 2026-07-20 or 2026-07-21.
+- Therefore the timezone bug (section 21) is NOT the cause of these two: the
+  rows are not merely under an adjacent date - they do not exist at all.
+
+REGRESSION-WINDOW FORENSICS (git):
+- Commits touching the save path: 8e56f7f (2026-07-09) then dedda3f
+  (2026-07-21 12:12, which is the section-21 fix, committed as "21/7/26").
+  There is NO commit between 2026-07-09 and 2026-07-21.
+- So the client bundle live across the entire 07-14 -> 07-20 window was 8e56f7f.
+  The SAME code that saved successfully on 07-14 failed to persist on 07-20.
+- Conclusion: the trigger is NOT a client-code change. It is server-side
+  (the create_workout_session RPC / RLS / schema) and/or environment/deploy,
+  and the old client reported false success.
+
+WHY THE OLD CLIENT SHOWED FALSE SUCCESS (confirmed defect in 8e56f7f):
+- saveFullWorkoutSession did `const { error } = await rpc('create_workout_session', payload)`
+  and ONLY threw when `error` was truthy. It never inspected `data`, never
+  confirmed a row was created. doSave then cleared the draft and showed
+  "האימון נשמר." So ANY condition where the RPC returns error=null without
+  actually inserting (server-side no-op / silently-swallowed insert / wrong
+  project / RLS dropping rows under SECURITY DEFINER) is presented as success
+  and the local draft is destroyed. This is the mechanism of the data loss.
+
+CANDIDATE SERVER-SIDE TRIGGERS (hypotheses - require the DB checks below):
+  H1. create_workout_session was altered/redeployed around 07-14 so its body no
+      longer inserts (or inserts under a condition that the payload no longer
+      meets) while still returning without error.
+  H2. A signature/overload change: the client payload no longer matches, so
+      PostgREST resolved a different/again-created overload, or the schema cache
+      served a stale/again-empty function.
+  H3. RLS policy change on workout_sessions/exercises/sets so inserts are
+      silently filtered (only possible to be silent under specific setups).
+  H4. Deployment/env change: NEXT_PUBLIC_SUPABASE_URL/ANON_KEY on Vercel
+      repointed to a different project (or a preview build with different env
+      was promoted), so saves after 07-14 landed elsewhere.
+These cannot be proven from the repo alone and are NOT asserted as fact.
+
+DATABASE CHECKS TO PIN THE EXACT CAUSE (run against production):
+  -- RPC contract (names, args, order, types, return, full body):
+  select p.proname,
+         pg_get_function_identity_arguments(p.oid) as arguments,
+         pg_get_function_result(p.oid) as return_type,
+         pg_get_functiondef(p.oid) as definition
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname='public'
+    and p.proname in ('create_workout_session','save_workout_session');
+  -- Compare `arguments` against the client payload keys (p_session_date,
+  --   p_day_id, p_day_name, p_program_id, p_status, p_started_at, p_ended_at,
+  --   p_duration_seconds, p_energy_level, p_exercises).
+  -- RLS policies:
+  select tablename, policyname, cmd, roles, qual, with_check
+  from pg_policies
+  where tablename in ('workout_sessions','workout_session_exercises','workout_session_sets');
+  -- Anything created/altered near the incident:
+  select session_date, count(*), max(created_at)
+  from public.workout_sessions
+  where user_id='d37dbe56-128b-4aa0-8c4e-0b4179ba81a3'
+  group by session_date order by session_date desc;
+
+RUNTIME SAVE PATH (current handler, app/workout/page.tsx):
+  1. Finish button -> handleSave() -> (incomplete-sets warning) -> doSave()=performSave(false)
+  2. performSave builds a WorkoutSaveInput (date=Israel key, dayId, dayName,
+     programId, exercises with sets, clientWorkoutId, overwrite).
+  3. runWorkoutSave(deps) -> deps.saveSession -> saveFullWorkoutSession(...)
+  4. RPC: prefers save_workout_session (p_client_workout_id, p_overwrite, +the
+     10 base p_* args); falls back to create_workout_session (then legacy).
+  5. Expected response: uuid (atomic path) / {error:null} (fallback).
+  6. Success is shown ONLY after read-after-write verification (see below).
+  7. Draft is cleared only after that verification passes.
+  8. No navigation occurs on save.
+  9. data null -> handled: verification queries by (user,date,day) instead of id.
+ 10. error non-null -> thrown -> status 'failed' -> draft kept, Hebrew error.
+ 11. RPC missing (save_workout_session) -> fallback to create_workout_session.
+ 12. RPC signature mismatch -> if it errors, either fallback (missing) or
+     surfaces as 'failed' (draft kept); if it silently no-ops, verification
+     catches it as 'failed' (draft kept).
+
+FIX IMPLEMENTED (server-cause-agnostic; makes false success impossible):
+- Read-after-write verification. runWorkoutSave now calls deps.verifySaved
+  after saveSession. A save is reported 'saved' ONLY when a row is found in
+  workout_sessions, owned by the current user. Otherwise it is 'failed'
+  (stage 'verify'): the draft is KEPT, state is not reset, no navigation, and
+  the Hebrew message is shown:
+    "שמירת האימון לא הושלמה. נתוני האימון נשמרו במכשיר ולא נמחקו. נסה שוב לאחר בדיקת החיבור."
+- repository verifyWorkoutSessionPersisted(): looks up by returned id, else by
+  (user, date, day identity); confirms user_id match; counts exercises and sets.
+- Diagnostics expanded: supabaseHost, rpcPath (save_workout_session /
+  create_workout_session / _legacy), requestedSessionId, and the verify result
+  (found, userIdMatches, exerciseCount, setCount) are logged around the save.
+  No tokens/anon key are logged.
+- Dev-only recovery utility src/lib/workout/workoutDraftDiagnostics.ts:
+  window.__gymInspectWorkoutDraft() / __gymExportWorkoutDraft() read and export
+  the local draft WITHOUT mutating it (registered only in non-production).
+
+SERVICE WORKER / STALE-BUNDLE ASSESSMENT (public/sw.js, SwRegister.tsx):
+- The SW is network-first for everything except immutable /_next/static/ hashed
+  chunks and two PWA assets; the HTML shell and all Supabase requests are never
+  cached. SwRegister unregisters old workers then registers fresh; the SW uses
+  skipWaiting + clients.claim and deletes non-current caches on activate
+  (CACHE_NAME 'gym-static-v3'). A stale save implementation surviving a deploy
+  is therefore unlikely (new HTML references new chunk hashes). No SW change was
+  required; left unchanged to avoid risk. Stale code remains a low-probability
+  contributor and is neutralized anyway by read-after-write verification.
+
+DEPLOYMENT STEPS:
+  1. Apply migration supabase/migrations/20260721_workout_save_atomicity_and_
+     idempotency.sql to the SAME Supabase project that holds the historical
+     sessions (host ziodqb...). Verify with the RPC-contract SQL above that
+     save_workout_session exists with the expected 12-arg signature.
+  2. In staging, run the "post-deployment verification" below; confirm the RPC
+     path used (diagnostics 'rpcPath') and that a row is created.
+  3. Confirm Vercel PRODUCTION env NEXT_PUBLIC_SUPABASE_URL/ANON_KEY point to
+     that same project (rules out H4). The app logs supabaseHost per save.
+  4. Deploy the app (Vercel). Because the SW network-firsts the shell, users get
+     the new bundle on next load; no manual cache purge needed.
+  5. Keep verification on regardless of migration state (it also protects the
+     create_workout_session fallback path).
+
+POST-DEPLOYMENT VERIFICATION (prove a new save persists):
+  -- After completing one workout in the app as the user, expect exactly one new
+  -- row for today's Israel date, owned by the user, with children:
+  select id, user_id, session_date, day_name, created_at, client_workout_id
+  from public.workout_sessions
+  where user_id='<uid>' and session_date='<israel-today>'
+  order by created_at desc limit 1;
+  -- exercises:
+  select count(*) from public.workout_session_exercises where workout_session_id='<id>';
+  -- sets:
+  select count(*) from public.workout_session_sets s
+    join public.workout_session_exercises e on e.id=s.workout_session_exercise_id
+   where e.workout_session_id='<id>';
+  Manual: the app must show "האימון נשמר." ONLY after the row is found; if the
+  RPC no-ops, the app now shows the "לא הושלמה" message and keeps the draft.
+
+RECOVERY STATUS (2026-07-20 / 2026-07-21 workouts):
+- Not in the database (confirmed by the user's query) and cannot be
+  reconstructed server-side.
+- Possible ONLY from the user's device: the OLD client cleared the draft on
+  (false) success, so if that device still shows a workout in progress or holds
+  the 'gym-active-workout-draft' localStorage key, run (dev build, that device):
+  window.__gymInspectWorkoutDraft()  and  window.__gymExportWorkoutDraft().
+  Nothing is fabricated; if the draft was cleared, the two workouts are
+  unrecoverable and must be re-entered.
+
+TESTS ADDED for the regression (src/lib/workout/__tests__):
+  RPC error / RPC missing (fallback) / signature-mismatch-as-failure / null data
+  / no session id resolved by verification / read-after-write not found / user-id
+  mismatch / verify throws / double Finish (single-flight, page) / stale-draft
+  retry reuses key / server-committed-response-lost idempotent replay / success
+  shown only after verification / failure keeps the draft. 23/23 pass.
+
+REMAINING RISKS:
+- The exact server-side trigger (H1-H4) is not proven from the repo; the DB
+  checks above will identify it. Verification makes the SYMPTOM (silent loss)
+  impossible regardless, but the underlying RPC/env should still be corrected so
+  saves actually succeed rather than repeatedly failing verification.
+- If production env points to a different Supabase project than expected (H4),
+  verification will (correctly) report failures until the env is fixed.
+
+================================================================================
 END OF SUMMARY
 ================================================================================

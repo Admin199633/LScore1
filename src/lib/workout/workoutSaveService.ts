@@ -15,13 +15,20 @@
 
 export const WORKOUT_SESSION_ALREADY_EXISTS = 'WORKOUT_SESSION_ALREADY_EXISTS';
 
-// User-facing Hebrew message shown when a save fails. The wording explicitly
-// reassures the user their data is safe on the device and the action is
-// retryable, per product requirement.
+// User-facing Hebrew message shown when the save request itself fails
+// (network error / RPC threw). Reassures the user their data is safe on the
+// device and the action is retryable.
 export const WORKOUT_SAVE_FAILED_MESSAGE =
   'שמירת האימון נכשלה. הנתונים נשמרו במכשיר ולא אבדו. בדוק את החיבור ונסה שוב.';
 
-export type WorkoutSaveStage = 'session' | 'durations' | 'notes' | 'reorder';
+// Shown when the save request returned WITHOUT an error but a read-after-write
+// check could NOT find the persisted session (the regression class where the
+// UI used to show false success). This is the "persistence not confirmed"
+// message and is also treated as a keep-the-draft, retryable failure.
+export const WORKOUT_SAVE_UNVERIFIED_MESSAGE =
+  'שמירת האימון לא הושלמה. נתוני האימון נשמרו במכשיר ולא נמחקו. נסה שוב לאחר בדיקת החיבור.';
+
+export type WorkoutSaveStage = 'session' | 'verify' | 'durations' | 'notes' | 'reorder';
 
 export type WorkoutSaveInput = {
   clientWorkoutId: string;
@@ -59,9 +66,11 @@ export type WorkoutSaveDiagnostics = {
   saveAttemptId: string;
   clientWorkoutId: string;
   userId: string | null;
+  supabaseHost: string | null;
   programId: string | null;
   dayId: string;
   dayName: string;
+  date: string;
   overwrite: boolean;
   exerciseCount: number;
   totalSetCount: number;
@@ -70,18 +79,33 @@ export type WorkoutSaveDiagnostics = {
   durationSeconds: number;
 };
 
+export type WorkoutVerifyResult = {
+  found: boolean;
+  sessionId: string | null;
+  userIdMatches: boolean;
+  exerciseCount: number;
+  setCount: number;
+};
+
 export type WorkoutSaveDeps = {
   // Persists the session + exercises + sets atomically. Resolves with the new
-  // session id (or null if unknown) and whether the row already existed
-  // (idempotent replay). MUST throw an Error whose message contains
-  // WORKOUT_SESSION_ALREADY_EXISTS when a same-day session exists and overwrite
-  // was not requested.
-  saveSession: (input: WorkoutSaveInput) => Promise<{ sessionId: string | null; alreadyExisted: boolean }>;
+  // session id (or null if unknown), whether the row already existed
+  // (idempotent replay), and which RPC path was used (diagnostics). MUST throw
+  // an Error whose message contains WORKOUT_SESSION_ALREADY_EXISTS when a
+  // same-day session exists and overwrite was not requested.
+  saveSession: (
+    input: WorkoutSaveInput
+  ) => Promise<{ sessionId: string | null; alreadyExisted: boolean; rpcPath?: string }>;
+  // Read-after-write confirmation. When provided, a save is ONLY reported as
+  // successful if this resolves with found:true and userIdMatches:true. This is
+  // the guard against "the async handler completed but nothing persisted".
+  verifySaved?: (input: WorkoutSaveInput, sessionId: string | null) => Promise<WorkoutVerifyResult>;
   updateDurations: (input: WorkoutSaveInput, durations: Record<string, number>) => Promise<void>;
   updateNotes: (input: WorkoutSaveInput) => Promise<void>;
   updateReorder: (input: WorkoutSaveInput) => Promise<void>;
   clearDraft: () => void;
   getUserId?: () => Promise<string | null>;
+  supabaseHost?: string;
   log?: (event: string, detail: Record<string, unknown>) => void;
 };
 
@@ -135,9 +159,11 @@ export const runWorkoutSave = async (
     saveAttemptId: input.clientWorkoutId,
     clientWorkoutId: input.clientWorkoutId,
     userId,
+    supabaseHost: deps.supabaseHost ?? null,
     programId: input.programId,
     dayId: input.dayId,
     dayName: input.dayName,
+    date: input.date,
     overwrite: input.overwrite,
     exerciseCount: input.exercises.length,
     totalSetCount: countTotalSets(input.exercises),
@@ -151,10 +177,12 @@ export const runWorkoutSave = async (
   // 1) Critical unit: session + exercises + sets (atomic in the DB layer).
   let sessionId: string | null = null;
   let alreadyExisted = false;
+  let rpcPath: string | undefined;
   try {
     const outcome = await deps.saveSession(input);
     sessionId = outcome.sessionId;
     alreadyExisted = outcome.alreadyExisted;
+    rpcPath = outcome.rpcPath;
   } catch (error) {
     if (isAlreadyExistsError(error)) {
       log('workout_save_exists', { ...diagnostics });
@@ -169,7 +197,41 @@ export const runWorkoutSave = async (
     return { status: 'failed', stage: 'session', userMessage: WORKOUT_SAVE_FAILED_MESSAGE, error };
   }
 
-  log('workout_save_session_ok', { ...diagnostics, sessionId, alreadyExisted });
+  log('workout_save_session_ok', { ...diagnostics, sessionId, alreadyExisted, rpcPath });
+
+  // 1b) Read-after-write verification — THE guard against false success. A save
+  //     that returns no error but did not actually create a row (server-side
+  //     RPC no-op, wrong Supabase project, RLS silently dropping the insert,
+  //     stale client) is caught here and treated as a retryable failure that
+  //     KEEPS the draft.
+  if (deps.verifySaved) {
+    let verify: WorkoutVerifyResult;
+    try {
+      verify = await deps.verifySaved(input, sessionId);
+    } catch (error) {
+      log('workout_save_verify_error', { ...diagnostics, sessionId, errorMessage: extractErrorMessage(error) });
+      return { status: 'failed', stage: 'verify', userMessage: WORKOUT_SAVE_UNVERIFIED_MESSAGE, error };
+    }
+
+    log('workout_save_verify', { ...diagnostics, requestedSessionId: sessionId, rpcPath, ...verify });
+
+    if (!verify.found || !verify.userIdMatches) {
+      // Draft is intentionally NOT cleared here.
+      return {
+        status: 'failed',
+        stage: 'verify',
+        userMessage: WORKOUT_SAVE_UNVERIFIED_MESSAGE,
+        error: new Error(
+          `persistence not confirmed (found=${verify.found}, userIdMatches=${verify.userIdMatches}, sessionId=${verify.sessionId})`
+        ),
+      };
+    }
+
+    // Adopt the verified session id if saveSession could not report one.
+    if (!sessionId && verify.sessionId) {
+      sessionId = verify.sessionId;
+    }
+  }
 
   // 2) Best-effort metadata. These never revert or block the confirmed session
   //    save, but failures are recorded as soft warnings.
